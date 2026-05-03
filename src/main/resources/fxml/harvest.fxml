@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<!-- Harvest — logging screen with yield analytics -->
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.HarvestController">
+
+    <!-- TODO: Harvest log table, record form, yield summary, export button -->
+
+</BorderPane>

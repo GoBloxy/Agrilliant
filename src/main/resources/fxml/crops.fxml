@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<!-- Crops — CRUD screen for managing crops on plots -->
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.CropController">
+
+    <!-- TODO: Table of crops, add/edit/delete forms, growth stage advancement -->
+
+</BorderPane>

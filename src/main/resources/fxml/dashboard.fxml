@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<!-- Dashboard — main screen with sensor charts, alerts, and farm overview -->
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.DashboardController">
+
+    <!-- TODO: Build layout — sidebar navigation, live charts, alert table, overview cards -->
+
+</BorderPane>

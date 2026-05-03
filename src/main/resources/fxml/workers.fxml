@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<!-- Workers — CRUD screen for managing farm workers -->
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.WorkerController">
+
+    <!-- TODO: Table of workers, add/edit/delete forms, workload display -->
+
+</BorderPane>
