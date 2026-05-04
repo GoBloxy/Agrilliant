@@ -32,6 +32,13 @@
             <version>${javafx.version}</version>
         </dependency>
 
+        <!-- AtlantaFX — Modern JavaFX CSS Themes -->
+        <dependency>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-base</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+
         <!-- MySQL JDBC Driver -->
         <dependency>
             <groupId>com.mysql</groupId>

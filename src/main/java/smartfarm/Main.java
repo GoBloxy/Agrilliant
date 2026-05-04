@@ -1,5 +1,6 @@
 package smartfarm;
 
+import atlantafx.base.theme.NordDark;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -14,6 +15,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // Apply AtlantaFX theme (swap to NordLight, PrimerDark, Dracula, etc. as desired)
+        Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
+
         // TODO: Load dashboard.fxml, set scene, show stage
         // TODO: Start FarmServer on a background thread
     }
