@@ -1,11 +1,49 @@
 package smartfarm.server;
 
-public class SensorHandler implements Runnable {
+import smartfarm.model.SensorReading;
+import smartfarm.service.SensorService;
 
-    // TODO: Constructor(Socket), run(), parseReading(String)
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
+import java.time.LocalDateTime;
+
+public class SensorHandler implements Runnable {
+    private final Socket socket;
+    private final SensorService sensorService = new SensorService();
+
+    public SensorHandler(Socket socket) {
+        this.socket = socket;
+    }
 
     @Override
     public void run() {
-        // TODO: Read lines from socket, parse, and forward to SensorService
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(socket.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                SensorReading reading = parseReading(line);
+                if (reading != null) {
+                    sensorService.processReading(reading);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Device disconnected: " + socket.getInetAddress());
+        }
+    }
+
+    // Parses "DEVICE:plot1_sensor,TEMP:27.50,HUM:63.20" into a SensorReading
+    private SensorReading parseReading(String raw) {
+        try {
+            String[] parts = raw.split(",");
+            String deviceId = parts[0].split(":")[1];
+            float temp = Float.parseFloat(parts[1].split(":")[1]);
+            float hum = Float.parseFloat(parts[2].split(":")[1]);
+            return new SensorReading(deviceId, temp, hum, LocalDateTime.now());
+        } catch (Exception e) {
+            System.err.println("Bad data format: " + raw);
+            return null;
+        }
     }
 }

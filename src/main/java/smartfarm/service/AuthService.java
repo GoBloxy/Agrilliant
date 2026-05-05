@@ -21,10 +21,10 @@ public class AuthService {
     return user;
 }
     public void signUp(String email, String password, String fullName, String role){
-        String hashedPassword = hashPassword(password);
         if(authProcess.emailExists(email)){
             throw new RuntimeException("The User Already Exists, Try To Sign In");
         }
+        String hashedPassword = hashPassword(password);
         User user = new User(email, hashedPassword, fullName, role);
         authProcess.register(user);
     }
