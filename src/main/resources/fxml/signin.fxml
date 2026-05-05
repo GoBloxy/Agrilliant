@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<!-- Sign In — username & password login form -->
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.SignInController">
+
+    <!-- TODO: Username field, password field, sign-in button, "Go to Sign Up" link, error label -->
+
+</BorderPane>

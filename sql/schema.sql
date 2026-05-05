@@ -4,6 +4,11 @@
 CREATE DATABASE IF NOT EXISTS smart_farm;
 USE smart_farm;
 
+-- Application users (sign-in / sign-up)
+CREATE TABLE users (
+
+);
+
 -- Plots of land on the farm
 CREATE TABLE plots (
 
