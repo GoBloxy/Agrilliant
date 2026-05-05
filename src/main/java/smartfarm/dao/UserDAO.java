@@ -10,6 +10,6 @@ public class UserDAO {
     private final Connection conn = DBConnection.getInstance();
 
     // TODO: register(User user) — INSERT into users
-    // TODO: findByUsername(String username) — SELECT for login
-    // TODO: usernameExists(String username) — check duplicates
+    // TODO: findByEmail(String email) — SELECT for login
+    // TODO: emailExists(String email) — check if already avaliable
 }
