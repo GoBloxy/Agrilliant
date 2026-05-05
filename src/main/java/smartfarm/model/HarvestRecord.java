@@ -12,8 +12,7 @@ public class HarvestRecord {
     private Grade grade;
     private int cropId;
 
-    public HarvestRecord(LocalDate harvestDate, double quantityKg,
-                         Grade grade, int cropId) {
+    public HarvestRecord(LocalDate harvestDate, double quantityKg, Grade grade, int cropId) {
         this.harvestDate = harvestDate;
         this.quantityKg = quantityKg;
         this.grade = grade;

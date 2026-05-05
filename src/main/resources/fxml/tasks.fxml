@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<!-- Tasks — manual task creation, status advancement, overdue view -->
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.TaskController">
+
+    <!-- TODO: Task table, add form (description, due date, worker, plot), advance status button, overdue filter -->
+
+</BorderPane>

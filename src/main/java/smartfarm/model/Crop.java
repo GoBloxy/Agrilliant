@@ -14,8 +14,7 @@ public class Crop {
     private int plotId;
     private double expectedYieldKg;
 
-    public Crop(String cropName, LocalDate plantingDate,
-                LocalDate harvestDate, int plotId, double expectedYieldKg) {
+    public Crop(String cropName, LocalDate plantingDate, LocalDate harvestDate, int plotId, double expectedYieldKg) {
         this.cropName = cropName;
         this.plantingDate = plantingDate;
         this.harvestDate = harvestDate;
@@ -24,9 +23,7 @@ public class Crop {
         this.expectedYieldKg = expectedYieldKg;
     }
 
-    /**
-     * Advance to next growth stage
-     */
+    // Advance to the next stage
     public void advanceStage() {
         switch (growthStage) {
             case PLANTED -> growthStage = GrowthStage.GROWING;
@@ -40,8 +37,7 @@ public class Crop {
      * Check if crop is overdue for harvest
      */
     public boolean isOverdue() {
-        return growthStage == GrowthStage.READY
-                && LocalDate.now().isAfter(harvestDate);
+        return growthStage == GrowthStage.READY && LocalDate.now().isAfter(harvestDate);
     }
 
     // ── Getters ──
