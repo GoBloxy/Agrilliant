@@ -5,6 +5,7 @@ CREATE DATABASE IF NOT EXISTS smart_farm;
 USE smart_farm;
 
 -- Application users (sign-in / sign-up)
+-- Workers are also users with role='worker' and a phone number
 CREATE TABLE users (
 
 );
@@ -29,12 +30,9 @@ CREATE TABLE alerts (
 
 );
 
--- Farm workers
-CREATE TABLE workers (
+-- (Workers are stored in the users table with role='worker')
 
-);
-
--- Tasks assigned to workers
+-- Tasks assigned to workers (references users table)
 CREATE TABLE tasks (
 
 );

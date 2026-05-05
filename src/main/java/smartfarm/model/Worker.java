@@ -1,43 +1,21 @@
 package smartfarm.model;
 
-public class Worker {
-    private int workerId;
-    private String name;
-    private String role;
+public class Worker extends User {
     private String phone;
     private int activeTaskCount;
 
-
-    public Worker(int workerId, String name, String role, String phone, int activeTaskCount) {
-        this.workerId = workerId;
-        this.name = name;
-        this.role = role;
+    // Full constructor (loading from DB)
+    public Worker(int userId, String email, String passwordHash, String fullName, String phone, int activeTaskCount) {
+        super(userId, email, passwordHash, fullName, "worker");
         this.phone = phone;
         this.activeTaskCount = activeTaskCount;
     }
 
-    public int getWorkerId() {
-        return workerId;
-    }
-
-    public void setWorkerId(int workerId) {
-        this.workerId = workerId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
+    // Without userId (registering a new worker)
+    public Worker(String email, String passwordHash, String fullName, String phone) {
+        super(email, passwordHash, fullName, "worker");
+        this.phone = phone;
+        this.activeTaskCount = 0;
     }
 
     public String getPhone() {
@@ -56,7 +34,7 @@ public class Worker {
         this.activeTaskCount = activeTaskCount;
     }
 
-    public boolean isAvailable(){
-        return getActiveTaskCount() == 0;
+    public boolean isAvailable() {
+        return activeTaskCount == 0;
     }
 }
