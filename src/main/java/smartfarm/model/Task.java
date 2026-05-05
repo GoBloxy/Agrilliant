@@ -13,7 +13,6 @@ public class Task {
     private int plotId;
     private String alertType;
 
-    // TODO: Constructor, advanceStatus(), revertStatus(), isOverdue(), getters, setters
 
     // with description
     public Task(int taskId, String description, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {

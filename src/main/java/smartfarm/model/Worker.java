@@ -7,7 +7,6 @@ public class Worker {
     private String phone;
     private int activeTaskCount;
 
-    // TODO: Constructor, isAvailable(), getters, setters
 
     public Worker(int workerId, String name, String role, String phone, int activeTaskCount) {
         this.workerId = workerId;

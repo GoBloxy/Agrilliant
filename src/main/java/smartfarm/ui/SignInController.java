@@ -1,4 +1,5 @@
 package smartfarm.ui;
+import smartfarm.service.AuthService;
 
 public class SignInController {
 
