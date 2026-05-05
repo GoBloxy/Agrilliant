@@ -23,7 +23,7 @@ public class AuthService {
     public void signUp(String email, String password, String fullName, String role){
         String hashedPassword = hashPassword(password);
         if(authProcess.emailExists(email)){
-            throw new Error("The User Already Exists, Try To Sign In");
+            throw new RuntimeException("The User Already Exists, Try To Sign In");
         }
         User user = new User(email, hashedPassword, fullName, role);
         authProcess.register(user);
