@@ -12,7 +12,7 @@ public class SensorService {
     // Save the reading, then check if it triggers any alerts
     public void processReading(SensorReading reading) {
         try {
-            sensorDAO.saveReading(reading);
+            sensorDAO.save(reading);
 
             int plotId = resolvePlotId(reading.getDeviceId());
             alertService.checkAndAlert(reading, plotId);

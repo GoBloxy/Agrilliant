@@ -11,17 +11,17 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SensorDAO {
+public class SensorDAO implements GenericDAO<SensorReading> {
     private final Connection conn = DBConnection.getInstance();
 
-    // Save a reading to the database
-    public void saveReading(SensorReading reading) throws SQLException {
+    @Override
+    public void save(SensorReading item) throws SQLException {
         String sql = "INSERT INTO sensor_readings (device_id, temperature, humidity, timestamp) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, reading.getDeviceId());
-            stmt.setFloat(2, reading.getTemperature());
-            stmt.setFloat(3, reading.getHumidity());
-            stmt.setObject(4, reading.getTimestamp());
+            stmt.setString(1, item.getDeviceId());
+            stmt.setFloat(2, item.getTemperature());
+            stmt.setFloat(3, item.getHumidity());
+            stmt.setObject(4, item.getTimestamp());
             stmt.executeUpdate();
         }
     }
@@ -44,5 +44,57 @@ public class SensorDAO {
             }
         }
         return list;
+    }
+
+    @Override
+    public SensorReading getById(int id) throws SQLException {
+        String sql = "SELECT * FROM sensor_readings WHERE reading_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new SensorReading(
+                    rs.getInt("reading_id"),
+                    rs.getString("device_id"),
+                    rs.getFloat("temperature"),
+                    rs.getFloat("humidity"),
+                    rs.getObject("timestamp", LocalDateTime.class)
+                );
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<SensorReading> getAll() throws SQLException {
+        List<SensorReading> list = new ArrayList<>();
+        String sql = "SELECT * FROM sensor_readings ORDER BY timestamp DESC";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(new SensorReading(
+                    rs.getInt("reading_id"),
+                    rs.getString("device_id"),
+                    rs.getFloat("temperature"),
+                    rs.getFloat("humidity"),
+                    rs.getObject("timestamp", LocalDateTime.class)
+                ));
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public void update(SensorReading item) throws SQLException {
+        // Sensor readings are immutable — not updated after insert
+    }
+
+    @Override
+    public void delete(int id) throws SQLException {
+        String sql = "DELETE FROM sensor_readings WHERE reading_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
     }
 }
