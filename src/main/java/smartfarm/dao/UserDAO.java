@@ -12,12 +12,12 @@ import java.util.List;
 public class UserDAO implements GenericDAO<User> {
     private final Connection conn = DBConnection.getInstance();
 
-
+    @Override
     public void save(User user) throws SQLException {
 
     }
 
-
+    @Override
     public User getById(int id) throws SQLException {
         return new User("placehlder", "placehlder", "placehlder", User.Role.FARMER);
     }
@@ -27,17 +27,17 @@ public class UserDAO implements GenericDAO<User> {
         return new User("placehlder", "placehlder", "placehlder", User.Role.FARMER);
     }
 
-
-    public List<User> getAll() throws SQLException {
+    @Override
+    public ArrayList<User> getAll() throws SQLException {
         return new ArrayList<>(); //placeholder
     }
 
-
+    @Override
     public void update(User item) throws SQLException {
 
     }
 
-
+    @Override
     public void delete(int id) throws SQLException {
 
     }

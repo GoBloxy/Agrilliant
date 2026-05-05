@@ -66,8 +66,8 @@ public class SensorDAO implements GenericDAO<SensorReading> {
     }
 
     @Override
-    public List<SensorReading> getAll() throws SQLException {
-        List<SensorReading> list = new ArrayList<>();
+    public ArrayList<SensorReading> getAll() throws SQLException {
+        ArrayList<SensorReading> list = new ArrayList<>();
         String sql = "SELECT * FROM sensor_readings ORDER BY timestamp DESC";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();

@@ -13,20 +13,20 @@ public class AuthService {
     }
 
     public User signIn(String email, String password) {
-        User user;
+        User fetch;
         try{
-            user = authProcess.getByEmail(email);
+            fetch = authProcess.getByEmail(email);
         }
         catch (SQLException err){
             throw new RuntimeException("Server Error Try Again Later");
         }
-        if (user == null) {
+        if (fetch == null) {
         throw new RuntimeException("The User Doesn't Exist, Try To Sign Up");
     }
-        if (!verifyPassword(password, user.getPasswordHash())) {
+        if (!verifyPassword(password, fetch.getPasswordHash())) {
         throw new RuntimeException("The Password Is Incorrect, Try Again");
     }
-    return user;
+    return fetch;
 }
     public void signUp(String email, String password, String fullName, User.Role role){
         User fecth;
