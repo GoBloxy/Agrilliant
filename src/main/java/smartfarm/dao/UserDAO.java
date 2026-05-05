@@ -17,7 +17,7 @@ public class UserDAO {
 
     // TODO: findByEmail(String email) — SELECT for login
     public User findByEmail(String email){
-        return new User("placehlder", "placehlder", "placehlder", "placehlder");
+        return new User("placehlder", "placehlder", "placehlder", User.Role.FARMER);
     }
 
     // TODO: emailExists(String email) — check if already avaliable
