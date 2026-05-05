@@ -10,14 +10,16 @@ public class AuthService {
         this.authProcess = authProcess;
     }
 
-    public void signIn(String email, String password) {
-        if(!authProcess.emailExists(email)){
-            throw new Error("The User Doesnt Exist, Try To Sign Up");
-        }
-        if(!verifyPassword(password, authProcess.getHash(email))) {
-            throw new Error("The Password Is Incorrect, Try Again");
-        }
+    public User signIn(String email, String password) {
+    User user = authProcess.findByEmail(email);
+        if (user == null) {
+        throw new RuntimeException("The User Doesn't Exist, Try To Sign Up");
     }
+        if (!verifyPassword(password, user.getPasswordHash())) {
+        throw new RuntimeException("The Password Is Incorrect, Try Again");
+    }
+    return user;
+}
     public void signUp(String email, String password, String fullName, String role){
         String hashedPassword = hashPassword(password);
         if(authProcess.emailExists(email)){
