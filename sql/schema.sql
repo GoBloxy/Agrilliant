@@ -1,8 +1,8 @@
 -- Smart Farm Management System — Database Schema
 -- Run this script in MySQL to create the database and all tables.
 
-CREATE DATABASE IF NOT EXISTS smart_farm;
-USE smart_farm;
+CREATE DATABASE IF NOT EXISTS agrilliant;
+USE agrilliant;
 
 -- Application users (sign-in / sign-up)
 -- Workers are also users with role='worker' and a phone number

@@ -6,14 +6,14 @@ public class Worker extends User {
 
     // Full constructor (loading from DB)
     public Worker(int userId, String email, String passwordHash, String fullName, String phone, int activeTaskCount) {
-        super(userId, email, passwordHash, fullName, "worker");
+        super(userId, email, passwordHash, fullName, Role.WORKER);
         this.phone = phone;
         this.activeTaskCount = activeTaskCount;
     }
 
     // Without userId (registering a new worker)
     public Worker(String email, String passwordHash, String fullName, String phone) {
-        super(email, passwordHash, fullName, "worker");
+        super(email, passwordHash, fullName, Role.WORKER);
         this.phone = phone;
         this.activeTaskCount = 0;
     }

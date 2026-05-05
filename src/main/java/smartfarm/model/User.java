@@ -1,15 +1,17 @@
 package smartfarm.model;
 
 public class User {
+    public enum Role { ADMIN, FARMER, WORKER }
+
     private int userId;
     private String email;
     private String passwordHash;
     private String fullName;
-    private String role; // e.g. "admin", "farmer", "worker"
+    private Role role;
 
 
 
-    public User(int userId, String email, String passwordHash, String fullName, String role) {
+    public User(int userId, String email, String passwordHash, String fullName, Role role) {
         this.userId = userId;
         this.email = email;
         this.passwordHash = passwordHash;
@@ -17,7 +19,7 @@ public class User {
         this.role = role;
     }
     // without userId not generated && auto incremented in the database
-    public User(String email, String passwordHash, String fullName, String role) {
+    public User(String email, String passwordHash, String fullName, Role role) {
         this.userId = -1;
         this.email = email;
         this.passwordHash = passwordHash;
@@ -57,11 +59,11 @@ public class User {
         this.fullName = fullName;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 }
