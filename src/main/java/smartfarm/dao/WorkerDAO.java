@@ -6,7 +6,6 @@ import smartfarm.util.DBConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class WorkerDAO implements GenericDAO<Worker> {
@@ -27,8 +26,8 @@ public class WorkerDAO implements GenericDAO<Worker> {
     }
 
     @Override
-    public ArrayList<Worker> getAll() throws SQLException {
-        ArrayList<Worker> placeholder = new ArrayList<>();
+    public List<Worker> getAll() throws SQLException {
+        List<Worker> placeholder = new List<>();
         return placeholder;
     };
 

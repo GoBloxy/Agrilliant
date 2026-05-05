@@ -5,7 +5,6 @@ import smartfarm.util.DBConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TaskDAO implements GenericDAO<Task> {
@@ -22,7 +21,7 @@ public class TaskDAO implements GenericDAO<Task> {
     }
 
     @Override
-    public ArrayList<Task> getAll() throws SQLException {
+    public List<Task> getAll() throws SQLException {
         return null;
     }
 

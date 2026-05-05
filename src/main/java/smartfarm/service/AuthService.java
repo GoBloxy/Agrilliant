@@ -29,14 +29,14 @@ public class AuthService {
     return fetch;
 }
     public void signUp(String email, String password, String fullName, User.Role role){
-        User fecth;
+        User fetch;
         try{
-            fecth = authProcess.getByEmail(email);
+            fetch = authProcess.getByEmail(email);
         }
         catch (SQLException err){
             throw new RuntimeException("Server Error Try Again Later");
         }
-        boolean emailExists = fecth!=null;
+        boolean emailExists = fetch !=null;
         if(emailExists){
             throw new RuntimeException("The User Already Exists, Try To Sign In");
         }

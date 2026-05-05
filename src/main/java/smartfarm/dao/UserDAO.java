@@ -1,12 +1,10 @@
 package smartfarm.dao;
 import smartfarm.model.User;
 
-import smartfarm.model.User;
 import smartfarm.util.DBConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAO implements GenericDAO<User> {
@@ -28,7 +26,7 @@ public class UserDAO implements GenericDAO<User> {
     }
 
     @Override
-    public ArrayList<User> getAll() throws SQLException {
+    public List<User> getAll() throws SQLException {
         return new ArrayList<>(); //placeholder
     }
 

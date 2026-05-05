@@ -15,13 +15,13 @@ public class WorkerService {
 
     public void addWorker(Worker worker){
         if(worker.getUserId() != -1){
-            throw new RuntimeException("The Worker ID Exists Already");
+            throw new RuntimeException("Server Error! Try again later");
         }
         try{
             workerProcess.save(worker);
         }
         catch (SQLException err){
-            throw new RuntimeException("Server Error Try Again Later");
+            throw new RuntimeException("Server Error! Try again later");
         }
     }
 
@@ -31,7 +31,7 @@ public class WorkerService {
             allWorkers = workerProcess.getAll();
         }
         catch (SQLException err) {
-            throw new RuntimeException("Server Error Try Again Later");
+            throw new RuntimeException("Server Error! Try again later");
         }
         ArrayList<Worker> avaliableWorkers = new ArrayList<>();
         for(Worker worker:allWorkers){
@@ -47,7 +47,10 @@ public class WorkerService {
             worker = workerProcess.getById(id);
         }
         catch (SQLException err){
-            throw new RuntimeException("Server Error Try Again Later");
+            throw new RuntimeException("Server Error! Try again later");
+        }
+        if (worker == null) {
+            throw new RuntimeException("Worker not found");
         }
         return worker.getActiveTaskCount();
     }
@@ -58,7 +61,10 @@ public class WorkerService {
             worker = workerProcess.getByEmail(email);
         }
         catch (SQLException err){
-            throw new RuntimeException("Server Error Try Again Later");
+            throw new RuntimeException("Server Error! Try again later");
+        }
+        if (worker == null) {
+            throw new RuntimeException("Worker not found");
         }
         return worker.getActiveTaskCount();
     }
