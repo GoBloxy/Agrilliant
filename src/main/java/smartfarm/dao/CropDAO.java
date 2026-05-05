@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-public class CropDAO {
+public class CropDAO implements GenericDAO<Crop> {
     private final Connection conn = DBConnection.getInstance();
 
     // TODO: addCrop, getCropById, getCropsByPlot, updateGrowthStage, getOverdueCrops

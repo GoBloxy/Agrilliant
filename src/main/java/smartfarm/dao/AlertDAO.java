@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-public class AlertDAO {
+public class AlertDAO implements GenericDAO<Alert> {
     private final Connection conn = DBConnection.getInstance();
 
     // TODO: save, getUnresolved, markResolved, getAlertsByPlot

@@ -7,7 +7,7 @@ import smartfarm.util.DBConnection;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class UserDAO {
+public class UserDAO implements GenericDAO<User> {
     private final Connection conn = DBConnection.getInstance();
 
     // TODO: register(User user) — INSERT into users

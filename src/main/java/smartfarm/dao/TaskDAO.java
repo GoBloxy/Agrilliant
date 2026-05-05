@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-public class TaskDAO {
+public class TaskDAO implements GenericDAO<Task> {
     private final Connection conn = DBConnection.getInstance();
 
     // TODO: addTask, getActiveTaskCount, getOverdueTasks, advanceStatus, getTasksByWorker
