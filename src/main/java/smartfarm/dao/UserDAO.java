@@ -6,27 +6,42 @@ import smartfarm.util.DBConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDAO implements GenericDAO<User> {
     private final Connection conn = DBConnection.getInstance();
 
-    // TODO: register(User user) — INSERT into users
-    public void register(User user){
+
+    public void save(User user) throws SQLException {
 
     }
 
-    // TODO: findByEmail(String email) — SELECT for login
-    public User findByEmail(String email){
+
+    public User getById(int id) throws SQLException {
         return new User("placehlder", "placehlder", "placehlder", User.Role.FARMER);
     }
 
-    // TODO: emailExists(String email) — check if already avaliable
-    public boolean emailExists(String email){
-        return false; //placeholder
+
+    public User getByEmail(String email) throws SQLException {
+        return new User("placehlder", "placehlder", "placehlder", User.Role.FARMER);
     }
 
-    // TODO: getHash(String email) — returns the hash to validate it
-    public String getHash(String email){
-        return "hash"; //placeholder
+
+    public List<User> getAll() throws SQLException {
+        return new ArrayList<>(); //placeholder
     }
+
+
+    public void update(User item) throws SQLException {
+
+    }
+
+
+    public void delete(int id) throws SQLException {
+
+    }
+
+
+
 }
