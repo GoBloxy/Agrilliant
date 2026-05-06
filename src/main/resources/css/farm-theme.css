@@ -1,0 +1,193 @@
+/* ═══════════════ Smart Farm Green Theme ═══════════════ */
+/* Applied on top of AtlantaFX PrimerLight base theme     */
+
+/* ── Root: Override accent colors to green ── */
+.root {
+    -color-accent-fg:        #2e7d32;
+    -color-accent-emphasis:  #388e3c;
+    -color-accent-muted:     #a5d6a7;
+    -color-accent-subtle:    #e8f5e9;
+    -fx-font-family:         "Segoe UI", system;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+    -fx-background-color: #1b3a1d;
+    -fx-min-width: 200;
+}
+
+#sidebar .label {
+    -fx-text-fill: #c8e6c9;
+}
+
+#sidebar .title-3 {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+#sidebar .text-muted {
+    -fx-text-fill: #81c784;
+}
+
+#sidebar .separator .line {
+    -fx-border-color: #2e7d32;
+}
+
+/* Sidebar nav buttons */
+#sidebar .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c8e6c9;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 8 15 8 15;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+#sidebar .button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+#sidebar .button.accent {
+    -fx-background-color: #2e7d32;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* ── Cards (bordered panels) ── */
+.bordered {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 2);
+}
+
+/* ── Top bar ── */
+.bg-subtle {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: transparent transparent #e0e0e0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* ── Sensor value labels ── */
+.title-2 {
+    -fx-font-size: 28;
+    -fx-font-weight: bold;
+}
+
+.title-3 {
+    -fx-font-size: 18;
+    -fx-font-weight: bold;
+}
+
+.title-4 {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+}
+
+.text-muted {
+    -fx-text-fill: #6c757d;
+    -fx-font-size: 12;
+}
+
+/* ── Status badges ── */
+.badge-high {
+    -fx-background-color: #ffebee;
+    -fx-text-fill: #c62828;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 4;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+}
+
+.badge-medium {
+    -fx-background-color: #fff3e0;
+    -fx-text-fill: #e65100;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 4;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+}
+
+.badge-low {
+    -fx-background-color: #e8f5e9;
+    -fx-text-fill: #2e7d32;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 4;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+}
+
+.badge-normal {
+    -fx-background-color: #e8f5e9;
+    -fx-text-fill: #2e7d32;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 4;
+    -fx-font-size: 11;
+}
+
+/* ── Quick Action buttons ── */
+.button.accent {
+    -fx-background-color: #2e7d32;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+.button.accent:hover {
+    -fx-background-color: #1b5e20;
+}
+
+/* ── Hyperlinks ── */
+.hyperlink {
+    -fx-text-fill: #2e7d32;
+    -fx-font-size: 12;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: #1b5e20;
+}
+
+/* ── Tables ── */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.table-view .column-header {
+    -fx-background-color: #f5f5f5;
+    -fx-font-weight: bold;
+    -fx-font-size: 12;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: #fafafa;
+}
+
+/* ── ListView ── */
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+/* ── Chart ── */
+.chart {
+    -fx-background-color: white;
+}
+
+.chart-plot-background {
+    -fx-background-color: white;
+}
+
+/* ── ScrollPane ── */
+.scroll-pane {
+    -fx-background-color: #f0f2f5;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: #f0f2f5;
+}

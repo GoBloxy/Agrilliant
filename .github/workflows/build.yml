@@ -1,0 +1,94 @@
+name: Build Installers
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  # ── Windows .exe ──
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+
+      - name: Build JAR
+        run: mvn clean package -DskipTests
+
+      - name: Package as .exe
+        run: |
+          jpackage `
+            --input target `
+            --main-jar smart-farm-1.0-SNAPSHOT.jar `
+            --main-class smartfarm.Main `
+            --name "Smart Farm" `
+            --type exe `
+            --dest target/installer `
+            --vendor "Agrilliant" `
+            --app-version 1.0.0 `
+            --icon src/main/resources/icon.ico `
+            --module-path "$env:JAVA_HOME/jmods" `
+            --add-modules javafx.controls,javafx.fxml `
+            --java-options "--add-opens javafx.graphics/com.sun.glass.utils=ALL-UNNAMED"
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-farm-windows-exe
+          path: target/installer/*.exe
+
+  # ── Linux binary ──
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+
+      - name: Build JAR
+        run: mvn clean package -DskipTests
+
+      - name: Package as .deb
+        run: |
+          jpackage \
+            --input target \
+            --main-jar smart-farm-1.0-SNAPSHOT.jar \
+            --main-class smartfarm.Main \
+            --name "smart-farm" \
+            --type deb \
+            --dest target/installer \
+            --vendor "Agrilliant" \
+            --app-version 1.0.0 \
+            --module-path "$JAVA_HOME/jmods" \
+            --add-modules javafx.controls,javafx.fxml \
+            --java-options "--add-opens javafx.graphics/com.sun.glass.utils=ALL-UNNAMED"
+
+      - name: Upload Linux installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-farm-linux-deb
+          path: target/installer/*.deb
