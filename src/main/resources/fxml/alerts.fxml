@@ -1,10 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<!-- Alerts — display and resolve alerts with colour-coded severity -->
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.AlertController">
+<!-- Alerts Page — display, filter, and resolve alerts with colour-coded severity -->
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.AlertController"
+      spacing="14" styleClass="content-pane">
+    <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
-    <!-- TODO: Alert table with severity/message/time columns, resolve button -->
+    <!-- ═══════════════ PAGE HEADER ═══════════════ -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <FontIcon iconLiteral="fth-bell" iconSize="24" styleClass="alert-page-icon"/>
+        <VBox spacing="1">
+            <Label text="Alerts" styleClass="page-title"/>
+            <Label text="Monitor and manage farm alerts" styleClass="page-subtitle"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Refresh" onAction="#onRefresh" styleClass="action-btn" graphicTextGap="6">
+            <graphic><FontIcon iconLiteral="fth-refresh-cw" iconSize="14"/></graphic>
+        </Button>
+    </HBox>
 
-</BorderPane>
+    <!-- ═══════════════ SUMMARY CARDS ═══════════════ -->
+    <HBox spacing="12">
+        <!-- Total Alerts -->
+        <VBox styleClass="card,alert-summary-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
+            <padding><Insets top="16" right="14" bottom="16" left="14"/></padding>
+            <HBox alignment="CENTER" spacing="6">
+                <FontIcon iconLiteral="fth-bell" iconSize="16" styleClass="summary-icon-total"/>
+                <Label text="Total Alerts" styleClass="summary-label"/>
+            </HBox>
+            <Label fx:id="lblTotalAlerts" text="0" styleClass="summary-value"/>
+        </VBox>
+
+        <!-- Unresolved -->
+        <VBox styleClass="card,alert-summary-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
+            <padding><Insets top="16" right="14" bottom="16" left="14"/></padding>
+            <HBox alignment="CENTER" spacing="6">
+                <FontIcon iconLiteral="fth-alert-circle" iconSize="16" styleClass="summary-icon-unresolved"/>
+                <Label text="Unresolved" styleClass="summary-label"/>
+            </HBox>
+            <Label fx:id="lblUnresolved" text="0" styleClass="summary-value,summary-value-warning"/>
+        </VBox>
+
+        <!-- Critical -->
+        <VBox styleClass="card,alert-summary-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
+            <padding><Insets top="16" right="14" bottom="16" left="14"/></padding>
+            <HBox alignment="CENTER" spacing="6">
+                <FontIcon iconLiteral="fth-alert-triangle" iconSize="16" styleClass="summary-icon-critical"/>
+                <Label text="Critical" styleClass="summary-label"/>
+            </HBox>
+            <Label fx:id="lblCritical" text="0" styleClass="summary-value,summary-value-critical"/>
+        </VBox>
+
+        <!-- Resolved -->
+        <VBox styleClass="card,alert-summary-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
+            <padding><Insets top="16" right="14" bottom="16" left="14"/></padding>
+            <HBox alignment="CENTER" spacing="6">
+                <FontIcon iconLiteral="fth-check-circle" iconSize="16" styleClass="summary-icon-resolved"/>
+                <Label text="Resolved" styleClass="summary-label"/>
+            </HBox>
+            <Label fx:id="lblResolved" text="0" styleClass="summary-value,summary-value-resolved"/>
+        </VBox>
+    </HBox>
+
+    <!-- ═══════════════ FILTER BAR + TABLE ═══════════════ -->
+    <VBox styleClass="card" spacing="0" VBox.vgrow="ALWAYS">
+        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+
+        <!-- Filter Toolbar -->
+        <HBox alignment="CENTER_LEFT" spacing="8">
+            <Label text="Alert History" styleClass="card-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnAll"          text="All"         onAction="#onFilterAll"        styleClass="filter-btn,filter-active" graphicTextGap="4">
+                <graphic><FontIcon iconLiteral="fth-list" iconSize="12"/></graphic>
+            </Button>
+            <Button fx:id="btnUnresolved"   text="Unresolved"  onAction="#onFilterUnresolved" styleClass="filter-btn" graphicTextGap="4">
+                <graphic><FontIcon iconLiteral="fth-alert-circle" iconSize="12"/></graphic>
+            </Button>
+            <Button fx:id="btnCriticalOnly" text="Critical"    onAction="#onFilterCritical"   styleClass="filter-btn" graphicTextGap="4">
+                <graphic><FontIcon iconLiteral="fth-alert-triangle" iconSize="12"/></graphic>
+            </Button>
+        </HBox>
+
+        <Region prefHeight="10"/>
+
+        <!-- Alert Table -->
+        <TableView fx:id="alertTable" VBox.vgrow="ALWAYS" styleClass="alert-table">
+            <columns>
+                <TableColumn fx:id="colSeverity"  text="Severity"   prefWidth="100" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colType"      text="Type"       prefWidth="120" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colMessage"   text="Message"    prefWidth="300" reorderable="false"/>
+                <TableColumn fx:id="colPlot"      text="Plot"       prefWidth="60"  reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colTimestamp"  text="Timestamp"  prefWidth="180" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colStatus"    text="Status"     prefWidth="100" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colAction"    text="Action"     prefWidth="110" reorderable="false" resizable="false" sortable="false"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <!-- ═══════════════ STATUS BAR ═══════════════ -->
+    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="alert-status-bar">
+        <padding><Insets top="4" right="14" bottom="4" left="14"/></padding>
+        <FontIcon iconLiteral="fth-info" iconSize="12" styleClass="status-bar-icon"/>
+        <Label fx:id="lblStatusMessage" text="Ready" styleClass="status-bar-text"/>
+    </HBox>
+
+</VBox>

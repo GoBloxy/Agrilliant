@@ -463,3 +463,138 @@
 .default-color0.chart-line-symbol { -fx-background-color: #ef4444, white; }
 .default-color1.chart-line-symbol { -fx-background-color: #3b82f6, white; }
 
+/* ═══════════════ ALERTS PAGE ═══════════════ */
+
+/* Page header */
+.page-title {
+    -fx-text-fill: #1f2937;
+    -fx-font-size: 20;
+    -fx-font-weight: bold;
+}
+
+.page-subtitle {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12;
+}
+
+.alert-page-icon {
+    -fx-icon-color: #f59e0b;
+}
+
+/* ── Summary Cards ── */
+.alert-summary-card {
+    -fx-background-color: white;
+}
+
+.summary-label {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+}
+
+.summary-value {
+    -fx-text-fill: #1f2937;
+    -fx-font-size: 28;
+    -fx-font-weight: bold;
+}
+
+.summary-value-warning {
+    -fx-text-fill: #d97706;
+}
+
+.summary-value-critical {
+    -fx-text-fill: #dc2626;
+}
+
+.summary-value-resolved {
+    -fx-text-fill: #16a34a;
+}
+
+.summary-icon-total      { -fx-icon-color: #6366f1; }
+.summary-icon-unresolved { -fx-icon-color: #f59e0b; }
+.summary-icon-critical   { -fx-icon-color: #ef4444; }
+.summary-icon-resolved   { -fx-icon-color: #22c55e; }
+
+/* ── Filter Buttons ── */
+.filter-btn {
+    -fx-background-color: white;
+    -fx-text-fill: #374151;
+    -fx-background-radius: 6;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12 6 12;
+}
+
+.filter-btn:hover {
+    -fx-background-color: #f3f4f6;
+}
+
+.filter-btn.filter-active {
+    -fx-background-color: #2e7d32;
+    -fx-text-fill: white;
+    -fx-border-color: #2e7d32;
+}
+
+.filter-btn.filter-active .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.filter-btn .ikonli-font-icon {
+    -fx-icon-color: #6b7280;
+}
+
+/* ── Active (unresolved) badge ── */
+.badge-active {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
+}
+
+/* ── Resolve Button ── */
+.resolve-btn {
+    -fx-background-color: #ecfdf5;
+    -fx-text-fill: #065f46;
+    -fx-background-radius: 6;
+    -fx-border-color: #a7f3d0;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10 4 10;
+}
+
+.resolve-btn:hover {
+    -fx-background-color: #d1fae5;
+    -fx-border-color: #6ee7b7;
+}
+
+.resolve-btn .ikonli-font-icon {
+    -fx-icon-color: #16a34a;
+}
+
+.resolved-label {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 11;
+}
+
+/* ── Status Bar ── */
+.alert-status-bar {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.status-bar-icon {
+    -fx-icon-color: #9ca3af;
+}
+
+.status-bar-text {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 11;
+}

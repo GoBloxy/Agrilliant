@@ -1,6 +1,7 @@
 package smartfarm.ui;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
@@ -16,6 +17,8 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import smartfarm.service.LiveSensorData;
 import smartfarm.util.DBConnection;
+
+import java.io.IOException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -171,7 +174,7 @@ public class DashboardController {
     // ═══════════════ NAVIGATION HANDLERS ═══════════════
     @FXML private void onNavDashboard()  { showPage(dashboardPage,  btnDashboard); }
     @FXML private void onNavMonitoring() { showPlaceholder("Monitoring",   "fth-activity",     btnMonitoring); }
-    @FXML private void onNavAlerts()     { showPlaceholder("Alerts",       "fth-bell",         btnAlerts); }
+    @FXML private void onNavAlerts()     { loadFxmlPage("/fxml/alerts.fxml", btnAlerts); }
     @FXML private void onNavCropsList()  { showPlaceholder("Crops",        "fth-feather",      btnCropsCrops); }
     @FXML private void onNavPlotsList()  { showPlaceholder("Plots",        "fth-map",          btnCropsPlots); }
     @FXML private void onNavWorkers()    { showPlaceholder("Workers",      "fth-users",        btnWorkers); }
@@ -185,6 +188,20 @@ public class DashboardController {
     private void showPage(Node page, Button navBtn) {
         pageContainer.getChildren().setAll(page);
         setActiveNav(navBtn);
+    }
+
+    /**
+     * Loads an FXML file and displays it in the page container.
+     * Falls back to a placeholder if the FXML fails to load.
+     */
+    private void loadFxmlPage(String fxmlPath, Button navBtn) {
+        try {
+            Node page = FXMLLoader.load(getClass().getResource(fxmlPath));
+            showPage(page, navBtn);
+        } catch (IOException e) {
+            System.err.println("Failed to load " + fxmlPath + ": " + e.getMessage());
+            showPlaceholder("Error", "fth-alert-circle", navBtn);
+        }
     }
 
     private void showPlaceholder(String title, String iconName, Button navBtn) {
