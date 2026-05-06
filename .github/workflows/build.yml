@@ -45,7 +45,7 @@ jobs:
             --main-class smartfarm.Launcher `
             --name "Agrilliant" `
             --type exe `
-            --dest target/installer `
+            --dest dist `
             --vendor "Agrilliant" `
             --app-version 1.0.0 `
             --icon src/main/resources/images/logo.png `
@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: agrilliant-windows-exe
-          path: target/installer/*.exe
+          path: dist/*.exe
 
   # ── Linux binary ──
   build-linux:
@@ -93,7 +93,7 @@ jobs:
             --main-class smartfarm.Launcher \
             --name "Agrilliant" \
             --type app-image \
-            --dest target/installer \
+            --dest dist \
             --vendor "Agrilliant" \
             --app-version 1.0.0 \
             --icon src/main/resources/images/logo.png \
@@ -101,10 +101,10 @@ jobs:
             --add-modules javafx.controls,javafx.fxml \
             --java-options "--add-opens javafx.graphics/com.sun.glass.utils=ALL-UNNAMED"
           # Create a .bin archive from the app-image
-          cd target/installer && tar czf Agrilliant-1.0.0-linux.bin Agrilliant/
+          cd dist && tar czf Agrilliant-1.0.0-linux.bin Agrilliant/
 
       - name: Upload Linux binary
         uses: actions/upload-artifact@v4
         with:
           name: agrilliant-linux-bin
-          path: target/installer/*.bin
+          path: dist/*.bin
