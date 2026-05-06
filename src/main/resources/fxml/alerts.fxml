@@ -2,110 +2,257 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.shape.*?>
 <?import javafx.geometry.Insets?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!-- Alerts Page — display, filter, and resolve alerts with colour-coded severity -->
-<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.AlertController"
-      spacing="14" styleClass="content-pane">
-    <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
+<HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.AlertController"
+      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="800">
 
-    <!-- ═══════════════ PAGE HEADER ═══════════════ -->
-    <HBox alignment="CENTER_LEFT" spacing="12">
-        <FontIcon iconLiteral="fth-bell" iconSize="24" styleClass="alert-page-icon"/>
-        <VBox spacing="1">
-            <Label text="Alerts" styleClass="page-title"/>
-            <Label text="Monitor and manage farm alerts" styleClass="page-subtitle"/>
-        </VBox>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Refresh" onAction="#onRefresh" styleClass="action-btn" graphicTextGap="6">
-            <graphic><FontIcon iconLiteral="fth-refresh-cw" iconSize="14"/></graphic>
-        </Button>
-    </HBox>
+    <!-- ═══════════════ LEFT CONTENT (Filters, Cards, Table) ═══════════════ -->
+    <VBox spacing="14" HBox.hgrow="ALWAYS">
+        <padding><Insets top="14" right="0" bottom="14" left="18"/></padding>
 
-    <!-- ═══════════════ SUMMARY CARDS ═══════════════ -->
-    <HBox spacing="12">
-        <!-- Total Alerts -->
-        <VBox styleClass="card,alert-summary-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
-            <padding><Insets top="16" right="14" bottom="16" left="14"/></padding>
-            <HBox alignment="CENTER" spacing="6">
-                <FontIcon iconLiteral="fth-bell" iconSize="16" styleClass="summary-icon-total"/>
-                <Label text="Total Alerts" styleClass="summary-label"/>
+        <!-- Filters Bar -->
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <ComboBox fx:id="cmbSeverity" promptText="All Severity" styleClass="filter-combo"/>
+            <ComboBox fx:id="cmbStatus" promptText="All Status" styleClass="filter-combo"/>
+            
+            <HBox alignment="CENTER_LEFT" styleClass="search-box">
+                <padding><Insets right="8" left="8"/></padding>
+                <TextField fx:id="txtSearch" promptText="Search by plot or type..." styleClass="search-field"/>
+                <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
             </HBox>
-            <Label fx:id="lblTotalAlerts" text="0" styleClass="summary-value"/>
-        </VBox>
-
-        <!-- Unresolved -->
-        <VBox styleClass="card,alert-summary-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
-            <padding><Insets top="16" right="14" bottom="16" left="14"/></padding>
-            <HBox alignment="CENTER" spacing="6">
-                <FontIcon iconLiteral="fth-alert-circle" iconSize="16" styleClass="summary-icon-unresolved"/>
-                <Label text="Unresolved" styleClass="summary-label"/>
-            </HBox>
-            <Label fx:id="lblUnresolved" text="0" styleClass="summary-value,summary-value-warning"/>
-        </VBox>
-
-        <!-- Critical -->
-        <VBox styleClass="card,alert-summary-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
-            <padding><Insets top="16" right="14" bottom="16" left="14"/></padding>
-            <HBox alignment="CENTER" spacing="6">
-                <FontIcon iconLiteral="fth-alert-triangle" iconSize="16" styleClass="summary-icon-critical"/>
-                <Label text="Critical" styleClass="summary-label"/>
-            </HBox>
-            <Label fx:id="lblCritical" text="0" styleClass="summary-value,summary-value-critical"/>
-        </VBox>
-
-        <!-- Resolved -->
-        <VBox styleClass="card,alert-summary-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
-            <padding><Insets top="16" right="14" bottom="16" left="14"/></padding>
-            <HBox alignment="CENTER" spacing="6">
-                <FontIcon iconLiteral="fth-check-circle" iconSize="16" styleClass="summary-icon-resolved"/>
-                <Label text="Resolved" styleClass="summary-label"/>
-            </HBox>
-            <Label fx:id="lblResolved" text="0" styleClass="summary-value,summary-value-resolved"/>
-        </VBox>
-    </HBox>
-
-    <!-- ═══════════════ FILTER BAR + TABLE ═══════════════ -->
-    <VBox styleClass="card" spacing="0" VBox.vgrow="ALWAYS">
-        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
-
-        <!-- Filter Toolbar -->
-        <HBox alignment="CENTER_LEFT" spacing="8">
-            <Label text="Alert History" styleClass="card-title"/>
+            
             <Region HBox.hgrow="ALWAYS"/>
-            <Button fx:id="btnAll"          text="All"         onAction="#onFilterAll"        styleClass="filter-btn,filter-active" graphicTextGap="4">
-                <graphic><FontIcon iconLiteral="fth-list" iconSize="12"/></graphic>
-            </Button>
-            <Button fx:id="btnUnresolved"   text="Unresolved"  onAction="#onFilterUnresolved" styleClass="filter-btn" graphicTextGap="4">
-                <graphic><FontIcon iconLiteral="fth-alert-circle" iconSize="12"/></graphic>
-            </Button>
-            <Button fx:id="btnCriticalOnly" text="Critical"    onAction="#onFilterCritical"   styleClass="filter-btn" graphicTextGap="4">
-                <graphic><FontIcon iconLiteral="fth-alert-triangle" iconSize="12"/></graphic>
+            <Button fx:id="btnMarkAllRead" text="Mark All as Read" styleClass="btn-secondary" graphicTextGap="6">
+                <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
             </Button>
         </HBox>
 
-        <Region prefHeight="10"/>
+        <!-- Summary Cards -->
+        <HBox spacing="12">
+            <!-- Critical -->
+            <VBox styleClass="card,summary-card-critical" HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Critical Alerts" styleClass="summary-card-title"/>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <FontIcon iconLiteral="fth-alert-triangle" iconSize="32" styleClass="summary-icon-critical"/>
+                    <VBox>
+                        <Label fx:id="lblCritical" text="0" styleClass="summary-card-value"/>
+                        <Label text="Require immediate action" styleClass="summary-card-subtitle"/>
+                    </VBox>
+                </HBox>
+            </VBox>
 
-        <!-- Alert Table -->
-        <TableView fx:id="alertTable" VBox.vgrow="ALWAYS" styleClass="alert-table">
-            <columns>
-                <TableColumn fx:id="colSeverity"  text="Severity"   prefWidth="100" reorderable="false" resizable="false"/>
-                <TableColumn fx:id="colType"      text="Type"       prefWidth="120" reorderable="false" resizable="false"/>
-                <TableColumn fx:id="colMessage"   text="Message"    prefWidth="300" reorderable="false"/>
-                <TableColumn fx:id="colPlot"      text="Plot"       prefWidth="60"  reorderable="false" resizable="false"/>
-                <TableColumn fx:id="colTimestamp"  text="Timestamp"  prefWidth="180" reorderable="false" resizable="false"/>
-                <TableColumn fx:id="colStatus"    text="Status"     prefWidth="100" reorderable="false" resizable="false"/>
-                <TableColumn fx:id="colAction"    text="Action"     prefWidth="110" reorderable="false" resizable="false" sortable="false"/>
-            </columns>
-        </TableView>
+            <!-- Warnings -->
+            <VBox styleClass="card,summary-card-warning" HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Warnings" styleClass="summary-card-title"/>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <FontIcon iconLiteral="fth-alert-circle" iconSize="32" styleClass="summary-icon-warning"/>
+                    <VBox>
+                        <Label fx:id="lblWarnings" text="0" styleClass="summary-card-value"/>
+                        <Label text="Need attention" styleClass="summary-card-subtitle"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Resolved Today -->
+            <VBox styleClass="card,summary-card-resolved" HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Resolved Today" styleClass="summary-card-title"/>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <FontIcon iconLiteral="fth-check-circle" iconSize="32" styleClass="summary-icon-resolved"/>
+                    <VBox>
+                        <Label fx:id="lblResolved" text="0" styleClass="summary-card-value"/>
+                        <Label text="Alerts resolved" styleClass="summary-card-subtitle"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Active Alerts -->
+            <VBox styleClass="card,summary-card-active" HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Active Alerts" styleClass="summary-card-title"/>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <FontIcon iconLiteral="fth-thermometer" iconSize="32" styleClass="summary-icon-active"/>
+                    <VBox>
+                        <Label fx:id="lblUnresolved" text="0" styleClass="summary-card-value"/>
+                        <Label text="Currently open" styleClass="summary-card-subtitle"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </HBox>
+
+        <!-- Table Card -->
+        <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
+            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+            <Label text="All Alerts" styleClass="card-title"/>
+            
+            <TableView fx:id="alertTable" VBox.vgrow="ALWAYS" styleClass="alert-table">
+                <columns>
+                    <TableColumn fx:id="colSeverity"  text="Severity"   prefWidth="100" reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colType"      text="Type"       prefWidth="120" reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colPlot"      text="Plot"       prefWidth="100" reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colMessage"   text="Message"    prefWidth="220" reorderable="false"/>
+                    <TableColumn fx:id="colTimestamp" text="Time"       prefWidth="120" reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colStatus"    text="Status"     prefWidth="90"  reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colAction"    text="Actions"    prefWidth="80"  reorderable="false" resizable="false" sortable="false"/>
+                </columns>
+            </TableView>
+
+            <!-- Pagination Bar -->
+            <HBox alignment="CENTER_LEFT">
+                <Label fx:id="lblPagination" text="Showing 1 to 7 of 24 alerts" styleClass="pagination-text"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <HBox styleClass="pagination-controls" spacing="4">
+                    <Button text="&lt;" styleClass="page-btn"/>
+                    <Button text="1" styleClass="page-btn,page-btn-active"/>
+                    <Button text="2" styleClass="page-btn"/>
+                    <Button text="3" styleClass="page-btn"/>
+                    <Button text="&gt;" styleClass="page-btn"/>
+                </HBox>
+            </HBox>
+        </VBox>
     </VBox>
 
-    <!-- ═══════════════ STATUS BAR ═══════════════ -->
-    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="alert-status-bar">
-        <padding><Insets top="4" right="14" bottom="4" left="14"/></padding>
-        <FontIcon iconLiteral="fth-info" iconSize="12" styleClass="status-bar-icon"/>
-        <Label fx:id="lblStatusMessage" text="Ready" styleClass="status-bar-text"/>
-    </HBox>
+    <!-- ═══════════════ RIGHT PANEL (Alert Details) ═══════════════ -->
+    <VBox fx:id="detailPane" styleClass="card,detail-pane" prefWidth="380" minWidth="380" maxWidth="380" spacing="16">
+        <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
 
-</VBox>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Alert Details" styleClass="card-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnCloseDetails" styleClass="icon-btn" onAction="#onCloseDetails">
+                <graphic><FontIcon iconLiteral="fth-x" iconSize="16"/></graphic>
+            </Button>
+        </HBox>
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="detail-scroll">
+            <VBox spacing="20">
+                
+                <!-- Header Card inside details -->
+                <VBox spacing="10">
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Label fx:id="lblDetailSeverity" text="Critical" styleClass="badge,badge-high"/>
+                        <Circle radius="2" fill="#9ca3af"/>
+                        <Label fx:id="lblDetailStatus" text="Active" styleClass="detail-status-text"/>
+                    </HBox>
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <StackPane styleClass="detail-icon-bg,bg-critical" prefWidth="48" prefHeight="48">
+                            <FontIcon fx:id="detailIcon" iconLiteral="fth-thermometer" iconSize="24" styleClass="icon-critical"/>
+                        </StackPane>
+                        <VBox spacing="2">
+                            <Label fx:id="lblDetailTitle" text="Temperature Alert" styleClass="detail-title"/>
+                            <Label fx:id="lblDetailPlot" text="Plot 3 - North Field" styleClass="detail-subtitle"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- Message -->
+                <VBox spacing="4">
+                    <Label text="Message" styleClass="detail-section-title"/>
+                    <Label fx:id="lblDetailMessage" text="Temperature exceeded the safe threshold of 40°C. Current temperature is 42.6°C." wrapText="true" styleClass="detail-text"/>
+                </VBox>
+
+                <!-- Details Grid -->
+                <VBox spacing="8">
+                    <Label text="Details" styleClass="detail-section-title"/>
+                    <GridPane vgap="8" hgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="120" prefWidth="120"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        
+                        <HBox alignment="CENTER_LEFT" spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <FontIcon iconLiteral="fth-cpu" iconSize="14" styleClass="detail-grid-icon"/>
+                            <Label text="Sensor Type" styleClass="detail-grid-label"/>
+                        </HBox>
+                        <Label fx:id="lblGridSensorType" text="Temperature Sensor" styleClass="detail-grid-value" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.halignment="RIGHT"/>
+
+                        <HBox alignment="CENTER_LEFT" spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <FontIcon iconLiteral="fth-thermometer" iconSize="14" styleClass="detail-grid-icon"/>
+                            <Label text="Current Value" styleClass="detail-grid-label"/>
+                        </HBox>
+                        <Label fx:id="lblGridCurrentVal" text="42.6 °C" styleClass="detail-grid-value,text-critical" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.halignment="RIGHT"/>
+
+                        <HBox alignment="CENTER_LEFT" spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                            <FontIcon iconLiteral="fth-alert-triangle" iconSize="14" styleClass="detail-grid-icon"/>
+                            <Label text="Threshold" styleClass="detail-grid-label"/>
+                        </HBox>
+                        <Label fx:id="lblGridThreshold" text="&gt; 40 °C" styleClass="detail-grid-value" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>
+
+                        <HBox alignment="CENTER_LEFT" spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="3">
+                            <FontIcon iconLiteral="fth-clock" iconSize="14" styleClass="detail-grid-icon"/>
+                            <Label text="Triggered At" styleClass="detail-grid-label"/>
+                        </HBox>
+                        <Label fx:id="lblGridTriggered" text="May 21, 2025 10:42 AM" styleClass="detail-grid-value" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.halignment="RIGHT"/>
+
+                        <HBox alignment="CENTER_LEFT" spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="4">
+                            <FontIcon iconLiteral="fth-hash" iconSize="14" styleClass="detail-grid-icon"/>
+                            <Label text="Sensor ID" styleClass="detail-grid-label"/>
+                        </HBox>
+                        <Label fx:id="lblGridSensorId" text="TEMP-003" styleClass="detail-grid-value" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>
+                    </GridPane>
+                </VBox>
+
+                <!-- Recent Readings Chart -->
+                <VBox spacing="4">
+                    <Label text="Recent Readings" styleClass="detail-section-title"/>
+                    <LineChart fx:id="detailChart" prefHeight="140" maxHeight="140" legendVisible="false" animated="false" createSymbols="true">
+                        <xAxis><CategoryAxis fx:id="detailChartX" tickLabelsVisible="true"/></xAxis>
+                        <yAxis><NumberAxis fx:id="detailChartY" autoRanging="false" lowerBound="30" upperBound="45" tickUnit="5"/></yAxis>
+                    </LineChart>
+                </VBox>
+
+                <!-- Suggested Action -->
+                <VBox spacing="6">
+                    <Label text="Suggested Action" styleClass="detail-section-title"/>
+                    <VBox styleClass="suggested-action-box" spacing="6">
+                        <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                        <HBox alignment="TOP_LEFT" spacing="8">
+                            <FontIcon iconLiteral="fth-activity" iconSize="16" styleClass="action-icon-green"/>
+                            <Label text="Increase irrigation or activate cooling system" wrapText="true" styleClass="action-text"/>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT">
+                            <Region prefWidth="24"/>
+                            <Label text="Recommended" styleClass="badge-light-green"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- Related Task -->
+                <VBox spacing="6">
+                    <Label text="Related Task" styleClass="detail-section-title"/>
+                    <HBox styleClass="related-task-box" spacing="12" alignment="CENTER_LEFT">
+                        <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                        <StackPane styleClass="task-icon-bg" prefWidth="36" prefHeight="36">
+                            <FontIcon iconLiteral="fth-calendar" iconSize="16" styleClass="task-icon"/>
+                        </StackPane>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Task #124" styleClass="task-id"/>
+                            <Label text="Irrigate Plot 3" styleClass="task-title"/>
+                        </VBox>
+                        <HBox alignment="CENTER" spacing="4">
+                            <Label text="In Progress" styleClass="task-link"/>
+                            <FontIcon iconLiteral="fth-arrow-right" iconSize="14" styleClass="task-link"/>
+                        </HBox>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+
+        <!-- Bottom Actions -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="btnDetailResolve" text="Mark as Resolved" styleClass="btn-secondary" graphicTextGap="6" onAction="#onDetailResolve">
+                <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
+            </Button>
+            <Button fx:id="btnDetailCreateTask" text="+ Create Task" styleClass="btn-primary"/>
+        </HBox>
+
+    </VBox>
+
+</HBox>
