@@ -9,12 +9,12 @@ public class Task {
     private String description;
     private Status status;
     private LocalDate dueDate;
-    private int workerId;
+    private int workerId; // change this to be array maybe multiple users can join the same task
     private int plotId;
     private String alertType;
 
 
-    // with description
+    // with description and with id
     public Task(int taskId, String description, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
         this.taskId = taskId;
         this.description = description;
@@ -25,13 +25,57 @@ public class Task {
         this.alertType = alertType;
     }
 
-    // without description, description can be null
+    // with description and without id
+    public Task(String description, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
+        this.taskId = -1;
+        this.description = description;
+        this.status = status;
+        this.dueDate = dueDate;
+        this.workerId = workerId;
+        this.plotId = plotId;
+        this.alertType = alertType;
+    }
+
+    // without description and with id
     public Task(int taskId, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
         this.taskId = taskId;
         this.description = null;
         this.status = status;
         this.dueDate = dueDate;
         this.workerId = workerId;
+        this.plotId = plotId;
+        this.alertType = alertType;
+    }
+
+    // without description and without id
+    public Task(Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
+        this.taskId = -1;
+        this.description = null;
+        this.status = status;
+        this.dueDate = dueDate;
+        this.workerId = workerId;
+        this.plotId = plotId;
+        this.alertType = alertType;
+    }
+
+    // without description and without id and without workerId
+    public Task(Status status, LocalDate dueDate, int plotId, String alertType) {
+        this.taskId = -1;
+        this.description = null;
+        this.status = status;
+        this.dueDate = dueDate;
+        this.workerId = -1;
+        this.plotId = plotId;
+        this.alertType = alertType;
+    }
+
+    // with description and without id and without workerId
+    public Task(String description, Status status, LocalDate dueDate, int plotId, String alertType) {
+        this.taskId = -1;
+        this.description = description;
+        this.status = status;
+        this.dueDate = dueDate;
+        this.workerId = -1;
         this.plotId = plotId;
         this.alertType = alertType;
     }
