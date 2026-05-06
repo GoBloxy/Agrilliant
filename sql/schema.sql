@@ -7,7 +7,15 @@ USE agrilliant;
 -- Application users (sign-in / sign-up)
 -- Workers are also users with role='worker' and a phone number
 CREATE TABLE users (
-
+    user_id           INT AUTO_INCREMENT PRIMARY KEY,
+    email             VARCHAR(255) NOT NULL UNIQUE,
+    password_hash     VARCHAR(255) NOT NULL,
+    full_name         VARCHAR(100) NOT NULL,
+    role              ENUM('ADMIN','FARMER','WORKER') NOT NULL DEFAULT 'WORKER',
+    phone             VARCHAR(20),
+    active_task_count INT DEFAULT 0,
+    telegram_chat_id  VARCHAR(50),          -- nullable, set per-worker via bot
+    created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Plots of land on the farm

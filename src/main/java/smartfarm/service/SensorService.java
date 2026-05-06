@@ -31,4 +31,13 @@ public class SensorService {
         String digits = deviceId.replaceAll("[^0-9]", "");
         return digits.isEmpty() ? 1 : Integer.parseInt(digits);
     }
+
+    public java.util.List<SensorReading> getRecentReadings(int limit) {
+        try {
+            return sensorDAO.getRecent(limit);
+        } catch (SQLException e) {
+            System.err.println("[SensorService] Error fetching recent readings: " + e.getMessage());
+            return new java.util.ArrayList<>();
+        }
+    }
 }

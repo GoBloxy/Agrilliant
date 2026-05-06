@@ -29,10 +29,34 @@ public class SensorDAO implements GenericDAO<SensorReading> {
 
     // Get the last 50 readings for a device (newest first)
     public List<SensorReading> getLast50Readings(String deviceId) throws SQLException {
+        return getRecentForDevice(deviceId, 50);
+    }
+
+    public List<SensorReading> getRecentForDevice(String deviceId, int limit) throws SQLException {
         List<SensorReading> list = new ArrayList<>();
-        String sql = "SELECT * FROM sensor_readings WHERE device_id = ? ORDER BY timestamp DESC LIMIT 50";
+        String sql = "SELECT * FROM sensor_readings WHERE device_id = ? ORDER BY timestamp DESC LIMIT ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, deviceId);
+            stmt.setInt(2, limit);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(new SensorReading(
+                    rs.getInt("reading_id"),
+                    rs.getString("device_id"),
+                    rs.getFloat("temperature"),
+                    rs.getFloat("humidity"),
+                    rs.getObject("timestamp", LocalDateTime.class)
+                ));
+            }
+        }
+        return list;
+    }
+
+    public List<SensorReading> getRecent(int limit) throws SQLException {
+        List<SensorReading> list = new ArrayList<>();
+        String sql = "SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 list.add(new SensorReading(
