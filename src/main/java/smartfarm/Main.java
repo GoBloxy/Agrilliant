@@ -5,7 +5,9 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import smartfarm.server.FarmServer;
 
 /**
  * Entry point for the Smart Farm Management System.
@@ -19,13 +21,21 @@ public class Main extends Application {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
-        Scene scene = new Scene(root, 1280, 800);
+        Scene scene = new Scene(root, 1440, 900);
         scene.getStylesheets().add(getClass().getResource("/css/farm-theme.css").toExternalForm());
-        primaryStage.setTitle("Smart Farm Management System");
+        primaryStage.setTitle("Agrilliant — Smart Farm Management System");
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
         primaryStage.setScene(scene);
+        primaryStage.setMinWidth(1300);
+        primaryStage.setMinHeight(820);
+        primaryStage.setMaximized(true);
         primaryStage.show();
 
-        // TODO: Start FarmServer on a background thread
+        // Start TCP sensor server on a daemon thread (auto-stops when app closes)
+        Thread serverThread = new Thread(() -> new FarmServer().start());
+        serverThread.setDaemon(true);
+        serverThread.setName("FarmServer-TCP");
+        serverThread.start();
     }
 
     public static void main(String[] args) {

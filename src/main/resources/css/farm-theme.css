@@ -1,193 +1,465 @@
-/* ═══════════════ Smart Farm Green Theme ═══════════════ */
-/* Applied on top of AtlantaFX PrimerLight base theme     */
+/* ═══════════════ Smart Farm Dashboard Theme ═══════════════ */
+/* Applied on top of AtlantaFX PrimerLight                    */
 
-/* ── Root: Override accent colors to green ── */
+* {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
 .root {
     -color-accent-fg:        #2e7d32;
     -color-accent-emphasis:  #388e3c;
     -color-accent-muted:     #a5d6a7;
     -color-accent-subtle:    #e8f5e9;
-    -fx-font-family:         "Segoe UI", system;
 }
 
-/* ── Sidebar ── */
-#sidebar {
-    -fx-background-color: #1b3a1d;
-    -fx-min-width: 200;
+.dashboard-root {
+    -fx-background-color: #f5f7fa;
 }
 
-#sidebar .label {
-    -fx-text-fill: #c8e6c9;
+.content-area {
+    -fx-background-color: #f5f7fa;
 }
 
-#sidebar .title-3 {
-    -fx-text-fill: white;
+.content-pane {
+    -fx-background-color: #f5f7fa;
+}
+
+/* ── Page scroll ── */
+.page-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.page-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.page-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 10;
+}
+
+.page-scroll .scroll-bar .thumb {
+    -fx-background-color: #d1d5db;
+    -fx-background-radius: 5;
+}
+
+/* ── Placeholder pages ── */
+.placeholder-page {
+    -fx-background-color: #f5f7fa;
+}
+
+.placeholder-icon {
+    -fx-icon-color: #9ca3af;
+}
+
+.placeholder-title {
+    -fx-text-fill: #374151;
+    -fx-font-size: 24;
     -fx-font-weight: bold;
 }
 
-#sidebar .text-muted {
+.placeholder-subtitle {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 14;
+}
+
+/* ── Sub-nav (Crops > Crops/Plots) ── */
+.nav-btn.nav-sub {
+    -fx-padding: 6 14 6 30;
+    -fx-font-size: 12;
+}
+
+.nav-btn.nav-sub .ikonli-font-icon {
+    -fx-icon-color: #81c784;
+}
+
+/* ═══════════════ SIDEBAR ═══════════════ */
+.sidebar {
+    -fx-background-color: linear-gradient(to bottom, #143218, #0e2310);
+}
+
+.sidebar .label {
+    -fx-text-fill: #c8e6c9;
+}
+
+.sidebar-title {
+    -fx-text-fill: white;
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+}
+
+.sidebar-subtitle {
     -fx-text-fill: #81c784;
+    -fx-font-size: 10;
 }
 
-#sidebar .separator .line {
-    -fx-border-color: #2e7d32;
+.logo-circle {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-background-radius: 100;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-pref-width: 36;
+    -fx-pref-height: 36;
 }
 
-/* Sidebar nav buttons */
-#sidebar .button {
+.nav-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #c8e6c9;
     -fx-alignment: CENTER_LEFT;
-    -fx-padding: 8 15 8 15;
-    -fx-background-radius: 8;
+    -fx-padding: 9 14 9 14;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
+    -fx-font-size: 13;
 }
 
-#sidebar .button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.1);
+.nav-btn .ikonli-font-icon {
+    -fx-icon-color: #c8e6c9;
 }
 
-#sidebar .button.accent {
+.nav-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+}
+
+.nav-btn.nav-active {
     -fx-background-color: #2e7d32;
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
 
-/* ── Cards (bordered panels) ── */
-.bordered {
-    -fx-background-color: white;
-    -fx-background-radius: 10;
-    -fx-border-color: #e0e0e0;
-    -fx-border-radius: 10;
-    -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 2);
+.nav-btn.nav-active .ikonli-font-icon {
+    -fx-icon-color: white;
 }
 
-/* ── Top bar ── */
-.bg-subtle {
-    -fx-background-color: #f8f9fa;
-    -fx-border-color: transparent transparent #e0e0e0 transparent;
+/* Sidebar status card */
+.status-card {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 8;
+}
+
+.status-dot-online {
+    -fx-fill: #4caf50;
+}
+.status-dot-offline {
+    -fx-fill: #f44336;
+}
+
+.sidebar-status-title {
+    -fx-text-fill: white;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+}
+
+.sidebar-status-value {
+    -fx-text-fill: #81c784;
+    -fx-font-size: 10;
+}
+
+.sidebar-version {
+    -fx-text-fill: #66bb6a;
+    -fx-font-size: 10;
+    -fx-padding: 8 0 0 0;
+}
+
+/* ═══════════════ TOP BAR ═══════════════ */
+.topbar {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #e5e7eb transparent;
     -fx-border-width: 0 0 1 0;
 }
 
-/* ── Sensor value labels ── */
-.title-2 {
-    -fx-font-size: 28;
+.topbar-strong {
+    -fx-text-fill: #1f2937;
+    -fx-font-size: 13;
     -fx-font-weight: bold;
 }
 
-.title-3 {
-    -fx-font-size: 18;
-    -fx-font-weight: bold;
+.topbar-muted {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 11;
 }
 
-.title-4 {
+.weather-icon {
+    -fx-icon-color: #f59e0b;
+}
+
+.user-pill {
+    -fx-background-color: #f3f4f6;
+    -fx-background-radius: 30;
+    -fx-cursor: hand;
+}
+
+.avatar-circle {
+    -fx-background-color: #e0e7ff;
+    -fx-background-radius: 100;
+}
+
+.avatar-circle .ikonli-font-icon {
+    -fx-icon-color: #4338ca;
+}
+
+/* ═══════════════ CARDS ═══════════════ */
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 4, 0, 0, 1);
+}
+
+.card-title {
+    -fx-text-fill: #1f2937;
     -fx-font-size: 14;
     -fx-font-weight: bold;
 }
 
-.text-muted {
-    -fx-text-fill: #6c757d;
-    -fx-font-size: 12;
-}
-
-/* ── Status badges ── */
-.badge-high {
-    -fx-background-color: #ffebee;
-    -fx-text-fill: #c62828;
-    -fx-padding: 2 8 2 8;
-    -fx-background-radius: 4;
-    -fx-font-size: 11;
-    -fx-font-weight: bold;
-}
-
-.badge-medium {
-    -fx-background-color: #fff3e0;
-    -fx-text-fill: #e65100;
-    -fx-padding: 2 8 2 8;
-    -fx-background-radius: 4;
-    -fx-font-size: 11;
-    -fx-font-weight: bold;
-}
-
-.badge-low {
-    -fx-background-color: #e8f5e9;
-    -fx-text-fill: #2e7d32;
-    -fx-padding: 2 8 2 8;
-    -fx-background-radius: 4;
-    -fx-font-size: 11;
-    -fx-font-weight: bold;
-}
-
-.badge-normal {
-    -fx-background-color: #e8f5e9;
-    -fx-text-fill: #2e7d32;
-    -fx-padding: 2 8 2 8;
-    -fx-background-radius: 4;
-    -fx-font-size: 11;
-}
-
-/* ── Quick Action buttons ── */
-.button.accent {
-    -fx-background-color: #2e7d32;
-    -fx-text-fill: white;
+/* ═══════════════ SENSOR CARDS ═══════════════ */
+.sensor-card {
+    -fx-background-color: #fafafa;
     -fx-background-radius: 8;
-    -fx-padding: 10 20 10 20;
-    -fx-cursor: hand;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
 }
 
-.button.accent:hover {
-    -fx-background-color: #1b5e20;
+.sensor-label {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
 }
 
-/* ── Hyperlinks ── */
+.sensor-value {
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.sensor-plot {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 10;
+}
+
+.sensor-icon-temp  { -fx-icon-color: #ef4444; }
+.sensor-icon-hum   { -fx-icon-color: #3b82f6; }
+.sensor-icon-soil  { -fx-icon-color: #f59e0b; }
+.sensor-icon-light { -fx-icon-color: #eab308; }
+
+/* ═══════════════ BADGES ═══════════════ */
+.badge {
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 12;
+    -fx-font-size: 10;
+    -fx-font-weight: bold;
+}
+
+.badge-normal  { -fx-background-color: #d1fae5; -fx-text-fill: #065f46; }
+.badge-low     { -fx-background-color: #fef3c7; -fx-text-fill: #92400e; }
+.badge-medium  { -fx-background-color: #fed7aa; -fx-text-fill: #9a3412; }
+.badge-high    { -fx-background-color: #fecaca; -fx-text-fill: #991b1b; }
+.badge-info    { -fx-background-color: #dbeafe; -fx-text-fill: #1e40af; }
+
+/* ═══════════════ FIELD OVERVIEW MAP ═══════════════ */
+.field-map {
+    -fx-background-color: linear-gradient(to bottom right, #d4e6c4, #a8c98a);
+    -fx-background-radius: 8;
+    -fx-border-color: #86b366;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.plot-normal {
+    -fx-fill: #66bb6a;
+    -fx-stroke: #2e7d32;
+    -fx-stroke-width: 2;
+    -fx-arc-width: 12;
+    -fx-arc-height: 12;
+    -fx-opacity: 0.85;
+}
+
+.plot-warning {
+    -fx-fill: #ffb74d;
+    -fx-stroke: #ef6c00;
+    -fx-stroke-width: 2;
+    -fx-arc-width: 12;
+    -fx-arc-height: 12;
+    -fx-opacity: 0.85;
+}
+
+.plot-critical {
+    -fx-fill: #ef5350;
+    -fx-stroke: #b71c1c;
+    -fx-stroke-width: 2;
+    -fx-arc-width: 12;
+    -fx-arc-height: 12;
+    -fx-opacity: 0.9;
+}
+
+.plot-label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 2, 0, 0, 1);
+}
+
+.legend-normal   { -fx-fill: #66bb6a; }
+.legend-warning  { -fx-fill: #ffb74d; }
+.legend-critical { -fx-fill: #ef5350; }
+.legend-offline  { -fx-fill: #9ca3af; }
+
+.legend-text {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 11;
+}
+
+/* ═══════════════ HYPERLINKS ═══════════════ */
 .hyperlink {
     -fx-text-fill: #2e7d32;
-    -fx-font-size: 12;
+    -fx-font-size: 11;
+    -fx-underline: false;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
 }
 
 .hyperlink:hover {
     -fx-text-fill: #1b5e20;
+    -fx-underline: true;
 }
 
-/* ── Tables ── */
+.link-end {
+    -fx-padding: 5 0 0 0;
+}
+
+/* ═══════════════ TABLES ═══════════════ */
 .table-view {
-    -fx-background-color: white;
-    -fx-border-color: #e0e0e0;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #f9fafb;
+    -fx-background-radius: 6 6 0 0;
 }
 
 .table-view .column-header {
-    -fx-background-color: #f5f5f5;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #e5e7eb transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 11;
     -fx-font-weight: bold;
-    -fx-font-size: 12;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-view .table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #f3f4f6 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 36;
 }
 
 .table-view .table-row-cell:odd {
-    -fx-background-color: #fafafa;
+    -fx-background-color: white;
 }
 
-/* ── ListView ── */
-.list-view {
+.table-view .table-cell {
+    -fx-text-fill: #1f2937;
+    -fx-font-size: 12;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 6 10 6 10;
+}
+
+/* ═══════════════ LIST VIEW (alerts/tasks) ═══════════════ */
+.ghost-list {
     -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.ghost-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 6 4 6 4;
+    -fx-border-color: transparent transparent #f3f4f6 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-text-fill: #1f2937;
+    -fx-font-size: 12;
+}
+
+.ghost-list .list-cell:empty {
     -fx-border-color: transparent;
 }
 
-/* ── Chart ── */
-.chart {
+/* ═══════════════ ACTION BUTTONS ═══════════════ */
+.action-btn {
+    -fx-background-color: #ecfdf5;
+    -fx-text-fill: #065f46;
+    -fx-background-radius: 8;
+    -fx-border-color: #a7f3d0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-content-display: TOP;
+    -fx-padding: 12 8 12 8;
+}
+
+.action-btn:hover {
+    -fx-background-color: #d1fae5;
+}
+
+.action-btn .ikonli-font-icon {
+    -fx-icon-color: #2e7d32;
+}
+
+.export-btn {
     -fx-background-color: white;
+    -fx-text-fill: #1f2937;
+    -fx-background-radius: 6;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+    -fx-font-size: 12;
+    -fx-padding: 8 12 8 12;
+}
+
+.export-btn:hover {
+    -fx-background-color: #f9fafb;
+}
+
+.export-btn .ikonli-font-icon {
+    -fx-icon-color: #6b7280;
+}
+
+/* ═══════════════ CHART ═══════════════ */
+.chart {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
 }
 
 .chart-plot-background {
     -fx-background-color: white;
 }
 
-/* ── ScrollPane ── */
-.scroll-pane {
-    -fx-background-color: #f0f2f5;
+.chart-vertical-grid-lines,
+.chart-horizontal-grid-lines {
+    -fx-stroke: #f3f4f6;
 }
 
-.scroll-pane > .viewport {
-    -fx-background-color: #f0f2f5;
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 4 0 4 0;
 }
+
+.default-color0.chart-series-line { -fx-stroke: #ef4444; -fx-stroke-width: 2; }
+.default-color1.chart-series-line { -fx-stroke: #3b82f6; -fx-stroke-width: 2; }
+.default-color0.chart-line-symbol { -fx-background-color: #ef4444, white; }
+.default-color1.chart-line-symbol { -fx-background-color: #3b82f6, white; }
+

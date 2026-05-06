@@ -1,6 +1,7 @@
 package smartfarm.server;
 
 import smartfarm.model.SensorReading;
+import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
 
 import java.io.BufferedReader;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 public class SensorHandler implements Runnable {
     private final Socket socket;
     private final SensorService sensorService = new SensorService();
+    private String lastDeviceId;
 
     public SensorHandler(Socket socket) {
         this.socket = socket;
@@ -25,11 +27,16 @@ public class SensorHandler implements Runnable {
             while ((line = reader.readLine()) != null) {
                 SensorReading reading = parseReading(line);
                 if (reading != null) {
+                    lastDeviceId = reading.getDeviceId();
                     sensorService.processReading(reading);
                 }
             }
         } catch (IOException e) {
             System.out.println("Device disconnected: " + socket.getInetAddress());
+        } finally {
+            if (lastDeviceId != null) {
+                LiveSensorData.getInstance().removeDevice(lastDeviceId);
+            }
         }
     }
 

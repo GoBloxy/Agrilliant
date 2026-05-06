@@ -3,237 +3,402 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.chart.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.shape.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.DashboardController"
-            prefWidth="1280" prefHeight="800" styleClass="bg-default">
+<HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.DashboardController"
+      prefWidth="1440" prefHeight="900" styleClass="dashboard-root">
 
     <!-- ═══════════════ LEFT SIDEBAR ═══════════════ -->
-    <left>
-        <VBox fx:id="sidebar" prefWidth="200" spacing="5" styleClass="bg-subtle">
-            <padding><Insets top="15" right="10" bottom="15" left="10"/></padding>
+        <VBox fx:id="sidebar" prefWidth="240" minWidth="240" maxWidth="240" spacing="3" styleClass="sidebar">
+            <padding><Insets top="20" right="15" bottom="15" left="15"/></padding>
 
-            <!-- App Title -->
-            <Label text="Smart Farm" styleClass="title-3"/>
-            <Label text="Management System" styleClass="text-muted"/>
-            <Separator/>
+            <!-- Logo + App Title -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <ImageView fitWidth="36" fitHeight="36" preserveRatio="true" smooth="true">
+                    <image><Image url="@../images/logo.png"/></image>
+                </ImageView>
+                <VBox spacing="0">
+                    <Label text="Agrilliant" styleClass="sidebar-title"/>
+                    <Label text="Smart Farm System" styleClass="sidebar-subtitle"/>
+                </VBox>
+            </HBox>
 
-            <!-- Navigation Buttons -->
-            <Button fx:id="btnDashboard"   text="Dashboard"      maxWidth="Infinity" styleClass="accent"/>
-            <Button fx:id="btnMonitoring"  text="Monitoring"     maxWidth="Infinity" styleClass="flat"/>
-            <Button fx:id="btnAlerts"      text="Alerts"         maxWidth="Infinity" styleClass="flat"/>
-            <Button fx:id="btnCrops"       text="Crops &amp; Plots"  maxWidth="Infinity" styleClass="flat"/>
-            <Button fx:id="btnWorkers"     text="Workers"        maxWidth="Infinity" styleClass="flat"/>
-            <Button fx:id="btnTasks"       text="Tasks"          maxWidth="Infinity" styleClass="flat"/>
-            <Button fx:id="btnHarvests"    text="Harvests"       maxWidth="Infinity" styleClass="flat"/>
-            <Button fx:id="btnReports"     text="Reports"        maxWidth="Infinity" styleClass="flat"/>
-            <Button fx:id="btnSettings"    text="Settings"       maxWidth="Infinity" styleClass="flat"/>
+            <Region prefHeight="15"/>
 
-            <!-- Spacer -->
+            <!-- Navigation -->
+            <Button fx:id="btnDashboard"  onAction="#onNavDashboard"  styleClass="nav-btn,nav-active" maxWidth="Infinity" text="Dashboard"  graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-grid" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnMonitoring" onAction="#onNavMonitoring" styleClass="nav-btn" maxWidth="Infinity" text="Monitoring" graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-activity" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnAlerts"     onAction="#onNavAlerts"     styleClass="nav-btn" maxWidth="Infinity" text="Alerts"     graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-bell" iconSize="16"/></graphic>
+            </Button>
+
+            <!-- Crops & Plots (expandable) -->
+            <Button fx:id="btnCrops" onAction="#toggleCropsSubmenu" styleClass="nav-btn" maxWidth="Infinity" text="Crops &amp; Plots" graphicTextGap="12" contentDisplay="LEFT">
+                <graphic><FontIcon iconLiteral="fth-map" iconSize="16"/></graphic>
+            </Button>
+            <VBox fx:id="cropsSubmenu" spacing="2" managed="false" visible="false">
+                <Button fx:id="btnCropsCrops" onAction="#onNavCropsList" styleClass="nav-btn,nav-sub" maxWidth="Infinity" text="Crops" graphicTextGap="12">
+                    <graphic><FontIcon iconLiteral="fth-circle" iconSize="6"/></graphic>
+                </Button>
+                <Button fx:id="btnCropsPlots" onAction="#onNavPlotsList" styleClass="nav-btn,nav-sub" maxWidth="Infinity" text="Plots" graphicTextGap="12">
+                    <graphic><FontIcon iconLiteral="fth-circle" iconSize="6"/></graphic>
+                </Button>
+            </VBox>
+
+            <Button fx:id="btnWorkers"    onAction="#onNavWorkers"   styleClass="nav-btn" maxWidth="Infinity" text="Workers"    graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-users" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnTasks"      onAction="#onNavTasks"     styleClass="nav-btn" maxWidth="Infinity" text="Tasks"      graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-check-square" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnHarvests"   onAction="#onNavHarvests"  styleClass="nav-btn" maxWidth="Infinity" text="Harvests"   graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-package" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnReports"    onAction="#onNavReports"   styleClass="nav-btn" maxWidth="Infinity" text="Reports"    graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-bar-chart-2" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnSettings"   onAction="#onNavSettings"  styleClass="nav-btn" maxWidth="Infinity" text="Settings"   graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-settings" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnUsers"      onAction="#onNavUsers"     styleClass="nav-btn" maxWidth="Infinity" text="Users"      graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-user" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnLogs"       onAction="#onNavLogs"      styleClass="nav-btn" maxWidth="Infinity" text="Logs"       graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-file-text" iconSize="16"/></graphic>
+            </Button>
+
             <Region VBox.vgrow="ALWAYS"/>
 
-            <!-- Status Indicators -->
-            <Separator/>
-            <Label fx:id="lblSystemStatus"   text="System Status: Online"   styleClass="text-muted"/>
-            <Label fx:id="lblDbStatus"       text="Database: Connected"     styleClass="text-muted"/>
-            <Label fx:id="lblSensorStatus"   text="IoT Sensors: 0 Active"  styleClass="text-muted"/>
+            <!-- Status Card -->
+            <VBox spacing="6" styleClass="status-card">
+                <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Circle fx:id="dotSystem" radius="4" styleClass="status-dot-online"/>
+                    <VBox spacing="0">
+                        <Label text="System Status" styleClass="sidebar-status-title"/>
+                        <Label fx:id="lblSystemStatus" text="Online" styleClass="sidebar-status-value"/>
+                    </VBox>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Circle fx:id="dotDb" radius="4" styleClass="status-dot-online"/>
+                    <VBox spacing="0">
+                        <Label text="Database" styleClass="sidebar-status-title"/>
+                        <Label fx:id="lblDbStatus" text="Connected" styleClass="sidebar-status-value"/>
+                    </VBox>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Circle fx:id="dotSensors" radius="4" styleClass="status-dot-online"/>
+                    <VBox spacing="0">
+                        <Label text="IoT Sensors" styleClass="sidebar-status-title"/>
+                        <Label fx:id="lblSensorStatus" text="0 Active" styleClass="sidebar-status-value"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <Label text="Version 1.0.0" styleClass="sidebar-version" maxWidth="Infinity" alignment="CENTER"/>
         </VBox>
-    </left>
 
-    <!-- ═══════════════ TOP BAR ═══════════════ -->
-    <top>
-        <HBox alignment="CENTER_RIGHT" spacing="15" styleClass="bg-subtle">
-            <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-            <Label fx:id="lblDate" text="May 6, 2026" styleClass="text-muted"/>
-            <Label fx:id="lblUserName" text="John Farmer"/>
-            <Label fx:id="lblUserRole" text="Farm Owner" styleClass="text-muted"/>
+    <!-- ═══════════════ MAIN CONTENT AREA (top bar + scrollable content) ═══════════════ -->
+    <VBox HBox.hgrow="ALWAYS" styleClass="content-area">
+
+        <!-- ═══════════════ TOP BAR ═══════════════ -->
+        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="topbar">
+            <padding><Insets top="12" right="25" bottom="12" left="25"/></padding>
+            <FontIcon iconLiteral="fth-menu" iconSize="20"/>
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Weather -->
+            <HBox alignment="CENTER" spacing="8">
+                <FontIcon iconLiteral="fth-cloud" iconSize="22" styleClass="weather-icon"/>
+                <VBox spacing="0">
+                    <Label fx:id="lblTempTop" text="28°C" styleClass="topbar-strong"/>
+                    <Label text="Partly Cloudy" styleClass="topbar-muted"/>
+                </VBox>
+            </HBox>
+
+            <!-- Date/Time -->
+            <VBox spacing="0" alignment="CENTER_RIGHT">
+                <Label fx:id="lblDate" text="May 21, 2025" styleClass="topbar-strong"/>
+                <Label fx:id="lblTime" text="10:30:45 AM" styleClass="topbar-muted"/>
+            </VBox>
+
+            <!-- User Pill (clickable for dropdown) -->
+            <HBox fx:id="userPill" alignment="CENTER" spacing="10" styleClass="user-pill" onMouseClicked="#showUserMenu">
+                <padding><Insets top="4" right="10" bottom="4" left="4"/></padding>
+                <StackPane styleClass="avatar-circle" prefWidth="32" prefHeight="32">
+                    <FontIcon iconLiteral="fth-user" iconSize="16"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label fx:id="lblUserName" text="John Farmer" styleClass="topbar-strong"/>
+                    <Label fx:id="lblUserRole" text="Farm Owner" styleClass="topbar-muted"/>
+                </VBox>
+                <FontIcon iconLiteral="fth-chevron-down" iconSize="14"/>
+            </HBox>
         </HBox>
-    </top>
 
-    <!-- ═══════════════ CENTER CONTENT ═══════════════ -->
-    <center>
-        <ScrollPane fitToWidth="true" fitToHeight="true">
-            <VBox spacing="15">
-                <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+        <!-- ═══════════════ SCROLLABLE PAGE CONTAINER ═══════════════ -->
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="page-scroll">
+            <StackPane fx:id="pageContainer">
+                <VBox fx:id="dashboardPage" spacing="14" styleClass="content-pane">
+                    <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
-                <!-- ──── ROW 1: Sensor Cards + Field Overview + Recent Alerts ──── -->
-                <HBox spacing="15" VBox.vgrow="NEVER">
+            <!-- ─────────── TOP SECTION: Sensors+Chart | Field Overview | Alerts+Tasks ─────────── -->
+            <HBox spacing="14">
+
+                <!-- LEFT COLUMN: Sensors + Chart -->
+                <VBox spacing="14" HBox.hgrow="ALWAYS">
 
                     <!-- Live Environmental Monitor -->
-                    <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="bordered">
-                        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                    <VBox styleClass="card" spacing="10">
+                        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                         <HBox alignment="CENTER_LEFT">
-                            <Label text="Live Environmental Monitor" styleClass="title-4"/>
+                            <Label text="Live Environmental Monitor" styleClass="card-title"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Hyperlink fx:id="linkViewSensors" text="View All Sensors"/>
                         </HBox>
-
-                        <HBox spacing="10" alignment="CENTER">
+                        <HBox spacing="10">
                             <!-- Temperature Card -->
-                            <VBox alignment="CENTER" spacing="5" HBox.hgrow="ALWAYS" styleClass="bordered">
-                                <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                                <Label text="Temperature" styleClass="text-muted"/>
-                                <Label fx:id="lblTemperature" text="--.- °C" styleClass="title-2"/>
-                                <Label fx:id="lblTempPlot" text="—" styleClass="text-muted"/>
-                                <Label fx:id="lblTempStatus" text="Normal"/>
+                            <VBox styleClass="sensor-card" alignment="CENTER" spacing="4" HBox.hgrow="ALWAYS">
+                                <padding><Insets top="12" right="10" bottom="10" left="10"/></padding>
+                                <HBox alignment="CENTER" spacing="5">
+                                    <FontIcon iconLiteral="fth-thermometer" iconSize="14" styleClass="sensor-icon-temp"/>
+                                    <Label text="Temperature" styleClass="sensor-label"/>
+                                </HBox>
+                                <Label fx:id="lblTemperature" text="--.- °C" styleClass="sensor-value"/>
+                                <Label fx:id="lblTempPlot" text="Plot — North Field" styleClass="sensor-plot"/>
+                                <Label fx:id="lblTempStatus" text="Normal" styleClass="badge,badge-normal"/>
                             </VBox>
 
                             <!-- Humidity Card -->
-                            <VBox alignment="CENTER" spacing="5" HBox.hgrow="ALWAYS" styleClass="bordered">
-                                <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                                <Label text="Humidity" styleClass="text-muted"/>
-                                <Label fx:id="lblHumidity" text="-- %" styleClass="title-2"/>
-                                <Label fx:id="lblHumPlot" text="—" styleClass="text-muted"/>
-                                <Label fx:id="lblHumStatus" text="Normal"/>
+                            <VBox styleClass="sensor-card" alignment="CENTER" spacing="4" HBox.hgrow="ALWAYS">
+                                <padding><Insets top="12" right="10" bottom="10" left="10"/></padding>
+                                <HBox alignment="CENTER" spacing="5">
+                                    <FontIcon iconLiteral="fth-droplet" iconSize="14" styleClass="sensor-icon-hum"/>
+                                    <Label text="Humidity" styleClass="sensor-label"/>
+                                </HBox>
+                                <Label fx:id="lblHumidity" text="-- %" styleClass="sensor-value"/>
+                                <Label fx:id="lblHumPlot" text="Plot — North Field" styleClass="sensor-plot"/>
+                                <Label fx:id="lblHumStatus" text="Normal" styleClass="badge,badge-normal"/>
                             </VBox>
 
                             <!-- Soil Moisture Card -->
-                            <VBox alignment="CENTER" spacing="5" HBox.hgrow="ALWAYS" styleClass="bordered">
-                                <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                                <Label text="Soil Moisture" styleClass="text-muted"/>
-                                <Label fx:id="lblSoilMoisture" text="-- %" styleClass="title-2"/>
-                                <Label fx:id="lblSoilPlot" text="—" styleClass="text-muted"/>
-                                <Label fx:id="lblSoilStatus" text="Normal"/>
+                            <VBox styleClass="sensor-card" alignment="CENTER" spacing="4" HBox.hgrow="ALWAYS">
+                                <padding><Insets top="12" right="10" bottom="10" left="10"/></padding>
+                                <HBox alignment="CENTER" spacing="5">
+                                    <FontIcon iconLiteral="fth-droplet" iconSize="14" styleClass="sensor-icon-soil"/>
+                                    <Label text="Soil Moisture" styleClass="sensor-label"/>
+                                </HBox>
+                                <Label fx:id="lblSoilMoisture" text="-- %" styleClass="sensor-value"/>
+                                <Label fx:id="lblSoilPlot" text="Plot — North Field" styleClass="sensor-plot"/>
+                                <Label fx:id="lblSoilStatus" text="Normal" styleClass="badge,badge-normal"/>
+                            </VBox>
+
+                            <!-- Light Intensity Card -->
+                            <VBox styleClass="sensor-card" alignment="CENTER" spacing="4" HBox.hgrow="ALWAYS">
+                                <padding><Insets top="12" right="10" bottom="10" left="10"/></padding>
+                                <HBox alignment="CENTER" spacing="5">
+                                    <FontIcon iconLiteral="fth-sun" iconSize="14" styleClass="sensor-icon-light"/>
+                                    <Label text="Light Intensity" styleClass="sensor-label"/>
+                                </HBox>
+                                <Label fx:id="lblLight" text="-- lux" styleClass="sensor-value"/>
+                                <Label fx:id="lblLightPlot" text="Plot — North Field" styleClass="sensor-plot"/>
+                                <Label fx:id="lblLightStatus" text="Normal" styleClass="badge,badge-normal"/>
                             </VBox>
                         </HBox>
                     </VBox>
 
-                    <!-- Recent Alerts Panel -->
-                    <VBox spacing="10" prefWidth="300" styleClass="bordered">
-                        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                    <!-- Temperature & Humidity Trend Chart -->
+                    <VBox styleClass="card">
+                        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                        <Label text="Temperature &amp; Humidity Trend" styleClass="card-title"/>
+                        <LineChart fx:id="sensorChart" prefHeight="220" maxHeight="220" legendVisible="true" animated="false" createSymbols="false">
+                            <xAxis><CategoryAxis fx:id="chartXAxis"/></xAxis>
+                            <yAxis><NumberAxis fx:id="chartYAxis"/></yAxis>
+                        </LineChart>
+                    </VBox>
+                </VBox>
+
+                <!-- MIDDLE COLUMN: Field Overview -->
+                <VBox styleClass="card" prefWidth="300" minWidth="280">
+                    <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Field Overview" styleClass="card-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Hyperlink fx:id="linkManagePlots" text="Manage Plots"/>
+                    </HBox>
+
+                    <!-- Field Map (visual representation of plots) -->
+                    <Pane fx:id="fieldMap" styleClass="field-map" prefHeight="330" minHeight="330">
+                        <Rectangle layoutX="20"  layoutY="30"  width="100" height="80"  styleClass="plot-normal"/>
+                        <Label    layoutX="55"  layoutY="60"  text="Plot 1" styleClass="plot-label"/>
+
+                        <Rectangle layoutX="140" layoutY="30"  width="110" height="100" styleClass="plot-warning"/>
+                        <Label    layoutX="180" layoutY="70"  text="Plot 2" styleClass="plot-label"/>
+
+                        <Rectangle layoutX="20"  layoutY="130" width="100" height="100" styleClass="plot-critical"/>
+                        <Label    layoutX="55"  layoutY="170" text="Plot 3" styleClass="plot-label"/>
+
+                        <Rectangle layoutX="140" layoutY="150" width="110" height="80"  styleClass="plot-normal"/>
+                        <Label    layoutX="180" layoutY="180" text="Plot 4" styleClass="plot-label"/>
+
+                        <Rectangle layoutX="60"  layoutY="250" width="170" height="70"  styleClass="plot-normal"/>
+                        <Label    layoutX="130" layoutY="280" text="Plot 5" styleClass="plot-label"/>
+                    </Pane>
+
+                    <!-- Legend -->
+                    <HBox spacing="10" alignment="CENTER" styleClass="map-legend">
+                        <padding><Insets top="8" right="0" bottom="0" left="0"/></padding>
+                        <HBox alignment="CENTER" spacing="4"><Circle radius="4" styleClass="legend-normal"/>  <Label text="Normal"   styleClass="legend-text"/></HBox>
+                        <HBox alignment="CENTER" spacing="4"><Circle radius="4" styleClass="legend-warning"/> <Label text="Warning"  styleClass="legend-text"/></HBox>
+                        <HBox alignment="CENTER" spacing="4"><Circle radius="4" styleClass="legend-critical"/><Label text="Critical" styleClass="legend-text"/></HBox>
+                        <HBox alignment="CENTER" spacing="4"><Circle radius="4" styleClass="legend-offline"/> <Label text="Offline"  styleClass="legend-text"/></HBox>
+                    </HBox>
+                </VBox>
+
+                <!-- RIGHT COLUMN: Alerts + Tasks -->
+                <VBox spacing="14" prefWidth="320" minWidth="300">
+
+                    <!-- Recent Alerts -->
+                    <VBox styleClass="card" spacing="8">
+                        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                         <HBox alignment="CENTER_LEFT">
-                            <Label text="Recent Alerts" styleClass="title-4"/>
+                            <Label text="Recent Alerts" styleClass="card-title"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Hyperlink fx:id="linkViewAlerts" text="View All"/>
                         </HBox>
-                        <ListView fx:id="alertListView" prefHeight="150"/>
-                        <Hyperlink fx:id="linkShowAllAlerts" text="Show all alerts →"/>
-                    </VBox>
-                </HBox>
-
-                <!-- ──── ROW 2: Temperature & Humidity Chart + My Tasks ──── -->
-                <HBox spacing="15" VBox.vgrow="ALWAYS">
-
-                    <!-- Chart -->
-                    <VBox HBox.hgrow="ALWAYS" styleClass="bordered">
-                        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                        <Label text="Temperature &amp; Humidity Trend" styleClass="title-4"/>
-                        <LineChart fx:id="sensorChart" VBox.vgrow="ALWAYS" prefHeight="250">
-                            <xAxis><CategoryAxis label="Time"/></xAxis>
-                            <yAxis><NumberAxis label="Value"/></yAxis>
-                        </LineChart>
+                        <ListView fx:id="alertListView" prefHeight="170" maxHeight="170" styleClass="ghost-list"/>
+                        <Hyperlink fx:id="linkShowAllAlerts" text="Show all alerts →" styleClass="link-end"/>
                     </VBox>
 
-                    <!-- My Tasks Panel -->
-                    <VBox spacing="10" prefWidth="300" styleClass="bordered">
-                        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                    <!-- My Tasks -->
+                    <VBox styleClass="card" spacing="8">
+                        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                         <HBox alignment="CENTER_LEFT">
-                            <Label text="My Tasks" styleClass="title-4"/>
+                            <Label text="My Tasks" styleClass="card-title"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Hyperlink fx:id="linkViewTasks" text="View All"/>
                         </HBox>
-                        <ListView fx:id="taskListView" VBox.vgrow="ALWAYS"/>
-                        <Hyperlink fx:id="linkViewAllTasks" text="View all tasks →"/>
+                        <ListView fx:id="taskListView" prefHeight="160" maxHeight="160" styleClass="ghost-list"/>
+                        <Hyperlink fx:id="linkViewAllTasks" text="View all tasks →" styleClass="link-end"/>
                     </VBox>
-                </HBox>
+                </VBox>
+            </HBox>
 
-                <!-- ──── ROW 3: Crop Overview + Worker Overview + Quick Actions ──── -->
-                <HBox spacing="15" VBox.vgrow="ALWAYS">
+            <!-- ─────────── MIDDLE SECTION: Crop | Worker | Quick Actions ─────────── -->
+            <HBox spacing="14">
 
-                    <!-- Crop & Plot Overview -->
-                    <VBox HBox.hgrow="ALWAYS" styleClass="bordered">
-                        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                        <HBox alignment="CENTER_LEFT">
-                            <Label text="Crop &amp; Plot Overview" styleClass="title-4"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Hyperlink fx:id="linkViewCrops" text="View All"/>
-                        </HBox>
-                        <TableView fx:id="cropTable" prefHeight="180" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colCropName"     text="Crop"          prefWidth="100"/>
-                                <TableColumn fx:id="colCropPlot"     text="Plot"          prefWidth="120"/>
-                                <TableColumn fx:id="colCropStage"    text="Stage"         prefWidth="100"/>
-                                <TableColumn fx:id="colPlantingDate" text="Planting Date" prefWidth="110"/>
-                                <TableColumn fx:id="colCropStatus"   text="Status"        prefWidth="90"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
+                <!-- Crop & Plot Overview -->
+                <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                    <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Crop &amp; Plot Overview" styleClass="card-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Hyperlink fx:id="linkViewCrops" text="View All"/>
+                    </HBox>
+                    <TableView fx:id="cropTable" prefHeight="170">
+                        <columns>
+                            <TableColumn fx:id="colCropName"     text="Crop"          prefWidth="90"  reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colCropPlot"     text="Plot"          prefWidth="110" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colCropStage"    text="Stage"         prefWidth="90"  reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colPlantingDate" text="Planting Date" prefWidth="100" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colCropStatus"   text="Status"        prefWidth="80"  reorderable="false" resizable="false"/>
+                        </columns>
+                    </TableView>
+                </VBox>
 
-                    <!-- Worker Overview -->
-                    <VBox HBox.hgrow="ALWAYS" styleClass="bordered">
-                        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                        <HBox alignment="CENTER_LEFT">
-                            <Label text="Worker Overview" styleClass="title-4"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Hyperlink fx:id="linkViewWorkers" text="View All"/>
-                        </HBox>
-                        <TableView fx:id="workerTable" prefHeight="180" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colWorkerName"    text="Worker"       prefWidth="100"/>
-                                <TableColumn fx:id="colWorkerRole"    text="Role"         prefWidth="100"/>
-                                <TableColumn fx:id="colWorkerStatus"  text="Status"       prefWidth="80"/>
-                                <TableColumn fx:id="colWorkerTask"    text="Current Task" prefWidth="120"/>
-                                <TableColumn fx:id="colWorkload"      text="Workload"     prefWidth="90"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </HBox>
+                <!-- Worker Overview -->
+                <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                    <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Worker Overview" styleClass="card-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Hyperlink fx:id="linkViewWorkers" text="View All"/>
+                    </HBox>
+                    <TableView fx:id="workerTable" prefHeight="170">
+                        <columns>
+                            <TableColumn fx:id="colWorkerName"    text="Worker"       prefWidth="110" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colWorkerRole"    text="Role"         prefWidth="100" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colWorkerStatus"  text="Status"       prefWidth="70"  reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colWorkerTask"    text="Current Task" prefWidth="120" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colWorkload"      text="Workload"     prefWidth="90"  reorderable="false" resizable="false"/>
+                        </columns>
+                    </TableView>
+                </VBox>
 
-                <!-- ──── ROW 4: Recent Harvests + Quick Actions + Reports Export ──── -->
-                <HBox spacing="15" VBox.vgrow="NEVER">
+                <!-- Quick Actions -->
+                <VBox styleClass="card" prefWidth="320" minWidth="300" spacing="10">
+                    <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                    <Label text="Quick Actions" styleClass="card-title"/>
+                    <GridPane hgap="10" vgap="10" VBox.vgrow="ALWAYS">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50"/>
+                            <ColumnConstraints percentWidth="50"/>
+                        </columnConstraints>
+                        <Button fx:id="btnAddCrop"      text="Add Crop"      styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" graphicTextGap="6">
+                            <graphic><FontIcon iconLiteral="fth-plus-circle" iconSize="16"/></graphic>
+                        </Button>
+                        <Button fx:id="btnAddTask"      text="Add Task"      styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" graphicTextGap="6">
+                            <graphic><FontIcon iconLiteral="fth-clipboard" iconSize="16"/></graphic>
+                        </Button>
+                        <Button fx:id="btnLogHarvest"   text="Log Harvest"   styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1" graphicTextGap="6">
+                            <graphic><FontIcon iconLiteral="fth-package" iconSize="16"/></graphic>
+                        </Button>
+                        <Button fx:id="btnExportReport" text="Export Report" styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" graphicTextGap="6">
+                            <graphic><FontIcon iconLiteral="fth-file-text" iconSize="16"/></graphic>
+                        </Button>
+                    </GridPane>
+                </VBox>
+            </HBox>
 
-                    <!-- Recent Harvests -->
-                    <VBox HBox.hgrow="ALWAYS" styleClass="bordered">
-                        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                        <HBox alignment="CENTER_LEFT">
-                            <Label text="Recent Harvests" styleClass="title-4"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Hyperlink fx:id="linkViewHarvests" text="View All"/>
-                        </HBox>
-                        <TableView fx:id="harvestTable" prefHeight="150">
-                            <columns>
-                                <TableColumn fx:id="colHarvestCrop"    text="Crop"           prefWidth="100"/>
-                                <TableColumn fx:id="colHarvestPlot"    text="Plot"           prefWidth="120"/>
-                                <TableColumn fx:id="colHarvestDate"    text="Harvest Date"   prefWidth="110"/>
-                                <TableColumn fx:id="colHarvestQty"     text="Quantity (kg)"  prefWidth="100"/>
-                                <TableColumn fx:id="colHarvestGrade"   text="Quality Grade"  prefWidth="100"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
+            <!-- ─────────── BOTTOM SECTION: Recent Harvests | Reports Export ─────────── -->
+            <HBox spacing="14" VBox.vgrow="SOMETIMES">
 
-                    <!-- Quick Actions + Reports -->
-                    <VBox spacing="15" prefWidth="300">
+                <!-- Recent Harvests -->
+                <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                    <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Recent Harvests" styleClass="card-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Hyperlink fx:id="linkViewHarvests" text="View All"/>
+                    </HBox>
+                    <TableView fx:id="harvestTable" prefHeight="160">
+                        <columns>
+                            <TableColumn fx:id="colHarvestCrop"     text="Crop"           prefWidth="90"  reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colHarvestPlot"     text="Plot"           prefWidth="110" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colHarvestDate"     text="Harvest Date"   prefWidth="100" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colHarvestQty"      text="Quantity (kg)"  prefWidth="100" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colHarvestGrade"    text="Quality Grade"  prefWidth="100" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colHarvestExpected" text="Expected (kg)"  prefWidth="100" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colHarvestPerf"     text="Performance"    prefWidth="100" reorderable="false" resizable="false"/>
+                        </columns>
+                    </TableView>
+                </VBox>
 
-                        <!-- Quick Actions -->
-                        <VBox spacing="10" styleClass="bordered">
-                            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                            <Label text="Quick Actions" styleClass="title-4"/>
-                            <HBox spacing="10" alignment="CENTER">
-                                <Button fx:id="btnAddCrop"      text="Add Crop"      styleClass="accent" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-                                <Button fx:id="btnAddTask"      text="Add Task"      styleClass="accent" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-                            </HBox>
-                            <HBox spacing="10" alignment="CENTER">
-                                <Button fx:id="btnLogHarvest"   text="Log Harvest"   styleClass="accent" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-                                <Button fx:id="btnExportReport" text="Export Report" styleClass="accent" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-                            </HBox>
-                        </VBox>
-
-                        <!-- Reports Export -->
-                        <VBox spacing="10" styleClass="bordered">
-                            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                            <Label text="Reports Export" styleClass="title-4"/>
-                            <Button fx:id="btnExportSensorCSV"  text="Sensor Logs (CSV)"       maxWidth="Infinity"/>
-                            <Button fx:id="btnExportHarvestCSV" text="Harvest Summary (CSV)"    maxWidth="Infinity"/>
-                            <Button fx:id="btnExportAlertCSV"   text="Alert History (CSV)"      maxWidth="Infinity"/>
-                        </VBox>
-                    </VBox>
-                </HBox>
-
-            </VBox>
+                <!-- Reports Export -->
+                <VBox styleClass="card" prefWidth="320" minWidth="300" spacing="6">
+                    <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                    <Label text="Reports Export" styleClass="card-title"/>
+                    <Button fx:id="btnExportSensorCSV"  text="Sensor Logs (CSV)"     maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                        <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
+                    </Button>
+                    <Button fx:id="btnExportHarvestCSV" text="Harvest Summary (CSV)" maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                        <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
+                    </Button>
+                    <Button fx:id="btnExportAlertCSV"   text="Alert History (CSV)"   maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                        <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
+                    </Button>
+                </VBox>
+            </HBox>
+                </VBox>
+            </StackPane>
         </ScrollPane>
-    </center>
-
-</BorderPane>
+    </VBox>
+</HBox>

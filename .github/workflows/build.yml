@@ -42,12 +42,13 @@ jobs:
           jpackage `
             --input target `
             --main-jar smart-farm-1.0-SNAPSHOT.jar `
-            --main-class smartfarm.Main `
-            --name "Smart Farm" `
+            --main-class smartfarm.Launcher `
+            --name "Agrilliant" `
             --type exe `
             --dest target/installer `
             --vendor "Agrilliant" `
             --app-version 1.0.0 `
+            --icon src/main/resources/images/logo.png `
             --module-path "javafx-jmods/javafx-jmods-${{ env.JAVAFX_VERSION }}" `
             --add-modules javafx.controls,javafx.fxml `
             --java-options "--add-opens javafx.graphics/com.sun.glass.utils=ALL-UNNAMED"
@@ -55,7 +56,7 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: smart-farm-windows-exe
+          name: agrilliant-windows-exe
           path: target/installer/*.exe
 
   # ── Linux binary ──
@@ -84,23 +85,26 @@ jobs:
       - name: Build JAR
         run: mvn clean package -DskipTests
 
-      - name: Package as .deb
+      - name: Package as Linux binary
         run: |
           jpackage \
             --input target \
             --main-jar smart-farm-1.0-SNAPSHOT.jar \
-            --main-class smartfarm.Main \
-            --name "smart-farm" \
-            --type deb \
+            --main-class smartfarm.Launcher \
+            --name "Agrilliant" \
+            --type app-image \
             --dest target/installer \
             --vendor "Agrilliant" \
             --app-version 1.0.0 \
+            --icon src/main/resources/images/logo.png \
             --module-path "javafx-jmods/javafx-jmods-${{ env.JAVAFX_VERSION }}" \
             --add-modules javafx.controls,javafx.fxml \
             --java-options "--add-opens javafx.graphics/com.sun.glass.utils=ALL-UNNAMED"
+          # Create a .bin archive from the app-image
+          cd target/installer && tar czf Agrilliant-1.0.0-linux.bin Agrilliant/
 
-      - name: Upload Linux installer
+      - name: Upload Linux binary
         uses: actions/upload-artifact@v4
         with:
-          name: smart-farm-linux-deb
-          path: target/installer/*.deb
+          name: agrilliant-linux-bin
+          path: target/installer/*.bin

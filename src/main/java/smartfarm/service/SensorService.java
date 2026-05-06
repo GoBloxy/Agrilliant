@@ -9,8 +9,11 @@ public class SensorService {
     private final SensorDAO sensorDAO = new SensorDAO();
     private final AlertService alertService = new AlertService();
 
-    // Save the reading, then check if it triggers any alerts
+    // Push to live UI first (always), then persist to DB
     public void processReading(SensorReading reading) {
+        // Always push to dashboard UI regardless of DB state
+        LiveSensorData.getInstance().update(reading);
+
         try {
             sensorDAO.save(reading);
 
@@ -18,8 +21,8 @@ public class SensorService {
             alertService.checkAndAlert(reading, plotId);
 
             System.out.println("Processed: " + reading);
-        } catch (SQLException e) {
-            System.err.println("Failed to process reading: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("DB/alert error (UI still updated): " + e.getMessage());
         }
     }
 
