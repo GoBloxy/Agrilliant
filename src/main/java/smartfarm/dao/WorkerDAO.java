@@ -17,18 +17,16 @@ public class WorkerDAO implements GenericDAO<Worker> {
 
     @Override
     public Worker getById(int id) throws SQLException{
-        return new Worker("placeholder", "placeholder", "placeholder", "placeholder");
-
+        return null;
     };
 
     public Worker getByEmail(String email) throws SQLException {
-        return new Worker("placehlder", "placehlder", "placehlder", "placeholder");
+        return null;
     }
 
     @Override
     public List<Worker> getAll() throws SQLException {
-        List<Worker> placeholder = new List<>();
-        return placeholder;
+        return null;
     };
 
     @Override

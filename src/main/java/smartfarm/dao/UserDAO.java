@@ -27,7 +27,7 @@ public class UserDAO implements GenericDAO<User> {
 
     @Override
     public List<User> getAll() throws SQLException {
-        return new ArrayList<>(); //placeholder
+        return null; //placeholder
     }
 
     @Override
