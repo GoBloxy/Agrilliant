@@ -5,71 +5,142 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import smartfarm.model.Alert;
-import smartfarm.model.Alert.Severity;
 import smartfarm.service.AlertService;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Controller for the Alerts page.
- * Displays all alerts in a colour-coded TableView with filter and resolve actions.
+ * Displays all alerts in a colour-coded TableView with a details pane.
  */
 public class AlertController {
 
-    // ── Summary Cards ──
-    @FXML private Label lblTotalAlerts, lblUnresolved, lblCritical, lblResolved;
+    // ── Filters ──
+    @FXML private ComboBox<String> cmbSeverity;
+    @FXML private ComboBox<String> cmbStatus;
+    @FXML private TextField txtSearch;
+    @FXML private Button btnMarkAllRead;
 
-    // ── Filter Buttons ──
-    @FXML private Button btnAll, btnUnresolved, btnCriticalOnly;
+    // ── Summary Cards ──
+    @FXML private Label lblCritical, lblWarnings, lblResolved, lblUnresolved;
 
     // ── Alert Table ──
     @FXML private TableView<Alert> alertTable;
     @FXML private TableColumn<Alert, String> colSeverity;
     @FXML private TableColumn<Alert, String> colType;
-    @FXML private TableColumn<Alert, String> colMessage;
     @FXML private TableColumn<Alert, Integer> colPlot;
+    @FXML private TableColumn<Alert, String> colMessage;
     @FXML private TableColumn<Alert, String> colTimestamp;
     @FXML private TableColumn<Alert, String> colStatus;
     @FXML private TableColumn<Alert, Void>   colAction;
+    
+    @FXML private Label lblPagination;
 
-    // ── Status Bar ──
-    @FXML private Label lblStatusMessage;
+    // ── Detail Pane ──
+    @FXML private VBox detailPane;
+    @FXML private Button btnCloseDetails;
+    
+    @FXML private Label lblDetailSeverity;
+    @FXML private Label lblDetailStatus;
+    @FXML private FontIcon detailIcon;
+    
+    @FXML private Label lblDetailTitle;
+    @FXML private Label lblDetailPlot;
+    @FXML private Label lblDetailMessage;
+    
+    @FXML private Label lblGridSensorType;
+    @FXML private Label lblGridCurrentVal;
+    @FXML private Label lblGridThreshold;
+    @FXML private Label lblGridTriggered;
+    @FXML private Label lblGridSensorId;
+    
+    @FXML private LineChart<String, Number> detailChart;
+    @FXML private CategoryAxis detailChartX;
+    @FXML private NumberAxis detailChartY;
+    
+    @FXML private Button btnDetailResolve;
+    @FXML private Button btnDetailCreateTask;
 
     private final AlertService alertService = new AlertService();
     private ObservableList<Alert> masterList;
     private FilteredList<Alert> filteredList;
+    private Alert currentSelectedAlert = null;
 
     private static final DateTimeFormatter TIME_FMT =
             DateTimeFormatter.ofPattern("MMM d, yyyy  hh:mm a");
-
-    // Track active filter button
-    private Button activeFilterBtn;
 
     // ═══════════════ INITIALIZATION ═══════════════
 
     @FXML
     public void initialize() {
+        // Hide details pane initially
+        detailPane.setVisible(false);
+        detailPane.setManaged(false);
+
+        setupFilters();
         setupColumns();
         loadAlerts();
-        activeFilterBtn = btnAll;
+
+        // Listen for table selection changes
+        alertTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                showAlertDetails(newSel);
+            }
+        });
     }
 
-    /**
-     * Configures each TableColumn with cell value factories and custom cell factories
-     * for colour-coded severity badges and action buttons.
-     */
-    private void setupColumns() {
+    private void setupFilters() {
+        cmbSeverity.setItems(FXCollections.observableArrayList("All Severity", "CRITICAL", "WARNING", "INFO"));
+        cmbSeverity.getSelectionModel().selectFirst();
+        cmbSeverity.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter());
 
+        cmbStatus.setItems(FXCollections.observableArrayList("All Status", "Active", "Resolved"));
+        cmbStatus.getSelectionModel().selectFirst();
+        cmbStatus.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter());
+
+        txtSearch.textProperty().addListener((obs, oldText, newText) -> updateFilter());
+    }
+
+    private void updateFilter() {
+        if (filteredList == null) return;
+        
+        String sevFilter = cmbSeverity.getValue();
+        String statusFilter = cmbStatus.getValue();
+        String searchFilter = txtSearch.getText().toLowerCase();
+
+        filteredList.setPredicate(alert -> {
+            boolean sevMatch = sevFilter.equals("All Severity") || alert.getSeverity().name().equals(sevFilter);
+            
+            boolean statusMatch = statusFilter.equals("All Status");
+            if (!statusMatch) {
+                if (statusFilter.equals("Resolved")) statusMatch = alert.isResolved();
+                if (statusFilter.equals("Active")) statusMatch = !alert.isResolved();
+            }
+
+            boolean searchMatch = searchFilter.isEmpty() || 
+                                  alert.getMessage().toLowerCase().contains(searchFilter) ||
+                                  formatType(alert.getAlertType()).toLowerCase().contains(searchFilter) ||
+                                  String.valueOf(alert.getPlotId()).contains(searchFilter);
+
+            return sevMatch && statusMatch && searchMatch;
+        });
+        
+        lblPagination.setText("Showing 1 to " + filteredList.size() + " of " + masterList.size() + " alerts");
+    }
+
+    private void setupColumns() {
         // ── Severity — colour-coded badge ──
         colSeverity.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getSeverity().name()));
@@ -79,12 +150,10 @@ public class AlertController {
                 super.updateItem(severity, empty);
                 if (empty || severity == null) {
                     setGraphic(null);
-                    setText(null);
                 } else {
                     Label badge = new Label(severity);
                     badge.getStyleClass().addAll("badge", getBadgeClass(severity));
                     setGraphic(badge);
-                    setText(null);
                 }
             }
         });
@@ -93,12 +162,12 @@ public class AlertController {
         colType.setCellValueFactory(cell ->
                 new SimpleStringProperty(formatType(cell.getValue().getAlertType())));
 
+        // ── Plot ID ──
+        colPlot.setCellValueFactory(new PropertyValueFactory<>("plotId"));
+
         // ── Message ──
         colMessage.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getMessage()));
-
-        // ── Plot ID ──
-        colPlot.setCellValueFactory(new PropertyValueFactory<>("plotId"));
 
         // ── Timestamp — formatted ──
         colTimestamp.setCellValueFactory(cell ->
@@ -113,13 +182,11 @@ public class AlertController {
                 super.updateItem(status, empty);
                 if (empty || status == null) {
                     setGraphic(null);
-                    setText(null);
                 } else {
                     Label badge = new Label(status);
                     badge.getStyleClass().addAll("badge",
                             status.equals("Resolved") ? "badge-normal" : "badge-active");
                     setGraphic(badge);
-                    setText(null);
                 }
             }
         });
@@ -147,7 +214,6 @@ public class AlertController {
                 } else {
                     Alert alert = getTableView().getItems().get(getIndex());
                     if (alert.isResolved()) {
-                        // Already resolved — show a muted label instead
                         Label done = new Label("✓ Done");
                         done.getStyleClass().add("resolved-label");
                         setGraphic(done);
@@ -161,10 +227,6 @@ public class AlertController {
 
     // ═══════════════ DATA LOADING ═══════════════
 
-    /**
-     * Fetches all alerts from the service layer,
-     * populates the table, and updates the summary cards.
-     */
     private void loadAlerts() {
         try {
             List<Alert> alerts = alertService.getAllAlerts();
@@ -172,98 +234,111 @@ public class AlertController {
             filteredList = new FilteredList<>(masterList, p -> true);
             alertTable.setItems(filteredList);
             updateSummaryCards();
-            lblStatusMessage.setText("Loaded " + alerts.size() + " alerts");
+            updateFilter();
         } catch (RuntimeException e) {
-            // DB not connected — show empty table with a friendly message
             masterList = FXCollections.observableArrayList();
             filteredList = new FilteredList<>(masterList, p -> true);
             alertTable.setItems(filteredList);
             alertTable.setPlaceholder(new Label("No database connection — alerts unavailable"));
             updateSummaryCards();
-            lblStatusMessage.setText("Database not connected");
         }
     }
 
-    /**
-     * Recalculates and displays the summary card numbers.
-     */
     private void updateSummaryCards() {
         int total      = masterList.size();
         int unresolved = (int) masterList.stream().filter(a -> !a.isResolved()).count();
         int critical   = (int) masterList.stream().filter(Alert::isCritical).count();
+        int warnings   = (int) masterList.stream().filter(a -> a.getSeverity().name().equals("WARNING")).count();
         int resolved   = total - unresolved;
 
-        lblTotalAlerts.setText(String.valueOf(total));
-        lblUnresolved.setText(String.valueOf(unresolved));
         lblCritical.setText(String.valueOf(critical));
+        lblWarnings.setText(String.valueOf(warnings));
+        lblUnresolved.setText(String.valueOf(unresolved));
         lblResolved.setText(String.valueOf(resolved));
     }
 
-    // ═══════════════ FILTER HANDLERS ═══════════════
+    // ═══════════════ DETAIL PANE LOGIC ═══════════════
 
-    @FXML
-    private void onFilterAll() {
-        filteredList.setPredicate(a -> true);
-        setActiveFilter(btnAll);
-        lblStatusMessage.setText("Showing all alerts");
-    }
+    private void showAlertDetails(Alert alert) {
+        currentSelectedAlert = alert;
+        detailPane.setVisible(true);
+        detailPane.setManaged(true);
 
-    @FXML
-    private void onFilterUnresolved() {
-        filteredList.setPredicate(a -> !a.isResolved());
-        setActiveFilter(btnUnresolved);
-        lblStatusMessage.setText("Showing unresolved alerts only");
-    }
+        // Header
+        lblDetailSeverity.setText(alert.getSeverity().name());
+        lblDetailSeverity.getStyleClass().removeAll("badge-high", "badge-low", "badge-info", "badge-normal");
+        lblDetailSeverity.getStyleClass().add(getBadgeClass(alert.getSeverity().name()));
 
-    @FXML
-    private void onFilterCritical() {
-        filteredList.setPredicate(Alert::isCritical);
-        setActiveFilter(btnCriticalOnly);
-        lblStatusMessage.setText("Showing critical alerts only");
-    }
+        lblDetailStatus.setText(alert.isResolved() ? "Resolved" : "Active");
+        lblDetailTitle.setText(formatType(alert.getAlertType()) + " Alert");
+        lblDetailPlot.setText("Plot " + alert.getPlotId());
+        lblDetailMessage.setText(alert.getMessage());
 
-    @FXML
-    private void onRefresh() {
-        loadAlerts();
-        // Reset to "All" filter
-        if (filteredList != null) {
-            filteredList.setPredicate(a -> true);
+        // Grid
+        lblGridSensorType.setText(getSensorType(alert.getAlertType()));
+        lblGridCurrentVal.setText("N/A"); // Ideally from alert payload
+        lblGridThreshold.setText("N/A");
+        lblGridTriggered.setText(alert.getTimestamp().format(TIME_FMT));
+        lblGridSensorId.setText("SENSOR-P" + alert.getPlotId());
+
+        // Setup Chart with dummy historical data
+        populateDummyChart();
+
+        // Buttons
+        btnDetailResolve.setDisable(alert.isResolved());
+        if(alert.isResolved()) {
+            btnDetailResolve.setText("Resolved");
+        } else {
+            btnDetailResolve.setText("Mark as Resolved");
         }
-        setActiveFilter(btnAll);
-        lblStatusMessage.setText("Alerts refreshed");
     }
 
-    private void setActiveFilter(Button btn) {
-        if (activeFilterBtn != null) {
-            activeFilterBtn.getStyleClass().remove("filter-active");
+    @FXML
+    private void onCloseDetails() {
+        detailPane.setVisible(false);
+        detailPane.setManaged(false);
+        alertTable.getSelectionModel().clearSelection();
+        currentSelectedAlert = null;
+    }
+
+    @FXML
+    private void onDetailResolve() {
+        if (currentSelectedAlert != null && !currentSelectedAlert.isResolved()) {
+            onResolveAlert(currentSelectedAlert);
+            showAlertDetails(currentSelectedAlert); // refresh details pane
         }
-        btn.getStyleClass().add("filter-active");
-        activeFilterBtn = btn;
+    }
+
+    private void populateDummyChart() {
+        detailChart.getData().clear();
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        series.setName("Sensor Reading");
+        
+        Random r = new Random();
+        int base = 35;
+        for (int i = 5; i > 0; i--) {
+            series.getData().add(new XYChart.Data<>("-" + i + "m", base + r.nextInt(10)));
+        }
+        series.getData().add(new XYChart.Data<>("Now", base + r.nextInt(10)));
+        detailChart.getData().add(series);
     }
 
     // ═══════════════ RESOLVE ACTION ═══════════════
 
-    /**
-     * Marks the given alert as resolved via AlertService,
-     * then refreshes the table and summary cards.
-     */
     private void onResolveAlert(Alert alert) {
         try {
             alertService.resolveAlert(alert.getAlertId());
-            alert.resolve();                        // update local model
-            alertTable.refresh();                    // repaint the table row
+            alert.resolve();
+            alertTable.refresh();
             updateSummaryCards();
-            lblStatusMessage.setText("Alert #" + alert.getAlertId() + " resolved");
+            updateFilter();
         } catch (RuntimeException e) {
-            lblStatusMessage.setText("Failed to resolve alert: " + e.getMessage());
+            System.err.println("Failed to resolve alert: " + e.getMessage());
         }
     }
 
     // ═══════════════ UTILITY METHODS ═══════════════
 
-    /**
-     * Returns the CSS class for a severity badge.
-     */
     private String getBadgeClass(String severity) {
         return switch (severity) {
             case "CRITICAL" -> "badge-high";
@@ -273,9 +348,6 @@ public class AlertController {
         };
     }
 
-    /**
-     * Converts alert type codes like "HIGH_TEMP" into readable text "High Temp".
-     */
     private String formatType(String alertType) {
         if (alertType == null) return "";
         String[] parts = alertType.toLowerCase().split("_");
@@ -288,5 +360,13 @@ public class AlertController {
             }
         }
         return sb.toString().trim();
+    }
+    
+    private String getSensorType(String alertType) {
+        if (alertType == null) return "Unknown Sensor";
+        if (alertType.contains("TEMP")) return "Temperature Sensor";
+        if (alertType.contains("MOISTURE")) return "Moisture Sensor";
+        if (alertType.contains("HUMIDITY")) return "Humidity Sensor";
+        return "Environmental Sensor";
     }
 }
