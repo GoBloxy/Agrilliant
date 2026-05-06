@@ -76,7 +76,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Fat JAR for jpackage (excludes JavaFX — provided via --module-path) -->
+            <!-- Fat JAR for jpackage (excludes JavaFX, provided via module-path) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
