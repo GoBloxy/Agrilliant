@@ -34,6 +34,4 @@ public class TaskDAO implements GenericDAO<Task> {
     public void delete(int id) throws SQLException {
 
     }
-
-    // TODO: addTask, getActiveTaskCount, getOverdueTasks, advanceStatus, getTasksByWorker
 }

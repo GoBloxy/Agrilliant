@@ -1,6 +1,7 @@
 package smartfarm.model;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class Task {
     public enum Status { PENDING, IN_PROGRESS, DONE }
@@ -9,13 +10,13 @@ public class Task {
     private String description;
     private Status status;
     private LocalDate dueDate;
-    private int workerId; // change this to be array maybe multiple users can join the same task
+    private List<Integer> workerId; // change this to be array maybe multiple users can join the same task
     private int plotId;
     private String alertType;
 
 
     // with description and with id
-    public Task(int taskId, String description, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
+    public Task(int taskId, String description, Status status, LocalDate dueDate, List<Integer> workerId, int plotId, String alertType) {
         this.taskId = taskId;
         this.description = description;
         this.status = status;
@@ -26,7 +27,7 @@ public class Task {
     }
 
     // with description and without id
-    public Task(String description, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
+    public Task(String description, Status status, LocalDate dueDate, List<Integer> workerId, int plotId, String alertType) {
         this.taskId = -1;
         this.description = description;
         this.status = status;
@@ -37,7 +38,7 @@ public class Task {
     }
 
     // without description and with id
-    public Task(int taskId, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
+    public Task(int taskId, Status status, LocalDate dueDate, List<Integer> workerId, int plotId, String alertType) {
         this.taskId = taskId;
         this.description = null;
         this.status = status;
@@ -48,7 +49,7 @@ public class Task {
     }
 
     // without description and without id
-    public Task(Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
+    public Task(Status status, LocalDate dueDate, List<Integer> workerId, int plotId, String alertType) {
         this.taskId = -1;
         this.description = null;
         this.status = status;
@@ -64,7 +65,7 @@ public class Task {
         this.description = null;
         this.status = status;
         this.dueDate = dueDate;
-        this.workerId = -1;
+        this.workerId = null;
         this.plotId = plotId;
         this.alertType = alertType;
     }
@@ -75,7 +76,7 @@ public class Task {
         this.description = description;
         this.status = status;
         this.dueDate = dueDate;
-        this.workerId = -1;
+        this.workerId = null;
         this.plotId = plotId;
         this.alertType = alertType;
     }
@@ -112,11 +113,11 @@ public class Task {
         this.dueDate = dueDate;
     }
 
-    public int getWorkerId() {
+    public List<Integer> getWorkerId() {
         return workerId;
     }
 
-    public void setWorkerId(int workerId) {
+    public void setWorkerId(List<Integer> workerId) {
         this.workerId = workerId;
     }
 

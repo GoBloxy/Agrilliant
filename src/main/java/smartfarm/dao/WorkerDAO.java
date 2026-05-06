@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class WorkerDAO implements GenericDAO<Worker> {
-    // TODO: addWorker, getWorkerById, getAllWorkers, updateWorker, deleteWorker
     private final Connection conn = DBConnection.getInstance();
 
     @Override

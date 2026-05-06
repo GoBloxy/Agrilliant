@@ -54,10 +54,10 @@ public class WorkerService {
         }
         return avaliableWorkers;
     }
-    public int getWorkerWorkloadByID(int id){
+    public int getWorkerWorkloadByID(int workerID){
         Worker worker;
         try {
-            worker = workerProcess.getById(id);
+            worker = workerProcess.getById(workerID);
         }
         catch (SQLException err){
             throw new RuntimeException("Server Error! Try again later");
@@ -82,21 +82,27 @@ public class WorkerService {
         return worker.getActiveTaskCount();
     }
 
-    public void deleteWorker(Worker worker){
+    public void deleteWorker(int workerID){
         try {
-            workerProcess.delete(worker.getUserId());
+            workerProcess.delete(workerID);
         }
         catch (SQLException err) {
             throw new RuntimeException("Server Error! Try again later");
         }
     }
+
+
+    public List<Integer> getTasksByWorker(int workerID){
+        Worker worker;
+        if(workerID == -1){
+           return new ArrayList<>();
+        }
+        try {
+            worker = workerProcess.getById(workerID);
+        }
+        catch(SQLException err){
+            throw new RuntimeException("Server Error! Try again later");
+        }
+        return worker.getTaskId();
+    }
 }
-
-
-/*
-    Todo:
-    1- Fix the foreign keys to be arrays for both worker and task
-    2- propagate all the exceptions to the controller to better handle i
-    3- the error handling here will be only about propagating the right custom error exception
-
- */

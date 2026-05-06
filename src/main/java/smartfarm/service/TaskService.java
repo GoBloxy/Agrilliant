@@ -4,6 +4,7 @@ import smartfarm.dao.WorkerDAO;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaskService {
@@ -26,6 +27,7 @@ public class TaskService {
         }
     }
 
+    // make the assign to least load worker instead of avaliable
     public void autoCreateTask(Task task){
         if(task.getTaskId()!=-1){
             throw new RuntimeException("The Task ID Already Exists");
@@ -35,8 +37,8 @@ public class TaskService {
         if(freeWorkers.isEmpty()){
             throw new RuntimeException("No Available Workers Right Now");
         }
-        Worker freeWorker = freeWorkers.getFirst();
-        task.setWorkerId(freeWorker.getUserId());
+        List<Integer> freeWorker = new ArrayList<>(List.of(freeWorkers.getFirst().getUserId()));
+        task.setWorkerId(freeWorker);
         try{
             taskProcess.save(task);
         }
@@ -45,9 +47,16 @@ public class TaskService {
         }
     }
 
-    public void advanceTaskStatus(Task task){
-        if(task.getTaskId()==-1){
+    public void advanceTaskStatus(int taskID){
+        if(taskID==-1){
             throw new RuntimeException("The Task Doesn't Exist");
+        }
+        Task task;
+        try{
+            task = taskProcess.getById(taskID);
+        }
+        catch(SQLException err){
+            throw new RuntimeException("Server Error! Try again later");
         }
         task.advanceStatus();
         try{
@@ -58,9 +67,16 @@ public class TaskService {
         }
     }
 
-    public void revertTaskStatus(Task task){
-        if(task.getTaskId()==-1){
+    public void revertTaskStatus(int taskID){
+        if(taskID==-1){
             throw new RuntimeException("The Task Doesn't Exist");
+        }
+        Task task;
+        try{
+            task = taskProcess.getById(taskID);
+        }
+        catch(SQLException err){
+            throw new RuntimeException("Server Error! Try again later");
         }
         task.revertStatus();
         try{
@@ -92,21 +108,33 @@ public class TaskService {
         }
     }
 
-    public void deleteTask(Task task){
+    public List<Task> getActiveTasks(){
+        List<Task> allTasks = getAllTasks(), available = new ArrayList<>();
+        for(Task task: allTasks){
+            if(!task.isOverdue()){
+                available.add(task);
+            }
+        }
+        return available;
+    }
+
+    public List<Task> getOverdueTasks(){
+        List<Task> allTasks = getAllTasks(), overdue = new ArrayList<>();
+        for(Task task: allTasks){
+            if(task.isOverdue()){
+                overdue.add(task);
+            }
+        }
+        return overdue;
+    }
+
+
+    public void deleteTask(int taskkID){
         try {
-            taskProcess.delete(task.getTaskId());
+            taskProcess.delete(taskkID);
         }
         catch (SQLException err) {
             throw new RuntimeException("Server Error! Try again later");
         }
     }
 }
-
-
-/*
-    Todo:
-    1- Fix the foreign keys to be arrays for both worker and task
-    2- propagate all the exceptions to the controller to better handle i
-    3- the error handling here will be only about propagating the right custom error exception
-
- */
