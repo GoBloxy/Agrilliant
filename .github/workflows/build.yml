@@ -7,6 +7,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  JAVAFX_VERSION: "21.0.2"
+
 jobs:
   # ── Windows .exe ──
   build-windows:
@@ -26,6 +29,11 @@ jobs:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
+      - name: Download JavaFX jmods (Windows)
+        run: |
+          curl -L -o javafx-jmods.zip "https://download2.gluonhq.com/openjfx/${{ env.JAVAFX_VERSION }}/openjfx-${{ env.JAVAFX_VERSION }}_windows-x64_bin-jmods.zip"
+          Expand-Archive javafx-jmods.zip -DestinationPath javafx-jmods
+
       - name: Build JAR
         run: mvn clean package -DskipTests
 
@@ -40,8 +48,7 @@ jobs:
             --dest target/installer `
             --vendor "Agrilliant" `
             --app-version 1.0.0 `
-            --icon src/main/resources/icon.ico `
-            --module-path "$env:JAVA_HOME/jmods" `
+            --module-path "javafx-jmods/javafx-jmods-${{ env.JAVAFX_VERSION }}" `
             --add-modules javafx.controls,javafx.fxml `
             --java-options "--add-opens javafx.graphics/com.sun.glass.utils=ALL-UNNAMED"
 
@@ -69,6 +76,11 @@ jobs:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
+      - name: Download JavaFX jmods (Linux)
+        run: |
+          curl -L -o javafx-jmods.zip "https://download2.gluonhq.com/openjfx/${{ env.JAVAFX_VERSION }}/openjfx-${{ env.JAVAFX_VERSION }}_linux-x64_bin-jmods.zip"
+          unzip javafx-jmods.zip -d javafx-jmods
+
       - name: Build JAR
         run: mvn clean package -DskipTests
 
@@ -83,7 +95,7 @@ jobs:
             --dest target/installer \
             --vendor "Agrilliant" \
             --app-version 1.0.0 \
-            --module-path "$JAVA_HOME/jmods" \
+            --module-path "javafx-jmods/javafx-jmods-${{ env.JAVAFX_VERSION }}" \
             --add-modules javafx.controls,javafx.fxml \
             --java-options "--add-opens javafx.graphics/com.sun.glass.utils=ALL-UNNAMED"
 
