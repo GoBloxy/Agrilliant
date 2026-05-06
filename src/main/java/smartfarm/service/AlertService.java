@@ -1,19 +1,159 @@
 package smartfarm.service;
 
+import smartfarm.dao.AlertDAO;
 import smartfarm.model.Alert;
+import smartfarm.model.Alert.Severity;
 import smartfarm.model.SensorReading;
+import smartfarm.model.Task;
+import smartfarm.util.ThresholdConfig;
+
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AlertService {
+    private final AlertDAO alertDAO;
+    private final TaskService taskService;
 
-    // Checks sensor reading against thresholds and creates alerts if needed
+    public AlertService(AlertDAO alertDAO, TaskService taskService) {
+        this.alertDAO = alertDAO;
+        this.taskService = taskService;
+    }
+
+    // Convenience constructor (no auto-task creation)
+    public AlertService() {
+        this.alertDAO = new AlertDAO();
+        this.taskService = null;
+    }
+
+    // Core: check a sensor reading against thresholds
     public void checkAndAlert(SensorReading reading, int plotId) {
-        if (reading.getTemperature() > 40) {
-            System.out.println("[ALERT] High temperature: " + reading.getTemperature() + "°C on plot " + plotId);
+        float temp = reading.getTemperature();
+        float hum  = reading.getHumidity();
+
+        // Temperature checks
+        if (temp >= ThresholdConfig.TEMP_CRITICAL_HIGH) {
+            createAlertWithTask(
+                "HIGH_TEMP", Severity.CRITICAL,
+                "Temperature critically high: " + temp + "°C",
+                plotId
+            );
+        } else if (temp >= ThresholdConfig.TEMP_WARNING_HIGH) {
+            createAlertOnly(
+                "HIGH_TEMP", Severity.WARNING,
+                "Temperature above normal: " + temp + "°C",
+                plotId
+            );
+        } else if (temp <= ThresholdConfig.TEMP_CRITICAL_LOW) {
+            createAlertWithTask(
+                "LOW_TEMP", Severity.CRITICAL,
+                "Temperature critically low: " + temp + "°C",
+                plotId
+            );
         }
-        if (reading.getHumidity() < 20) {
-            System.out.println("[ALERT] Low humidity: " + reading.getHumidity() + "% on plot " + plotId);
+
+        // Humidity checks
+        if (hum >= ThresholdConfig.HUM_WARNING_HIGH) {
+            createAlertOnly(
+                "HIGH_HUMIDITY", Severity.WARNING,
+                "Humidity above normal: " + hum + "%",
+                plotId
+            );
+        } else if (hum <= ThresholdConfig.HUM_WARNING_LOW) {
+            createAlertOnly(
+                "LOW_HUMIDITY", Severity.WARNING,
+                "Humidity below normal: " + hum + "%",
+                plotId
+            );
         }
     }
 
-    // TODO: createAlertWithTask, createAlertOnly
+    // Save an alert AND auto-create a task for it
+    public void createAlertWithTask(String alertType, Severity severity, String message, int plotId) {
+        // Step 1 — save the alert
+        Alert alert = new Alert(alertType, severity, message, plotId);
+        try {
+            alertDAO.save(alert);
+            System.out.println("[ALERT] " + alert);
+        } catch (SQLException e) {
+            System.err.println("Failed to save alert: " + e.getMessage());
+            return;
+        }
+
+        // Step 2 — auto-create an urgent task (if TaskService is available)
+        if (taskService != null) {
+            try {
+                Task task = new Task(
+                    -1,
+                    "AUTO: " + message,
+                    Task.Status.PENDING,
+                    LocalDate.now(),
+                    -1,
+                    plotId,
+                    alertType
+                );
+                taskService.autoCreateTask(task);
+                System.out.println("[TASK] Auto-created task for alert: " + alertType);
+            } catch (RuntimeException e) {
+                System.err.println("Auto-task creation failed: " + e.getMessage());
+            }
+        }
+    }
+
+    // Save an alert only (no task needed)
+    public void createAlertOnly(String alertType, Severity severity, String message, int plotId) {
+        Alert alert = new Alert(alertType, severity, message, plotId);
+        try {
+            alertDAO.save(alert);
+            System.out.println("[ALERT] " + alert);
+        } catch (SQLException e) {
+            System.err.println("Failed to save alert: " + e.getMessage());
+        }
+    }
+
+    //  Resolve an alert by ID
+    public void resolveAlert(int alertId) {
+        try {
+            alertDAO.markResolved(alertId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Server Error! Try again later");
+        }
+    }
+
+    //Retrieve alerts
+    public List<Alert> getAllAlerts() {
+        try {
+            return alertDAO.getAll();
+        } catch (SQLException e) {
+            throw new RuntimeException("Server Error! Try again later");
+        }
+    }
+
+    public List<Alert> getUnresolvedAlerts() {
+        try {
+            return alertDAO.getUnresolved();
+        } catch (SQLException e) {
+            throw new RuntimeException("Server Error! Try again later");
+        }
+    }
+
+    public List<Alert> getAlertsByPlot(int plotId) {
+        try {
+            return alertDAO.getAlertsByPlot(plotId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Server Error! Try again later");
+        }
+    }
+
+    public List<Alert> getCriticalAlerts() {
+        List<Alert> all = getUnresolvedAlerts();
+        List<Alert> critical = new ArrayList<>();
+        for (Alert alert : all) {
+            if (alert.isCritical()) {
+                critical.add(alert);
+            }
+        }
+        return critical;
+    }
 }
