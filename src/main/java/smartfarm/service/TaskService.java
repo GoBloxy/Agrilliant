@@ -9,7 +9,7 @@ import java.util.List;
 
 public class TaskService {
     private final TaskDAO taskProcess;
-    WorkerDAO DAO = new WorkerDAO();
+    private final WorkerDAO workerDAO = new WorkerDAO();
 
     public TaskService(TaskDAO taskProcess) {
         this.taskProcess = taskProcess;
@@ -32,13 +32,12 @@ public class TaskService {
         if(task.getTaskId()!=-1){
             throw new RuntimeException("The Task ID Already Exists");
         }
-        WorkerService service = new WorkerService(DAO);
+        WorkerService service = new WorkerService(workerDAO);
         List<Worker> freeWorkers = service.getAvailableWorkers();
         if(freeWorkers.isEmpty()){
             throw new RuntimeException("No Available Workers Right Now");
         }
-        List<Integer> freeWorker = new ArrayList<>(List.of(freeWorkers.getFirst().getUserId()));
-        task.setWorkerId(freeWorker);
+        task.setWorkerId(freeWorkers.getFirst().getUserId());
         try{
             taskProcess.save(task);
         }
@@ -57,6 +56,9 @@ public class TaskService {
         }
         catch(SQLException err){
             throw new RuntimeException("Server Error! Try again later");
+        }
+        if(task == null){
+            throw new RuntimeException("Task Not Found");
         }
         task.advanceStatus();
         try{
@@ -78,6 +80,9 @@ public class TaskService {
         catch(SQLException err){
             throw new RuntimeException("Server Error! Try again later");
         }
+        if(task == null){
+            throw new RuntimeException("Task Not Found");
+        }
         task.revertStatus();
         try{
             taskProcess.update(task);
@@ -87,7 +92,7 @@ public class TaskService {
         }
     }
 
-    public void updatetTask(Task task){
+    public void updateTask(Task task){
         if(task.getTaskId()==-1){
             throw new RuntimeException("The Task Doesn't Exist");
         }
@@ -129,9 +134,9 @@ public class TaskService {
     }
 
 
-    public void deleteTask(int taskkID){
+    public void deleteTask(int taskID){
         try {
-            taskProcess.delete(taskkID);
+            taskProcess.delete(taskID);
         }
         catch (SQLException err) {
             throw new RuntimeException("Server Error! Try again later");

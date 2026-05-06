@@ -1,7 +1,6 @@
 package smartfarm.model;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public class Task {
     public enum Status { PENDING, IN_PROGRESS, DONE }
@@ -10,13 +9,12 @@ public class Task {
     private String description;
     private Status status;
     private LocalDate dueDate;
-    private List<Integer> workerId; // change this to be array maybe multiple users can join the same task
+    private int workerId;
     private int plotId;
     private String alertType;
 
-
-    // with description and with id
-    public Task(int taskId, String description, Status status, LocalDate dueDate, List<Integer> workerId, int plotId, String alertType) {
+    // Full constructor (loading from DB)
+    public Task(int taskId, String description, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
         this.taskId = taskId;
         this.description = description;
         this.status = status;
@@ -26,57 +24,13 @@ public class Task {
         this.alertType = alertType;
     }
 
-    // with description and without id
-    public Task(String description, Status status, LocalDate dueDate, List<Integer> workerId, int plotId, String alertType) {
+    // Without taskId (creating a new task)
+    public Task(String description, LocalDate dueDate, int workerId, int plotId, String alertType) {
         this.taskId = -1;
         this.description = description;
-        this.status = status;
+        this.status = Status.PENDING;
         this.dueDate = dueDate;
         this.workerId = workerId;
-        this.plotId = plotId;
-        this.alertType = alertType;
-    }
-
-    // without description and with id
-    public Task(int taskId, Status status, LocalDate dueDate, List<Integer> workerId, int plotId, String alertType) {
-        this.taskId = taskId;
-        this.description = null;
-        this.status = status;
-        this.dueDate = dueDate;
-        this.workerId = workerId;
-        this.plotId = plotId;
-        this.alertType = alertType;
-    }
-
-    // without description and without id
-    public Task(Status status, LocalDate dueDate, List<Integer> workerId, int plotId, String alertType) {
-        this.taskId = -1;
-        this.description = null;
-        this.status = status;
-        this.dueDate = dueDate;
-        this.workerId = workerId;
-        this.plotId = plotId;
-        this.alertType = alertType;
-    }
-
-    // without description and without id and without workerId
-    public Task(Status status, LocalDate dueDate, int plotId, String alertType) {
-        this.taskId = -1;
-        this.description = null;
-        this.status = status;
-        this.dueDate = dueDate;
-        this.workerId = null;
-        this.plotId = plotId;
-        this.alertType = alertType;
-    }
-
-    // with description and without id and without workerId
-    public Task(String description, Status status, LocalDate dueDate, int plotId, String alertType) {
-        this.taskId = -1;
-        this.description = description;
-        this.status = status;
-        this.dueDate = dueDate;
-        this.workerId = null;
         this.plotId = plotId;
         this.alertType = alertType;
     }
@@ -113,11 +67,11 @@ public class Task {
         this.dueDate = dueDate;
     }
 
-    public List<Integer> getWorkerId() {
+    public int getWorkerId() {
         return workerId;
     }
 
-    public void setWorkerId(List<Integer> workerId) {
+    public void setWorkerId(int workerId) {
         this.workerId = workerId;
     }
 
@@ -138,8 +92,7 @@ public class Task {
     }
 
     public boolean isOverdue(){
-        LocalDate today = LocalDate.now();
-        return today.isAfter(getDueDate());
+        return status != Status.DONE && LocalDate.now().isAfter(getDueDate());
     }
 
     public void advanceStatus(){

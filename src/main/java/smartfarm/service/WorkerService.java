@@ -46,14 +46,15 @@ public class WorkerService {
 
     public List<Worker> getAvailableWorkers(){
         List<Worker> allWorkers = getAllWorkers();
-        List<Worker> avaliableWorkers = new ArrayList<>();
-        for(Worker worker:allWorkers){
+        List<Worker> availableWorkers = new ArrayList<>();
+        for(Worker worker : allWorkers){
             if(worker.isAvailable()){
-                avaliableWorkers.add(worker);
+                availableWorkers.add(worker);
             }
         }
-        return avaliableWorkers;
+        return availableWorkers;
     }
+
     public int getWorkerWorkloadByID(int workerID){
         Worker worker;
         try {
@@ -63,7 +64,7 @@ public class WorkerService {
             throw new RuntimeException("Server Error! Try again later");
         }
         if (worker == null) {
-            throw new RuntimeException("Worker not found");
+            throw new RuntimeException("Worker Not Found");
         }
         return worker.getActiveTaskCount();
     }
@@ -77,7 +78,7 @@ public class WorkerService {
             throw new RuntimeException("Server Error! Try again later");
         }
         if (worker == null) {
-            throw new RuntimeException("Worker not found");
+            throw new RuntimeException("Worker Not Found");
         }
         return worker.getActiveTaskCount();
     }
@@ -89,20 +90,5 @@ public class WorkerService {
         catch (SQLException err) {
             throw new RuntimeException("Server Error! Try again later");
         }
-    }
-
-
-    public List<Integer> getTasksByWorker(int workerID){
-        Worker worker;
-        if(workerID == -1){
-           return new ArrayList<>();
-        }
-        try {
-            worker = workerProcess.getById(workerID);
-        }
-        catch(SQLException err){
-            throw new RuntimeException("Server Error! Try again later");
-        }
-        return worker.getTaskId();
     }
 }

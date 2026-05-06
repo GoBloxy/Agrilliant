@@ -12,8 +12,7 @@ public class FarmServer {
     // Starts the server — blocks forever, so run this on a background thread
     public void start() {
         ExecutorService threadPool = Executors.newCachedThreadPool();
-        try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Farm Server started on port " + PORT);
 
             while (true) {
