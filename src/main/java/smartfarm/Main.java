@@ -24,7 +24,7 @@ public class Main extends Application {
         Scene scene = new Scene(root, 1440, 900);
         scene.getStylesheets().add(getClass().getResource("/css/farm-theme.css").toExternalForm());
         primaryStage.setTitle("Agrilliant — Smart Farm Management System");
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo-dark.png")));
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(1300);
         primaryStage.setMinHeight(820);
