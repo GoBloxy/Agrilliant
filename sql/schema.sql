@@ -14,7 +14,6 @@ CREATE TABLE users (
     role              ENUM('ADMIN','FARMER','WORKER') NOT NULL DEFAULT 'WORKER',
     phone             VARCHAR(20),
     active_task_count INT DEFAULT 0,
-    telegram_chat_id  VARCHAR(50),          -- nullable, set per-worker via bot
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
