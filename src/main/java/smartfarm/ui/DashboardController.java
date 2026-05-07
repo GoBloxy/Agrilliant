@@ -202,8 +202,9 @@ public class DashboardController {
         try {
             Node page = FXMLLoader.load(getClass().getResource(fxmlPath));
             showPage(page, navBtn);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Failed to load " + fxmlPath + ": " + e.getMessage());
+            e.printStackTrace();
             showPlaceholder("Error", "fth-alert-circle", navBtn);
         }
     }

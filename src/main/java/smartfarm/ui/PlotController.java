@@ -11,10 +11,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.RingPlot;
-import org.jfree.data.general.DefaultPieDataset;
-import org.jfree.chart.fx.ChartViewer;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.ArrayList;
@@ -37,18 +33,143 @@ public class PlotController {
     private final List<double[]> currentPoints = new ArrayList<>();
     private final List<Circle> currentDots = new ArrayList<>();
     private Polygon currentPreview = null;
-    private int plotCounter = 10; // next plot number
+    private int plotCounter = 1;
+
+    // Selection / editing state
+    private static class PlotEntry {
+        final Polygon polygon;
+        final Label label;
+        final String colorHex;
+        PlotEntry(Polygon polygon, Label label, String colorHex) {
+            this.polygon = polygon;
+            this.label = label;
+            this.colorHex = colorHex;
+        }
+    }
+    private final List<PlotEntry> allPlots = new ArrayList<>();
+    private PlotEntry selectedPlot = null;
+    private final List<Circle> vertexHandles = new ArrayList<>();
 
     // Colors for drawn plots
     private static final String[] PLOT_COLORS = {
         "#4caf50", "#66bb6a", "#81c784", "#a5d6a7", "#388e3c"
     };
 
+    // Hint label shown when map is empty
+    private Label hintLabel;
+
     @FXML
     public void initialize() {
-        setupDonutChart();
-        setupTable();
-        setupDrawingTool();
+        try {
+            // Critical: make transparent Pane receive mouse events
+            plotMapPane.setPickOnBounds(true);
+            setupDonutChart();
+            setupTable();
+            setupDrawingTool();
+            showEmptyHint();
+            System.out.println("[PlotController] initialized — draw mode & selection active");
+        } catch (Exception e) {
+            System.err.println("Error initializing PlotController: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void showEmptyHint() {
+        if (allPlots.isEmpty()) {
+            hintLabel = new Label("Click the  ✏  button, then click on the map to draw plot boundaries.\nDouble-click to finish a polygon.");
+            hintLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold; "
+                + "-fx-text-alignment: center; -fx-alignment: center; "
+                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 4, 0, 0, 1);");
+            hintLabel.setMouseTransparent(true);
+            hintLabel.setLayoutX(200);
+            hintLabel.setLayoutY(170);
+            plotMapPane.getChildren().add(hintLabel);
+        }
+    }
+
+    private void removeHintIfNeeded() {
+        if (hintLabel != null) {
+            plotMapPane.getChildren().remove(hintLabel);
+            hintLabel = null;
+        }
+    }
+
+    // ═══════════════ SELECTION & EDITING ═══════════════
+
+    private void selectPlot(PlotEntry entry) {
+        deselectPlot();
+        selectedPlot = entry;
+
+        // Highlight the selected polygon
+        entry.polygon.setStroke(Color.WHITE);
+        entry.polygon.setStrokeWidth(3);
+        entry.polygon.getStrokeDashArray().setAll(8.0, 4.0);
+
+        // Show draggable vertex handles
+        showVertexHandles(entry.polygon);
+    }
+
+    private void deselectPlot() {
+        if (selectedPlot != null) {
+            // Restore original stroke
+            selectedPlot.polygon.setStroke(Color.web(selectedPlot.colorHex, 0.9));
+            selectedPlot.polygon.setStrokeWidth(2);
+            selectedPlot.polygon.getStrokeDashArray().clear();
+            selectedPlot = null;
+        }
+        removeVertexHandles();
+    }
+
+    private void showVertexHandles(Polygon poly) {
+        removeVertexHandles();
+        List<Double> pts = poly.getPoints();
+        for (int i = 0; i < pts.size(); i += 2) {
+            final int idx = i;
+            double x = pts.get(i);
+            double y = pts.get(i + 1);
+
+            Circle handle = new Circle(x, y, 5, Color.WHITE);
+            handle.setStroke(Color.web("#1b5e20"));
+            handle.setStrokeWidth(2);
+            handle.setCursor(Cursor.MOVE);
+
+            // Drag to move vertex
+            handle.setOnMouseDragged(event -> {
+                double nx = event.getX();
+                double ny = event.getY();
+                handle.setCenterX(nx);
+                handle.setCenterY(ny);
+                pts.set(idx, nx);
+                pts.set(idx + 1, ny);
+                updateLabelPosition(selectedPlot);
+                event.consume();
+            });
+            handle.setOnMousePressed(event -> event.consume());
+            handle.setOnMouseReleased(event -> event.consume());
+
+            vertexHandles.add(handle);
+            plotMapPane.getChildren().add(handle);
+        }
+    }
+
+    private void removeVertexHandles() {
+        plotMapPane.getChildren().removeAll(vertexHandles);
+        vertexHandles.clear();
+    }
+
+    private void updateLabelPosition(PlotEntry entry) {
+        if (entry == null || entry.label == null) return;
+        List<Double> pts = entry.polygon.getPoints();
+        double cx = 0, cy = 0;
+        int count = pts.size() / 2;
+        for (int i = 0; i < pts.size(); i += 2) {
+            cx += pts.get(i);
+            cy += pts.get(i + 1);
+        }
+        cx /= count;
+        cy /= count;
+        entry.label.setLayoutX(cx - 35);
+        entry.label.setLayoutY(cy - 20);
     }
 
     // ═══════════════ DRAWING TOOL ═══════════════
@@ -59,55 +180,48 @@ public class PlotController {
             btnDrawMode.selectedProperty().addListener((obs, oldVal, newVal) -> {
                 drawingMode = newVal;
                 plotMapPane.setCursor(drawingMode ? Cursor.CROSSHAIR : Cursor.DEFAULT);
-                if (!drawingMode) {
+                if (drawingMode) {
+                    deselectPlot();
+                } else {
                     cancelCurrentDrawing();
                 }
             });
         }
 
-        // Click on map to add polygon points
+        // Click on map pane background
         plotMapPane.setOnMouseClicked(event -> {
-            if (!drawingMode) return;
+            if (drawingMode) {
+                if (event.getClickCount() == 2 && currentPoints.size() >= 3) {
+                    finishPolygon();
+                    event.consume();
+                } else if (event.getClickCount() == 1) {
+                    double x = event.getX();
+                    double y = event.getY();
+                    currentPoints.add(new double[]{x, y});
 
-            if (event.getClickCount() == 2 && currentPoints.size() >= 3) {
-                // Double-click: close the polygon
-                finishPolygon();
-                event.consume();
-            } else if (event.getClickCount() == 1) {
-                // Single click: add a point
-                double x = event.getX();
-                double y = event.getY();
-                currentPoints.add(new double[]{x, y});
+                    Circle dot = new Circle(x, y, 4, Color.WHITE);
+                    dot.setStroke(Color.web("#2e7d32"));
+                    dot.setStrokeWidth(2);
+                    currentDots.add(dot);
+                    plotMapPane.getChildren().add(dot);
 
-                // Draw a dot at the click location
-                Circle dot = new Circle(x, y, 4, Color.WHITE);
-                dot.setStroke(Color.web("#2e7d32"));
-                dot.setStrokeWidth(2);
-                currentDots.add(dot);
-                plotMapPane.getChildren().add(dot);
-
-                // Update preview polygon
-                updatePreview();
+                    updatePreview();
+                }
+            } else {
+                // Clicking empty space deselects
+                deselectPlot();
             }
         });
 
-        // Delete button
+        // Delete button removes selected plot, or last drawn if none selected
         if (btnDeletePlot != null) {
             btnDeletePlot.setOnAction(e -> {
-                // Remove last drawn polygon if any
-                if (!plotMapPane.getChildren().isEmpty()) {
-                    // Remove from end until we find a non-polygon
-                    for (int i = plotMapPane.getChildren().size() - 1; i >= 0; i--) {
-                        if (plotMapPane.getChildren().get(i) instanceof Polygon) {
-                            plotMapPane.getChildren().remove(i);
-                            // Also remove associated label (the one right after)
-                            if (i < plotMapPane.getChildren().size() &&
-                                plotMapPane.getChildren().get(i) instanceof Label) {
-                                plotMapPane.getChildren().remove(i);
-                            }
-                            break;
-                        }
-                    }
+                if (selectedPlot != null) {
+                    plotMapPane.getChildren().remove(selectedPlot.polygon);
+                    plotMapPane.getChildren().remove(selectedPlot.label);
+                    allPlots.remove(selectedPlot);
+                    removeVertexHandles();
+                    selectedPlot = null;
                 }
             });
         }
@@ -127,14 +241,12 @@ public class PlotController {
             currentPreview.setStrokeWidth(2);
             currentPreview.getStrokeDashArray().addAll(6.0, 4.0);
             currentPreview.setMouseTransparent(true);
-            // Insert behind dots
             int insertIdx = plotMapPane.getChildren().size() - currentDots.size();
             plotMapPane.getChildren().add(Math.max(0, insertIdx), currentPreview);
         }
     }
 
     private void finishPolygon() {
-        // Remove preview and dots
         if (currentPreview != null) {
             plotMapPane.getChildren().remove(currentPreview);
             currentPreview = null;
@@ -151,6 +263,7 @@ public class PlotController {
         poly.setFill(Color.web(color, 0.4));
         poly.setStroke(Color.web(color));
         poly.setStrokeWidth(2);
+        poly.setCursor(Cursor.HAND);
         plotMapPane.getChildren().add(poly);
 
         // Add centered label
@@ -166,6 +279,18 @@ public class PlotController {
         lbl.setLayoutY(cy - 8);
         lbl.setMouseTransparent(true);
         plotMapPane.getChildren().add(lbl);
+
+        PlotEntry entry = new PlotEntry(poly, lbl, color);
+        allPlots.add(entry);
+        removeHintIfNeeded();
+
+        // Make the new plot selectable
+        poly.setOnMouseClicked(event -> {
+            if (!drawingMode) {
+                selectPlot(entry);
+                event.consume();
+            }
+        });
 
         plotCounter++;
         currentPoints.clear();
@@ -189,34 +314,32 @@ public class PlotController {
     // ═══════════════ DONUT CHART ═══════════════
 
     private void setupDonutChart() {
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        dataset.setValue("Under Cultivation", 8);
-        dataset.setValue("Available", 2);
-        dataset.setValue("Fallow", 2);
+        javafx.scene.shape.Arc arc1 = new javafx.scene.shape.Arc(65, 65, 50, 50, 90, 236);
+        arc1.setFill(Color.TRANSPARENT);
+        arc1.setStroke(Color.web("#28a745"));
+        arc1.setStrokeWidth(12);
+        
+        javafx.scene.shape.Arc arc2 = new javafx.scene.shape.Arc(65, 65, 50, 50, 330, 56);
+        arc2.setFill(Color.TRANSPARENT);
+        arc2.setStroke(Color.web("#ffc107"));
+        arc2.setStrokeWidth(12);
+        
+        javafx.scene.shape.Arc arc3 = new javafx.scene.shape.Arc(65, 65, 50, 50, 30, 56);
+        arc3.setFill(Color.TRANSPARENT);
+        arc3.setStroke(Color.web("#6f42c1"));
+        arc3.setStrokeWidth(12);
 
-        RingPlot plot = new RingPlot(dataset);
-        plot.setSectionDepth(0.35);
-        plot.setLabelGenerator(null);
-        plot.setSectionPaint("Under Cultivation", new java.awt.Color(40, 167, 69));
-        plot.setSectionPaint("Available", new java.awt.Color(255, 193, 7));
-        plot.setSectionPaint("Fallow", new java.awt.Color(111, 66, 193));
-        plot.setBackgroundPaint(null);
-        plot.setOutlineVisible(false);
-        plot.setShadowPaint(null);
-        plot.setSeparatorStroke(new java.awt.BasicStroke(3.0f));
-        plot.setSeparatorPaint(java.awt.Color.WHITE);
-
-        JFreeChart chart = new JFreeChart(null, null, plot, false);
-        chart.setBackgroundPaint(null);
-
-        ChartViewer viewer = new ChartViewer(chart);
-        viewer.setPrefSize(150, 150);
-        chartContainer.getChildren().add(0, viewer);
+        javafx.scene.layout.Pane arcPane = new javafx.scene.layout.Pane();
+        arcPane.setPrefSize(130, 130);
+        arcPane.getChildren().addAll(arc1, arc2, arc3);
+        
+        chartContainer.getChildren().add(0, arcPane);
     }
 
     // ═══════════════ TABLE ═══════════════
 
     private void setupTable() {
+        plotTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colPlotId.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("plotId"));
         colField.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("field"));
         colCrop.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("crop"));

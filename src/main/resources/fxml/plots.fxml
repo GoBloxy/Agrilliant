@@ -74,26 +74,29 @@
         </HBox>
     </HBox>
 
+    <!-- Filters Row -->
+    <HBox spacing="14" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" styleClass="search-box">
+            <padding><Insets right="8" left="8"/></padding>
+            <TextField promptText="Search plots..." styleClass="search-field"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
+        </HBox>
+        <ComboBox promptText="All Fields" styleClass="filter-combo"/>
+        <ComboBox promptText="All Status" styleClass="filter-combo"/>
+        <ComboBox promptText="All Crops" styleClass="filter-combo"/>
+    </HBox>
+
     <!-- Map + Overview -->
     <HBox spacing="14">
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="680" spacing="10">
-            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <HBox alignment="CENTER_LEFT" styleClass="search-box">
-                    <padding><Insets right="8" left="8"/></padding>
-                    <TextField promptText="Search plots..." styleClass="search-field"/>
-                    <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
-                </HBox>
-                <ComboBox promptText="All Fields" styleClass="filter-combo"/>
-                <ComboBox promptText="All Status" styleClass="filter-combo"/>
-                <ComboBox promptText="All Crops" styleClass="filter-combo"/>
-            </HBox>
-            <StackPane prefHeight="340" maxHeight="340" style="-fx-background-color: #2d5a27; -fx-background-radius: 8;">
-                <ImageView fitHeight="340" fitWidth="660" preserveRatio="false" style="-fx-opacity: 0.95;">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+            <StackPane prefHeight="380" style="-fx-background-color: #2d5a27; -fx-background-radius: 10;">
+                <ImageView fitHeight="380" fitWidth="780" preserveRatio="false" style="-fx-opacity: 0.95;">
                     <image><Image url="@../images/farm_map.png"/></image>
                 </ImageView>
                 <Pane fx:id="plotMapPane" style="-fx-background-color: transparent;"/>
-                <VBox spacing="4" StackPane.alignment="TOP_LEFT">
+                <VBox spacing="4" StackPane.alignment="TOP_LEFT" pickOnBounds="false"
+                      maxWidth="-Infinity" maxHeight="-Infinity">
                     <padding><Insets top="10" left="10"/></padding>
                     <Button text="+" style="-fx-background-color: white; -fx-background-radius: 4; -fx-padding: 4 10; -fx-cursor: hand; -fx-font-weight: bold;"/>
                     <Button text="—" style="-fx-background-color: white; -fx-background-radius: 4; -fx-padding: 4 10; -fx-cursor: hand;"/>
@@ -201,15 +204,15 @@
         <Label text="All Plots" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
         <TableView fx:id="plotTable" VBox.vgrow="ALWAYS" prefHeight="250" style="-fx-fixed-cell-size: 46;">
             <columns>
-                <TableColumn fx:id="colPlotId" text="Plot ID" prefWidth="140"/>
-                <TableColumn fx:id="colField" text="Field" prefWidth="100"/>
-                <TableColumn fx:id="colCrop" text="Crop" prefWidth="110"/>
-                <TableColumn fx:id="colArea" text="Area (ha)" prefWidth="75"/>
-                <TableColumn fx:id="colStatus" text="Status" prefWidth="135"/>
-                <TableColumn fx:id="colSoil" text="Soil Type" prefWidth="95"/>
-                <TableColumn fx:id="colIrrigation" text="Irrigation" prefWidth="100"/>
-                <TableColumn fx:id="colLastActivity" text="Last Activity" prefWidth="145"/>
-                <TableColumn fx:id="colActions" text="Actions" prefWidth="80"/>
+                <TableColumn fx:id="colPlotId" text="Plot ID" prefWidth="125" minWidth="100"/>
+                <TableColumn fx:id="colField" text="Field" prefWidth="85" minWidth="70"/>
+                <TableColumn fx:id="colCrop" text="Crop" prefWidth="95" minWidth="80"/>
+                <TableColumn fx:id="colArea" text="Area (ha)" prefWidth="65" minWidth="55"/>
+                <TableColumn fx:id="colStatus" text="Status" prefWidth="120" minWidth="100"/>
+                <TableColumn fx:id="colSoil" text="Soil Type" prefWidth="80" minWidth="70"/>
+                <TableColumn fx:id="colIrrigation" text="Irrigation" prefWidth="85" minWidth="70"/>
+                <TableColumn fx:id="colLastActivity" text="Last Activity" prefWidth="120" minWidth="100"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="75" minWidth="75"/>
             </columns>
         </TableView>
         <HBox alignment="CENTER_LEFT" spacing="10">
