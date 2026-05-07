@@ -1,46 +1,50 @@
 package smartfarm.model;
 
-import java.time.LocalDateTime;
-
-/**
- * TODO: Drone represents a UAV used for irrigation, crop monitoring, and disease detection.
- *
- * CAPABILITIES:
- * - Irrigation: carries a tank and sprays water/fertilizer over plots.
- * - Imaging: captures aerial photos for GIS orthomosaics and disease detection.
- * - Monitoring: follows a flight path over plots, recording sensor data.
- *
- * INTEGRATION:
- * - Drone communicates with backend via MQTT or REST API (like ESP32 sensors).
- * - Sends telemetry: battery, GPS position, flight status.
- * - Receives commands: start mission, return home, spray area.
- * - Flight missions can be auto-triggered by alerts or scheduled.
- *
- * Links to: Plot (which plot it's assigned/operating on, nullable when idle).
- * Referenced by: IrrigationLog (drone-based irrigation), DiseaseDetection (drone-captured images).
- */
 public class Drone {
-    public enum Status { IDLE, IN_FLIGHT, CHARGING, MAINTENANCE }
-    public enum MissionType { IRRIGATION, IMAGING, MONITORING, SPRAYING }
+    public enum Status { IDLE, MAPPING, IRRIGATING, RETURNING, MAINT }
 
     private int droneId;
-    private String droneCode;         // e.g. "DRN-001"
-    private String model;             // hardware model name
+    private String serialNumber;
+    private String model;
     private Status status;
-    private Integer currentPlotId;    // nullable — null when idle/not assigned
     private double batteryPercent;
-    private double latitude;
-    private double longitude;
-    private double altitudeMeters;
-    private LocalDateTime lastHeartbeat;  // last telemetry ping
-    private double totalFlightHours;
+    private Integer assignedPlotId;        // nullable
+    private int operatedByWorkerId;
 
-    // TODO: Implement constructors, getters, setters
-    // TODO: Implement DAO (DroneDAO)
-    // TODO: Implement Service (DroneService):
-    //       - startMission(droneId, plotId, missionType)
-    //       - updateTelemetry(droneId, battery, lat, lng, alt)
-    //       - completeMission(droneId) → log results
-    //       - getAvailableDrones() → drones with status IDLE and battery > threshold
-    // TODO: Create DroneMission model to track individual flight missions with start/end times
+    public Drone(int droneId, String serialNumber, String model, Status status, double batteryPercent,
+                 Integer assignedPlotId, int operatedByWorkerId) {
+        this.droneId = droneId;
+        this.serialNumber = serialNumber;
+        this.model = model;
+        this.status = status;
+        this.batteryPercent = batteryPercent;
+        this.assignedPlotId = assignedPlotId;
+        this.operatedByWorkerId = operatedByWorkerId;
+    }
+
+    public Drone(String serialNumber, String model, double batteryPercent,
+                 Integer assignedPlotId, int operatedByWorkerId) {
+        this.droneId = -1;
+        this.serialNumber = serialNumber;
+        this.model = model;
+        this.status = Status.IDLE;
+        this.batteryPercent = batteryPercent;
+        this.assignedPlotId = assignedPlotId;
+        this.operatedByWorkerId = operatedByWorkerId;
+    }
+
+    public int getDroneId() { return droneId; }
+    public void setDroneId(int droneId) { this.droneId = droneId; }
+    public String getSerialNumber() { return serialNumber; }
+    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
+    public String getModel() { return model; }
+    public void setModel(String model) { this.model = model; }
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
+    public double getBatteryPercent() { return batteryPercent; }
+    public void setBatteryPercent(double batteryPercent) { this.batteryPercent = batteryPercent; }
+    public Integer getAssignedPlotId() { return assignedPlotId; }
+    public void setAssignedPlotId(Integer assignedPlotId) { this.assignedPlotId = assignedPlotId; }
+    public int getOperatedByWorkerId() { return operatedByWorkerId; }
+    public void setOperatedByWorkerId(int operatedByWorkerId) { this.operatedByWorkerId = operatedByWorkerId; }
 }

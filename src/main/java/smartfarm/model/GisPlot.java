@@ -1,39 +1,48 @@
 package smartfarm.model;
 
-import java.time.LocalDateTime;
-
-/**
- * TODO: GisPlot stores geographic/spatial data for each plot.
- *
- * HOW TO IMPLEMENT GIS:
- * - Store plot boundaries as a polygon (list of lat/lng coordinates).
- * - In MySQL, you can use the GEOMETRY/POLYGON spatial data type, or store as JSON text.
- * - For the frontend map: use Leaflet.js or Google Maps API to render plot boundaries.
- * - Drone can fly over and capture aerial imagery; the orthomosaic is stored as a URL.
- *
- * DATA SOURCES:
- * - Manual: manager draws boundaries on a map in the UI.
- * - Drone: autonomous flight captures GPS-tagged images → stitched into orthomosaic.
- * - Satellite: free imagery from Sentinel-2 (ESA) via API for NDVI vegetation index.
- *
- * Links to: Plot (1:1 relationship — each Plot has one GisPlot with its spatial data).
- * The drone captures field overview imagery stored here as orthomosaic URLs.
- */
 public class GisPlot {
-    private int gisPlotId;
+    private int gisId;
     private int plotId;                // FK → plots (1:1)
-    private String boundaryGeoJson;    // GeoJSON polygon string for plot boundary
     private double centerLatitude;
     private double centerLongitude;
-    private double areaSquareMeters;   // computed from boundary
-    private String orthomosaicUrl;     // latest drone aerial image URL
-    private String ndviMapUrl;         // latest NDVI vegetation map URL (from satellite/drone)
-    private LocalDateTime lastUpdated;
+    private String boundaryGeoJson;
+    private String satelliteImageUrl;
+    private String soilHeatmapUrl;
 
-    // TODO: Implement constructors, getters, setters
-    // TODO: Implement DAO (GisPlotDAO)
-    // TODO: Implement Service (GisService):
-    //       - updateBoundary(plotId, geoJson) → recalculate area
-    //       - uploadOrthomosaic(plotId, imageUrl) → update after drone flight
-    //       - fetchNdvi(plotId) → call satellite API (e.g. Sentinel Hub) for vegetation health
+    public GisPlot(int gisId, int plotId, double centerLatitude, double centerLongitude,
+                   String boundaryGeoJson, String satelliteImageUrl, String soilHeatmapUrl) {
+        this.gisId = gisId;
+        this.plotId = plotId;
+        this.centerLatitude = centerLatitude;
+        this.centerLongitude = centerLongitude;
+        this.boundaryGeoJson = boundaryGeoJson;
+        this.satelliteImageUrl = satelliteImageUrl;
+        this.soilHeatmapUrl = soilHeatmapUrl;
+    }
+
+    public GisPlot(int plotId, double centerLatitude, double centerLongitude,
+                   String boundaryGeoJson, String satelliteImageUrl, String soilHeatmapUrl) {
+        this.gisId = -1;
+        this.plotId = plotId;
+        this.centerLatitude = centerLatitude;
+        this.centerLongitude = centerLongitude;
+        this.boundaryGeoJson = boundaryGeoJson;
+        this.satelliteImageUrl = satelliteImageUrl;
+        this.soilHeatmapUrl = soilHeatmapUrl;
+    }
+
+    public int getGisId() { return gisId; }
+    public void setGisId(int gisId) { this.gisId = gisId; }
+    public int getPlotId() { return plotId; }
+    public void setPlotId(int plotId) { this.plotId = plotId; }
+    public double getCenterLatitude() { return centerLatitude; }
+    public void setCenterLatitude(double centerLatitude) { this.centerLatitude = centerLatitude; }
+    public double getCenterLongitude() { return centerLongitude; }
+    public void setCenterLongitude(double centerLongitude) { this.centerLongitude = centerLongitude; }
+    public String getBoundaryGeoJson() { return boundaryGeoJson; }
+    public void setBoundaryGeoJson(String boundaryGeoJson) { this.boundaryGeoJson = boundaryGeoJson; }
+    public String getSatelliteImageUrl() { return satelliteImageUrl; }
+    public void setSatelliteImageUrl(String satelliteImageUrl) { this.satelliteImageUrl = satelliteImageUrl; }
+    public String getSoilHeatmapUrl() { return soilHeatmapUrl; }
+    public void setSoilHeatmapUrl(String soilHeatmapUrl) { this.soilHeatmapUrl = soilHeatmapUrl; }
 }

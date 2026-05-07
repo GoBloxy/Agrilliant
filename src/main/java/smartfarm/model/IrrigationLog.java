@@ -1,31 +1,52 @@
 package smartfarm.model;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
-/**
- * TODO: IrrigationLog tracks every irrigation event on a plot.
- * - Can be triggered manually by a worker, automatically by sensor thresholds, or by a drone.
- * - Records water volume, duration, method (drip/sprinkler/drone), and source trigger.
- * - Links to: Plot (where), Worker (who initiated, nullable), Drone (if drone-irrigated, nullable).
- * - Used for water usage reports, scheduling optimization, and cost analysis.
- */
 public class IrrigationLog {
     public enum Method { DRIP, SPRINKLER, FLOOD, DRONE }
-    public enum TriggerSource { MANUAL, SENSOR_AUTO, SCHEDULED, DRONE_AUTO }
 
     private int logId;
     private int plotId;
-    private Integer workerId;       // nullable — null if auto-triggered
-    private Integer droneId;        // nullable — set only if drone performed irrigation
+    private LocalDate date;
+    private double volumeLitres;
     private Method method;
-    private TriggerSource triggerSource;
-    private double waterVolumeLiters;
     private int durationMinutes;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private String notes;
+    private String triggeredBy;
 
-    // TODO: Implement constructors, getters, setters
-    // TODO: Implement DAO (IrrigationLogDAO) with save/getById/getAll/getByPlot/getByDateRange
-    // TODO: Implement Service (IrrigationService) with scheduling logic, water budget tracking
+    public IrrigationLog(int logId, int plotId, LocalDate date, double volumeLitres, Method method,
+                         int durationMinutes, String triggeredBy) {
+        this.logId = logId;
+        this.plotId = plotId;
+        this.date = date;
+        this.volumeLitres = volumeLitres;
+        this.method = method;
+        this.durationMinutes = durationMinutes;
+        this.triggeredBy = triggeredBy;
+    }
+
+    public IrrigationLog(int plotId, LocalDate date, double volumeLitres, Method method,
+                         int durationMinutes, String triggeredBy) {
+        this.logId = -1;
+        this.plotId = plotId;
+        this.date = date;
+        this.volumeLitres = volumeLitres;
+        this.method = method;
+        this.durationMinutes = durationMinutes;
+        this.triggeredBy = triggeredBy;
+    }
+
+    public int getLogId() { return logId; }
+    public void setLogId(int logId) { this.logId = logId; }
+    public int getPlotId() { return plotId; }
+    public void setPlotId(int plotId) { this.plotId = plotId; }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
+    public double getVolumeLitres() { return volumeLitres; }
+    public void setVolumeLitres(double volumeLitres) { this.volumeLitres = volumeLitres; }
+    public Method getMethod() { return method; }
+    public void setMethod(Method method) { this.method = method; }
+    public int getDurationMinutes() { return durationMinutes; }
+    public void setDurationMinutes(int durationMinutes) { this.durationMinutes = durationMinutes; }
+    public String getTriggeredBy() { return triggeredBy; }
+    public void setTriggeredBy(String triggeredBy) { this.triggeredBy = triggeredBy; }
 }

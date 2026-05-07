@@ -19,24 +19,18 @@ public class HarvestDAO implements GenericDAO<HarvestRecord> {
             rs.getObject("harvest_date", java.time.LocalDate.class),
             rs.getDouble("quantity_kg"),
             HarvestRecord.Grade.valueOf(rs.getString("grade")),
-            rs.getDouble("moisture_percent"),
-            rs.getDouble("expected_yield_kg"),
-            rs.getInt("crop_id"),
-            rs.getInt("worker_id")
+            rs.getInt("crop_id")
         );
     }
 
     @Override
     public void save(HarvestRecord item) throws SQLException {
-        String sql = "INSERT INTO harvest_records (harvest_date, quantity_kg, grade, moisture_percent, expected_yield_kg, crop_id, worker_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO harvest_records (harvest_date, quantity_kg, grade, crop_id) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             stmt.setObject(1, item.getHarvestDate());
             stmt.setDouble(2, item.getQuantityKg());
             stmt.setString(3, item.getGrade().name());
-            stmt.setDouble(4, item.getMoisturePercent());
-            stmt.setDouble(5, item.getExpectedYieldKg());
-            stmt.setInt(6, item.getCropId());
-            stmt.setInt(7, item.getWorkerId());
+            stmt.setInt(4, item.getCropId());
             stmt.executeUpdate();
 
             try (ResultSet keys = stmt.getGeneratedKeys()) {
@@ -75,16 +69,13 @@ public class HarvestDAO implements GenericDAO<HarvestRecord> {
 
     @Override
     public void update(HarvestRecord item) throws SQLException {
-        String sql = "UPDATE harvest_records SET harvest_date = ?, quantity_kg = ?, grade = ?, moisture_percent = ?, expected_yield_kg = ?, crop_id = ?, worker_id = ? WHERE record_id = ?";
+        String sql = "UPDATE harvest_records SET harvest_date = ?, quantity_kg = ?, grade = ?, crop_id = ? WHERE record_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, item.getHarvestDate());
             stmt.setDouble(2, item.getQuantityKg());
             stmt.setString(3, item.getGrade().name());
-            stmt.setDouble(4, item.getMoisturePercent());
-            stmt.setDouble(5, item.getExpectedYieldKg());
-            stmt.setInt(6, item.getCropId());
-            stmt.setInt(7, item.getWorkerId());
-            stmt.setInt(8, item.getRecordId());
+            stmt.setInt(4, item.getCropId());
+            stmt.setInt(5, item.getRecordId());
             stmt.executeUpdate();
         }
     }

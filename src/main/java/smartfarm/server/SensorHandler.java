@@ -1,5 +1,7 @@
 package smartfarm.server;
 
+import smartfarm.dao.DeviceDAO;
+import smartfarm.model.Device;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
@@ -8,12 +10,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 public class SensorHandler implements Runnable {
     private final Socket socket;
     private final SensorService sensorService = new SensorService();
-    private String lastDeviceId;
+    private final DeviceDAO deviceDAO = new DeviceDAO();
+    private String lastDeviceCode;
 
     public SensorHandler(Socket socket) {
         this.socket = socket;
@@ -25,32 +29,57 @@ public class SensorHandler implements Runnable {
                 new InputStreamReader(socket.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                SensorReading reading = parseReading(line);
-                if (reading != null) {
-                    lastDeviceId = reading.getDeviceId();
-                    sensorService.processReading(reading);
+                Parsed parsed = parseLine(line);
+                if (parsed != null) {
+                    lastDeviceCode = parsed.deviceCode;
+                    int deviceId = resolveDeviceId(parsed.deviceCode);
+                    SensorReading reading = new SensorReading(
+                        deviceId, parsed.temperature, parsed.humidity, LocalDateTime.now()
+                    );
+                    sensorService.processReading(reading, parsed.deviceCode);
                 }
             }
         } catch (IOException e) {
             System.out.println("Device disconnected: " + socket.getInetAddress());
         } finally {
-            if (lastDeviceId != null) {
-                LiveSensorData.getInstance().removeDevice(lastDeviceId);
+            if (lastDeviceCode != null) {
+                LiveSensorData.getInstance().removeDevice(lastDeviceCode);
             }
         }
     }
 
-    // Parses "DEVICE:plot1_sensor,TEMP:27.50,HUM:63.20" into a SensorReading
-    private SensorReading parseReading(String raw) {
+    // Look up device by its code; returns 0 (untracked) if not registered or DB unavailable.
+    private int resolveDeviceId(String deviceCode) {
+        try {
+            Device d = deviceDAO.getByCode(deviceCode);
+            return d != null ? d.getDeviceId() : 0;
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    // Parses "DEVICE:plot1_sensor,TEMP:27.50,HUM:63.20"
+    private Parsed parseLine(String raw) {
         try {
             String[] parts = raw.split(",");
-            String deviceId = parts[0].split(":")[1];
+            String deviceCode = parts[0].split(":")[1];
             float temp = Float.parseFloat(parts[1].split(":")[1]);
-            float hum = Float.parseFloat(parts[2].split(":")[1]);
-            return new SensorReading(deviceId, temp, hum, LocalDateTime.now());
+            float hum  = Float.parseFloat(parts[2].split(":")[1]);
+            return new Parsed(deviceCode, temp, hum);
         } catch (Exception e) {
             System.err.println("Bad data format: " + raw);
             return null;
+        }
+    }
+
+    private static final class Parsed {
+        final String deviceCode;
+        final float temperature;
+        final float humidity;
+        Parsed(String deviceCode, float temperature, float humidity) {
+            this.deviceCode = deviceCode;
+            this.temperature = temperature;
+            this.humidity = humidity;
         }
     }
 }

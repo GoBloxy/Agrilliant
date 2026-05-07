@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public class Crop {
 
-    public enum GrowthStage {PLANTED, GROWING, READY, HARVESTED}
+    public enum GrowthStage { SEED, SEEDLING, VEGETATIVE, FLOWERING, FRUITING, HARVESTED }
 
     private int cropId;
     private String cropName;
@@ -12,24 +12,26 @@ public class Crop {
     private LocalDate harvestDate;
     private GrowthStage growthStage;
     private int plotId;
-    private double expectedYieldKg;
+    private double expectedYield;
 
-    public Crop(String cropName, LocalDate plantingDate, LocalDate harvestDate, int plotId, double expectedYieldKg) {
+    public Crop(String cropName, LocalDate plantingDate, LocalDate harvestDate, int plotId, double expectedYield) {
         this.cropName = cropName;
         this.plantingDate = plantingDate;
         this.harvestDate = harvestDate;
-        this.growthStage = GrowthStage.PLANTED;
+        this.growthStage = GrowthStage.SEED;
         this.plotId = plotId;
-        this.expectedYieldKg = expectedYieldKg;
+        this.expectedYield = expectedYield;
     }
 
     // Advance to the next stage
     public void advanceStage() {
         switch (growthStage) {
-            case PLANTED -> growthStage = GrowthStage.GROWING;
-            case GROWING -> growthStage = GrowthStage.READY;
-            case READY -> growthStage = GrowthStage.HARVESTED;
-            case HARVESTED -> { /* already done */ }
+            case SEED       -> growthStage = GrowthStage.SEEDLING;
+            case SEEDLING   -> growthStage = GrowthStage.VEGETATIVE;
+            case VEGETATIVE -> growthStage = GrowthStage.FLOWERING;
+            case FLOWERING  -> growthStage = GrowthStage.FRUITING;
+            case FRUITING   -> growthStage = GrowthStage.HARVESTED;
+            case HARVESTED  -> { /* already done */ }
         }
     }
 
@@ -37,7 +39,7 @@ public class Crop {
      * Check if crop is overdue for harvest
      */
     public boolean isOverdue() {
-        return growthStage == GrowthStage.READY && LocalDate.now().isAfter(harvestDate);
+        return growthStage == GrowthStage.FRUITING && LocalDate.now().isAfter(harvestDate);
     }
 
     // ── Getters ──
@@ -66,8 +68,8 @@ public class Crop {
         return plotId;
     }
 
-    public double getExpectedYieldKg() {
-        return expectedYieldKg;
+    public double getExpectedYield() {
+        return expectedYield;
     }
 
     // ── Setters ──
@@ -96,7 +98,7 @@ public class Crop {
         this.plotId = plotId;
     }
 
-    public void setExpectedYieldKg(double expectedYieldKg) {
-        this.expectedYieldKg = expectedYieldKg;
+    public void setExpectedYield(double expectedYield) {
+        this.expectedYield = expectedYield;
     }
 }

@@ -10,14 +10,14 @@ public class SensorService {
     private final AlertService alertService = new AlertService();
 
     // Push to live UI first (always), then persist to DB
-    public void processReading(SensorReading reading) {
+    public void processReading(SensorReading reading, String deviceCode) {
         // Always push to dashboard UI regardless of DB state
-        LiveSensorData.getInstance().update(reading);
+        LiveSensorData.getInstance().update(reading, deviceCode);
 
         try {
             sensorDAO.save(reading);
 
-            int plotId = resolvePlotId(reading.getDeviceId());
+            int plotId = resolvePlotId(deviceCode);
             alertService.checkAndAlert(reading, plotId);
 
             System.out.println("Processed: " + reading);
@@ -26,9 +26,10 @@ public class SensorService {
         }
     }
 
-    // Maps device ID to plot ID (e.g. "plot1_sensor" → 1)
-    private int resolvePlotId(String deviceId) {
-        String digits = deviceId.replaceAll("[^0-9]", "");
+    // Maps device code to plot ID (e.g. "plot1_sensor" → 1)
+    private int resolvePlotId(String deviceCode) {
+        if (deviceCode == null) return 1;
+        String digits = deviceCode.replaceAll("[^0-9]", "");
         return digits.isEmpty() ? 1 : Integer.parseInt(digits);
     }
 

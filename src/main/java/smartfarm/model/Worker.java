@@ -1,66 +1,77 @@
 package smartfarm.model;
 
-public class Worker extends User {
-    public enum Status { ACTIVE, ON_LEAVE, INACTIVE }
+import java.time.LocalDateTime;
+import java.util.List;
 
+public class Worker {
+    private int workerId;
+    private String fullName;
     private String phone;
     private String jobTitle;
-    private Status status;
+    private String skills;
+    private boolean onDuty;
+    private int managerId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     // Full constructor (loading from DB)
-    public Worker(int userId, String email, String passwordHash, String fullName,
-                  String phone, String jobTitle, Status status) {
-        super(userId, email, passwordHash, fullName, Role.WORKER);
-        this.phone    = phone;
-        this.jobTitle = jobTitle;
-        this.status   = status;
+    public Worker(int workerId, String fullName, String phone, String jobTitle, String skills,
+                  boolean onDuty, int managerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.workerId  = workerId;
+        this.fullName  = fullName;
+        this.phone     = phone;
+        this.jobTitle  = jobTitle;
+        this.skills    = skills;
+        this.onDuty    = onDuty;
+        this.managerId = managerId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    // Without userId (creating new)
-    public Worker(String email, String passwordHash, String fullName,
-                  String phone, String jobTitle) {
-        super(email, passwordHash, fullName, Role.WORKER);
-        this.phone    = phone;
-        this.jobTitle = jobTitle;
-        this.status   = Status.ACTIVE;
+    // Without workerId (creating new)
+    public Worker(String fullName, String phone, String jobTitle, String skills, int managerId) {
+        this.workerId  = -1;
+        this.fullName  = fullName;
+        this.phone     = phone;
+        this.jobTitle  = jobTitle;
+        this.skills    = skills;
+        this.onDuty    = false;
+        this.managerId = managerId;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getJobTitle() {
-        return jobTitle;
-    }
-
-    public void setJobTitle(String jobTitle) {
-        this.jobTitle = jobTitle;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
+    public int getWorkerId() { return workerId; }
+    public void setWorkerId(int workerId) { this.workerId = workerId; }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getJobTitle() { return jobTitle; }
+    public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
+    public String getSkills() { return skills; }
+    public void setSkills(String skills) { this.skills = skills; }
+    public boolean isOnDuty() { return onDuty; }
+    public void setOnDuty(boolean onDuty) { this.onDuty = onDuty; }
+    public int getManagerId() { return managerId; }
+    public void setManagerId(int managerId) { this.managerId = managerId; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     /**
      * Computes the active task count from a given list of tasks.
-     * A task is "active" if it is PENDING or IN_PROGRESS and this worker is assigned.
+     * A task is "active" if it is not DONE and this worker is assigned.
      */
-    public int getActiveTaskCount(java.util.List<Task> allTasks) {
+    public int getActiveTaskCount(List<Task> allTasks) {
         return (int) allTasks.stream()
                 .filter(t -> t.getStatus() != Task.Status.DONE)
-                .filter(t -> t.getWorkerIds().contains(this.getUserId()))
+                .filter(t -> t.getWorkerIds().contains(this.workerId))
                 .count();
     }
 
-    public boolean isAvailable(java.util.List<Task> allTasks) {
+    public boolean isAvailable(List<Task> allTasks) {
         return getActiveTaskCount(allTasks) == 0;
     }
 }

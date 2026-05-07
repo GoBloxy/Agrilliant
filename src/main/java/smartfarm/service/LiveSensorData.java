@@ -33,12 +33,13 @@ public class LiveSensorData {
     }
 
     // Called from any thread (TCP handler)
-    public void update(SensorReading reading) {
-        connectedDevices.add(reading.getDeviceId());
+    public void update(SensorReading reading, String deviceCode) {
+        if (deviceCode != null) connectedDevices.add(deviceCode);
         Platform.runLater(() -> {
             temperature.set(reading.getTemperature());
             humidity.set(reading.getHumidity());
-            deviceId.set(reading.getDeviceId());
+            if (deviceCode != null) deviceId.set(deviceCode);
+            else deviceId.set(String.valueOf(reading.getDeviceId()));
             activeSensors.set(connectedDevices.size());
         });
     }

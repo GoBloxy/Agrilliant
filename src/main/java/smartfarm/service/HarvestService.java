@@ -49,11 +49,11 @@ public class HarvestService {
         if (crop == null) {
             throw new RuntimeException("Crop Not Found");
         }
-        if (crop.getExpectedYieldKg() <= 0) {
+        if (crop.getExpectedYield() <= 0) {
             return 0;
         }
         try {
-            return harvestDAO.getTotalYieldByCrop(cropId) / crop.getExpectedYieldKg();
+            return harvestDAO.getTotalYieldByCrop(cropId) / crop.getExpectedYield();
         } catch (SQLException err) {
             throw new RuntimeException("Server Error! Try again later");
         }

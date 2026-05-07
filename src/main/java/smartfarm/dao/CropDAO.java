@@ -19,7 +19,7 @@ public class CropDAO implements GenericDAO<Crop> {
             rs.getObject("planting_date", java.time.LocalDate.class),
             rs.getObject("harvest_date", java.time.LocalDate.class),
             rs.getInt("plot_id"),
-            rs.getDouble("expected_yield_kg")
+            rs.getDouble("expected_yield")
         );
         crop.setCropId(rs.getInt("crop_id"));
         crop.setGrowthStage(Crop.GrowthStage.valueOf(rs.getString("growth_stage")));
@@ -28,14 +28,14 @@ public class CropDAO implements GenericDAO<Crop> {
 
     @Override
     public void save(Crop item) throws SQLException {
-        String sql = "INSERT INTO crops (crop_name, planting_date, harvest_date, growth_stage, plot_id, expected_yield_kg) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO crops (crop_name, planting_date, harvest_date, growth_stage, plot_id, expected_yield) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, item.getCropName());
             stmt.setObject(2, item.getPlantingDate());
             stmt.setObject(3, item.getHarvestDate());
             stmt.setString(4, item.getGrowthStage().name());
             stmt.setInt(5, item.getPlotId());
-            stmt.setDouble(6, item.getExpectedYieldKg());
+            stmt.setDouble(6, item.getExpectedYield());
             stmt.executeUpdate();
         }
     }
@@ -68,14 +68,14 @@ public class CropDAO implements GenericDAO<Crop> {
 
     @Override
     public void update(Crop item) throws SQLException {
-        String sql = "UPDATE crops SET crop_name = ?, planting_date = ?, harvest_date = ?, growth_stage = ?, plot_id = ?, expected_yield_kg = ? WHERE crop_id = ?";
+        String sql = "UPDATE crops SET crop_name = ?, planting_date = ?, harvest_date = ?, growth_stage = ?, plot_id = ?, expected_yield = ? WHERE crop_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, item.getCropName());
             stmt.setObject(2, item.getPlantingDate());
             stmt.setObject(3, item.getHarvestDate());
             stmt.setString(4, item.getGrowthStage().name());
             stmt.setInt(5, item.getPlotId());
-            stmt.setDouble(6, item.getExpectedYieldKg());
+            stmt.setDouble(6, item.getExpectedYield());
             stmt.setInt(7, item.getCropId());
             stmt.executeUpdate();
         }
@@ -116,7 +116,7 @@ public class CropDAO implements GenericDAO<Crop> {
         List<Crop> list = new ArrayList<>();
         String sql = "SELECT * FROM crops WHERE growth_stage = ? AND harvest_date < CURRENT_DATE ORDER BY harvest_date ASC";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, Crop.GrowthStage.READY.name());
+            stmt.setString(1, Crop.GrowthStage.FRUITING.name());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 list.add(extractCrop(rs));

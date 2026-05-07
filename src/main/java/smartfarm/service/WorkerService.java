@@ -23,7 +23,7 @@ public class WorkerService {
     }
 
     public void addWorker(Worker worker){
-        if(worker.getUserId() != -1){
+        if(worker.getWorkerId() != -1){
             throw new RuntimeException("The Worker ID Already Exists");
         }
         try{
@@ -79,18 +79,13 @@ public class WorkerService {
         return worker.getActiveTaskCount(getAllTasks());
     }
 
-    public int getWorkerWorkloadByEmail(String email){
-        Worker worker;
+    public List<Worker> getWorkersByManager(int managerId){
         try {
-            worker = workerProcess.getByEmail(email);
+            return workerProcess.getByManager(managerId);
         }
         catch (SQLException err){
             throw new RuntimeException("Server Error! Try again later");
         }
-        if (worker == null) {
-            throw new RuntimeException("Worker Not Found");
-        }
-        return worker.getActiveTaskCount(getAllTasks());
     }
 
     private List<Task> getAllTasks() {

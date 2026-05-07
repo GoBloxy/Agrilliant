@@ -4,119 +4,111 @@ import smartfarm.model.Worker;
 import smartfarm.util.DBConnection;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WorkerDAO implements GenericDAO<Worker> {
     private final Connection conn = DBConnection.getInstance();
 
-    // ═══════════════ SAVE ═══════════════
     @Override
     public void save(Worker item) throws SQLException {
         if (conn == null) return;
-        String sql = "INSERT INTO users (email, password_hash, full_name, role, phone, job_title, worker_status) "
-                   + "VALUES (?, ?, ?, 'WORKER', ?, ?, ?)";
+        String sql = "INSERT INTO worker (full_name, phone, job_title, skills, on_duty, manager_id) "
+                   + "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, item.getEmail());
-            ps.setString(2, item.getPasswordHash());
-            ps.setString(3, item.getFullName());
-            ps.setString(4, item.getPhone());
-            ps.setString(5, item.getJobTitle());
-            ps.setString(6, item.getStatus().name());
+            ps.setString(1, item.getFullName());
+            ps.setString(2, item.getPhone());
+            ps.setString(3, item.getJobTitle());
+            ps.setString(4, item.getSkills());
+            ps.setBoolean(5, item.isOnDuty());
+            ps.setInt(6, item.getManagerId());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
-                    item.setUserId(keys.getInt(1));
+                    item.setWorkerId(keys.getInt(1));
                 }
             }
         }
     }
 
-    // ═══════════════ GET BY ID ═══════════════
     @Override
     public Worker getById(int id) throws SQLException {
         if (conn == null) return null;
-        String sql = "SELECT * FROM users WHERE user_id = ? AND role = 'WORKER'";
+        String sql = "SELECT * FROM worker WHERE worker_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapRow(rs);
-                }
+                if (rs.next()) return mapRow(rs);
             }
         }
         return null;
     }
 
-    // ═══════════════ GET BY EMAIL ═══════════════
-    public Worker getByEmail(String email) throws SQLException {
-        if (conn == null) return null;
-        String sql = "SELECT * FROM users WHERE email = ? AND role = 'WORKER'";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapRow(rs);
-                }
-            }
-        }
-        return null;
-    }
-
-    // ═══════════════ GET ALL ═══════════════
     @Override
     public List<Worker> getAll() throws SQLException {
         if (conn == null) return new ArrayList<>();
-        String sql = "SELECT * FROM users WHERE role = 'WORKER' ORDER BY full_name";
+        String sql = "SELECT * FROM worker ORDER BY full_name";
         List<Worker> workers = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                workers.add(mapRow(rs));
+            while (rs.next()) workers.add(mapRow(rs));
+        }
+        return workers;
+    }
+
+    public List<Worker> getByManager(int managerId) throws SQLException {
+        if (conn == null) return new ArrayList<>();
+        String sql = "SELECT * FROM worker WHERE manager_id = ? ORDER BY full_name";
+        List<Worker> workers = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, managerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) workers.add(mapRow(rs));
             }
         }
         return workers;
     }
 
-    // ═══════════════ UPDATE ═══════════════
     @Override
     public void update(Worker item) throws SQLException {
         if (conn == null) return;
-        String sql = "UPDATE users SET email = ?, full_name = ?, phone = ?, job_title = ?, worker_status = ? "
-                   + "WHERE user_id = ?";
+        String sql = "UPDATE worker SET full_name = ?, phone = ?, job_title = ?, skills = ?, on_duty = ?, manager_id = ? "
+                   + "WHERE worker_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, item.getEmail());
-            ps.setString(2, item.getFullName());
-            ps.setString(3, item.getPhone());
-            ps.setString(4, item.getJobTitle());
-            ps.setString(5, item.getStatus().name());
-            ps.setInt(6, item.getUserId());
+            ps.setString(1, item.getFullName());
+            ps.setString(2, item.getPhone());
+            ps.setString(3, item.getJobTitle());
+            ps.setString(4, item.getSkills());
+            ps.setBoolean(5, item.isOnDuty());
+            ps.setInt(6, item.getManagerId());
+            ps.setInt(7, item.getWorkerId());
             ps.executeUpdate();
         }
     }
 
-    // ═══════════════ DELETE ═══════════════
     @Override
     public void delete(int id) throws SQLException {
         if (conn == null) return;
-        String sql = "DELETE FROM users WHERE user_id = ? AND role = 'WORKER'";
+        String sql = "DELETE FROM worker WHERE worker_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
         }
     }
 
-    // ═══════════════ ROW MAPPER ═══════════════
     private Worker mapRow(ResultSet rs) throws SQLException {
         return new Worker(
-            rs.getInt("user_id"),
-            rs.getString("email"),
-            rs.getString("password_hash"),
+            rs.getInt("worker_id"),
             rs.getString("full_name"),
             rs.getString("phone"),
             rs.getString("job_title"),
-            Worker.Status.valueOf(rs.getString("worker_status"))
+            rs.getString("skills"),
+            rs.getBoolean("on_duty"),
+            rs.getInt("manager_id"),
+            rs.getObject("created_at", LocalDateTime.class),
+            rs.getObject("updated_at", LocalDateTime.class)
         );
     }
 }
