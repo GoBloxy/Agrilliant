@@ -70,9 +70,13 @@ public class DashboardController {
     }
 
     private void updateDateTime() {
-        LocalDateTime now = LocalDateTime.now();
-        lblDate.setText(now.format(DateTimeFormatter.ofPattern("MMM d, yyyy")));
-        lblTime.setText(now.format(DateTimeFormatter.ofPattern("hh:mm:ss a")));
+        javafx.animation.Timeline clock = new javafx.animation.Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.ZERO, e -> {
+            LocalDateTime now = LocalDateTime.now();
+            lblDate.setText(now.format(DateTimeFormatter.ofPattern("MMM d, yyyy")));
+            lblTime.setText(now.format(DateTimeFormatter.ofPattern("hh:mm:ss a")));
+        }), new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1)));
+        clock.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        clock.play();
     }
 
     private void setupUserMenu() {
@@ -173,10 +177,10 @@ public class DashboardController {
 
     // ═══════════════ NAVIGATION HANDLERS ═══════════════
     @FXML private void onNavDashboard()  { showPage(dashboardPage,  btnDashboard); }
-    @FXML private void onNavMonitoring() { showPlaceholder("Monitoring",   "fth-activity",     btnMonitoring); }
+    @FXML private void onNavMonitoring() { loadFxmlPage("/fxml/monitoring.fxml", btnMonitoring); }
     @FXML private void onNavAlerts()     { loadFxmlPage("/fxml/alerts.fxml", btnAlerts); }
     @FXML private void onNavCropsList()  { showPlaceholder("Crops",        "fth-feather",      btnCropsCrops); }
-    @FXML private void onNavPlotsList()  { showPlaceholder("Plots",        "fth-map",          btnCropsPlots); }
+    @FXML private void onNavPlotsList()  { loadFxmlPage("/fxml/plots.fxml", btnCropsPlots); }
     @FXML private void onNavWorkers()    { showPlaceholder("Workers",      "fth-users",        btnWorkers); }
     @FXML private void onNavTasks()      { showPlaceholder("Tasks",        "fth-check-square", btnTasks); }
     @FXML private void onNavHarvests()   { showPlaceholder("Harvests",     "fth-package",      btnHarvests); }
@@ -198,8 +202,9 @@ public class DashboardController {
         try {
             Node page = FXMLLoader.load(getClass().getResource(fxmlPath));
             showPage(page, navBtn);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Failed to load " + fxmlPath + ": " + e.getMessage());
+            e.printStackTrace();
             showPlaceholder("Error", "fth-alert-circle", navBtn);
         }
     }
