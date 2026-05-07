@@ -1,7 +1,7 @@
 package smartfarm.model;
 
 public class User {
-    public enum Role { ADMIN, FARMER, WORKER }
+    public enum Role { ADMIN, MANAGER, WORKER }
 
     private int userId;
     private String email;

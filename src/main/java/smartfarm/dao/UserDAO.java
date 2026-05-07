@@ -17,12 +17,12 @@ public class UserDAO implements GenericDAO<User> {
 
     @Override
     public User getById(int id) throws SQLException {
-        return new User("placehlder", "placehlder", "placehlder", User.Role.FARMER);
+        return new User("placehlder", "placehlder", "placehlder", User.Role.MANAGER);
     }
 
 
     public User getByEmail(String email) throws SQLException {
-        return new User("placehlder", "placehlder", "placehlder", User.Role.FARMER);
+        return new User("placehlder", "placehlder", "placehlder", User.Role.MANAGER);
     }
 
     @Override

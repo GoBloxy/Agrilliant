@@ -1,16 +1,28 @@
 package smartfarm.model;
 
 public class Worker extends User {
-    private String phone;
+    public enum Status { ACTIVE, ON_LEAVE, INACTIVE }
 
-    public Worker(int userId, String email, String passwordHash, String fullName, String phone) {
+    private String phone;
+    private String jobTitle;
+    private Status status;
+
+    // Full constructor (loading from DB)
+    public Worker(int userId, String email, String passwordHash, String fullName,
+                  String phone, String jobTitle, Status status) {
         super(userId, email, passwordHash, fullName, Role.WORKER);
-        this.phone = phone;
+        this.phone    = phone;
+        this.jobTitle = jobTitle;
+        this.status   = status;
     }
 
-    public Worker(String email, String passwordHash, String fullName, String phone) {
+    // Without userId (creating new)
+    public Worker(String email, String passwordHash, String fullName,
+                  String phone, String jobTitle) {
         super(email, passwordHash, fullName, Role.WORKER);
-        this.phone = phone;
+        this.phone    = phone;
+        this.jobTitle = jobTitle;
+        this.status   = Status.ACTIVE;
     }
 
     public String getPhone() {
@@ -19,6 +31,22 @@ public class Worker extends User {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
+
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     /**

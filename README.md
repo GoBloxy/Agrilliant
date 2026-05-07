@@ -2,7 +2,7 @@
 
 A full-stack Java & IoT college project for the **OOP II** module.
 
-Physical sensors measure field conditions → a Java server processes the data → the system manages crops, workers, tasks, and harvests in MySQL → the farmer monitors everything through a live JavaFX dashboard.
+Physical sensors measure field conditions → a Java server processes the data → the system manages crops, workers, tasks, and harvests in MySQL → the manager monitors everything through a live JavaFX dashboard.
 
 ---
 

@@ -14,13 +14,15 @@ public class WorkerDAO implements GenericDAO<Worker> {
     @Override
     public void save(Worker item) throws SQLException {
         if (conn == null) return;
-        String sql = "INSERT INTO users (email, password_hash, full_name, role, phone) "
-                   + "VALUES (?, ?, ?, 'WORKER', ?)";
+        String sql = "INSERT INTO users (email, password_hash, full_name, role, phone, job_title, worker_status) "
+                   + "VALUES (?, ?, ?, 'WORKER', ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, item.getEmail());
             ps.setString(2, item.getPasswordHash());
             ps.setString(3, item.getFullName());
             ps.setString(4, item.getPhone());
+            ps.setString(5, item.getJobTitle());
+            ps.setString(6, item.getStatus().name());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -81,13 +83,15 @@ public class WorkerDAO implements GenericDAO<Worker> {
     @Override
     public void update(Worker item) throws SQLException {
         if (conn == null) return;
-        String sql = "UPDATE users SET email = ?, full_name = ?, phone = ? "
+        String sql = "UPDATE users SET email = ?, full_name = ?, phone = ?, job_title = ?, worker_status = ? "
                    + "WHERE user_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, item.getEmail());
             ps.setString(2, item.getFullName());
             ps.setString(3, item.getPhone());
-            ps.setInt(4, item.getUserId());
+            ps.setString(4, item.getJobTitle());
+            ps.setString(5, item.getStatus().name());
+            ps.setInt(6, item.getUserId());
             ps.executeUpdate();
         }
     }
@@ -110,7 +114,9 @@ public class WorkerDAO implements GenericDAO<Worker> {
             rs.getString("email"),
             rs.getString("password_hash"),
             rs.getString("full_name"),
-            rs.getString("phone")
+            rs.getString("phone"),
+            rs.getString("job_title"),
+            Worker.Status.valueOf(rs.getString("worker_status"))
         );
     }
 }

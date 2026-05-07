@@ -85,7 +85,9 @@ public class AlertService {
         if (taskService != null) {
             try {
                 Task task = new Task(
+                    alertType,
                     "AUTO: " + message,
+                    Task.Priority.HIGH,
                     LocalDate.now(),
                     plotId,
                     alert.getAlertId() > 0 ? alert.getAlertId() : null

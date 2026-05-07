@@ -15,16 +15,19 @@ public class TaskDAO implements GenericDAO<Task> {
     @Override
     public void save(Task item) throws SQLException {
         if (conn == null) return;
-        String sql = "INSERT INTO tasks (description, status, due_date, plot_id, alert_id) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO tasks (task_name, description, status, priority, due_date, created_at, plot_id, alert_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, item.getDescription());
-            ps.setString(2, item.getStatus().name());
-            ps.setDate(3, Date.valueOf(item.getDueDate()));
-            ps.setInt(4, item.getPlotId());
+            ps.setString(1, item.getTaskName());
+            ps.setString(2, item.getDescription());
+            ps.setString(3, item.getStatus().name());
+            ps.setString(4, item.getPriority().name());
+            ps.setDate(5, Date.valueOf(item.getDueDate()));
+            ps.setTimestamp(6, Timestamp.valueOf(item.getCreatedAt()));
+            ps.setInt(7, item.getPlotId());
             if (item.getAlertId() != null) {
-                ps.setInt(5, item.getAlertId());
+                ps.setInt(8, item.getAlertId());
             } else {
-                ps.setNull(5, Types.INTEGER);
+                ps.setNull(8, Types.INTEGER);
             }
             ps.executeUpdate();
 
@@ -77,18 +80,20 @@ public class TaskDAO implements GenericDAO<Task> {
     @Override
     public void update(Task item) throws SQLException {
         if (conn == null) return;
-        String sql = "UPDATE tasks SET description = ?, status = ?, due_date = ?, plot_id = ?, alert_id = ? WHERE task_id = ?";
+        String sql = "UPDATE tasks SET task_name = ?, description = ?, status = ?, priority = ?, due_date = ?, plot_id = ?, alert_id = ? WHERE task_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, item.getDescription());
-            ps.setString(2, item.getStatus().name());
-            ps.setDate(3, Date.valueOf(item.getDueDate()));
-            ps.setInt(4, item.getPlotId());
+            ps.setString(1, item.getTaskName());
+            ps.setString(2, item.getDescription());
+            ps.setString(3, item.getStatus().name());
+            ps.setString(4, item.getPriority().name());
+            ps.setDate(5, Date.valueOf(item.getDueDate()));
+            ps.setInt(6, item.getPlotId());
             if (item.getAlertId() != null) {
-                ps.setInt(5, item.getAlertId());
+                ps.setInt(7, item.getAlertId());
             } else {
-                ps.setNull(5, Types.INTEGER);
+                ps.setNull(7, Types.INTEGER);
             }
-            ps.setInt(6, item.getTaskId());
+            ps.setInt(8, item.getTaskId());
             ps.executeUpdate();
         }
         // Re-sync worker assignments
@@ -152,9 +157,12 @@ public class TaskDAO implements GenericDAO<Task> {
 
         return new Task(
             rs.getInt("task_id"),
+            rs.getString("task_name"),
             rs.getString("description"),
             Task.Status.valueOf(rs.getString("status")),
+            Task.Priority.valueOf(rs.getString("priority")),
             rs.getDate("due_date").toLocalDate(),
+            rs.getTimestamp("created_at").toLocalDateTime(),
             new ArrayList<>(),  // populated after by getWorkerIdsForTask
             rs.getInt("plot_id"),
             alertId

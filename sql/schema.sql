@@ -11,7 +11,7 @@ CREATE TABLE users (
     email             VARCHAR(255) NOT NULL UNIQUE,
     password_hash     VARCHAR(255) NOT NULL,
     full_name         VARCHAR(100) NOT NULL,
-    role              ENUM('ADMIN','FARMER','WORKER') NOT NULL DEFAULT 'WORKER',
+    role              ENUM('ADMIN','MANAGER','WORKER') NOT NULL DEFAULT 'WORKER',
     phone             VARCHAR(20),
     active_task_count INT DEFAULT 0,
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
