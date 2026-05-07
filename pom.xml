@@ -63,6 +63,18 @@
             <artifactId>ikonli-feather-pack</artifactId>
             <version>12.3.1</version>
         </dependency>
+
+        <!-- JFreeChart for advanced charts -->
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.5.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart-fx</artifactId>
+            <version>1.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>

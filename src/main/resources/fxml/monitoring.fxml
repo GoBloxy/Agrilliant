@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.MonitoringController"
+      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+    <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
+
+    <!-- Filters Bar -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <ComboBox fx:id="cmbFields" promptText="All Fields" styleClass="filter-combo"/>
+        <ComboBox fx:id="cmbPlots" promptText="All Plots" styleClass="filter-combo"/>
+        
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="date-picker-box">
+            <DatePicker fx:id="datePicker" promptText="May 21, 2025"/>
+        </HBox>
+        
+        <Region HBox.hgrow="ALWAYS"/>
+        
+        <MenuButton fx:id="btnAutoRefresh" text="Auto Refresh" styleClass="btn-secondary">
+            <graphic><FontIcon iconLiteral="fth-refresh-cw" iconSize="14"/></graphic>
+            <items>
+                <MenuItem text="5 Seconds"/>
+                <MenuItem text="30 Seconds"/>
+                <MenuItem text="1 Minute"/>
+                <MenuItem text="Off"/>
+            </items>
+        </MenuButton>
+    </HBox>
+
+    <!-- Top Section: Summary Cards -->
+    <HBox spacing="14">
+        <!-- Temperature -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <FontIcon iconLiteral="fth-thermometer" iconSize="32" styleClass="icon-critical"/>
+                <VBox spacing="2">
+                    <Label text="Temperature" styleClass="summary-card-title"/>
+                    <HBox alignment="BASELINE_LEFT" spacing="4">
+                        <Label fx:id="lblTemp" text="28.6" styleClass="summary-card-value"/>
+                        <Label text="°C" styleClass="summary-card-title"/>
+                    </HBox>
+                    <Label fx:id="lblTempSub" text="↑ 2.4° vs yesterday" styleClass="text-critical"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Humidity -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <FontIcon iconLiteral="fth-droplet" iconSize="32" styleClass="icon-info"/>
+                <VBox spacing="2">
+                    <Label text="Humidity" styleClass="summary-card-title"/>
+                    <HBox alignment="BASELINE_LEFT" spacing="4">
+                        <Label fx:id="lblHum" text="65" styleClass="summary-card-value"/>
+                        <Label text="\%" styleClass="summary-card-title"/>
+                    </HBox>
+                    <Label fx:id="lblHumSub" text="↓ 5% vs yesterday" styleClass="text-success"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Soil Moisture -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <FontIcon iconLiteral="fth-droplet" iconSize="32" styleClass="icon-warning"/>
+                <VBox spacing="2">
+                    <Label text="Soil Moisture" styleClass="summary-card-title"/>
+                    <HBox alignment="BASELINE_LEFT" spacing="4">
+                        <Label fx:id="lblSoil" text="32" styleClass="summary-card-value"/>
+                        <Label text="\%" styleClass="summary-card-title"/>
+                    </HBox>
+                    <Label fx:id="lblSoilSub" text="↓ 3% vs yesterday" styleClass="text-success"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Light Intensity -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <FontIcon iconLiteral="fth-sun" iconSize="32" styleClass="icon-warning"/>
+                <VBox spacing="2">
+                    <Label text="Light Intensity" styleClass="summary-card-title"/>
+                    <HBox alignment="BASELINE_LEFT" spacing="4">
+                        <Label fx:id="lblLight" text="750" styleClass="summary-card-value"/>
+                        <Label text="lux" styleClass="summary-card-title"/>
+                    </HBox>
+                    <Label fx:id="lblLightSub" text="↑ 120 lux vs yesterday" styleClass="text-critical"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Wind Speed -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <FontIcon iconLiteral="fth-wind" iconSize="32" styleClass="icon-info"/>
+                <VBox spacing="2">
+                    <Label text="Wind Speed" styleClass="summary-card-title"/>
+                    <HBox alignment="BASELINE_LEFT" spacing="4">
+                        <Label fx:id="lblWind" text="12" styleClass="summary-card-value"/>
+                        <Label text="km/h" styleClass="summary-card-title"/>
+                    </HBox>
+                    <Label fx:id="lblWindSub" text="→ No change" styleClass="text-muted"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <!-- Middle Section: Trend Chart & Sensor Map -->
+    <HBox spacing="14">
+        <!-- Temperature & Humidity Trend -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="600">
+            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Temperature &amp; Humidity Trend" styleClass="card-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="cmbChartPeriod" promptText="24 Hours" styleClass="filter-combo"/>
+            </HBox>
+            <LineChart fx:id="trendChart" prefHeight="260" maxHeight="260" legendVisible="true" animated="false" createSymbols="true">
+                <xAxis><CategoryAxis fx:id="trendChartX" tickLabelsVisible="true"/></xAxis>
+                <yAxis><NumberAxis fx:id="trendChartY" autoRanging="true"/></yAxis>
+            </LineChart>
+        </VBox>
+
+        <!-- Sensor Map -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="400">
+            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Sensor Map" styleClass="card-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="cmbMapSensors" promptText="All Sensors" styleClass="filter-combo"/>
+            </HBox>
+            <StackPane styleClass="sensor-map-container" prefHeight="260" maxHeight="260">
+                <!-- Fallback to a plain dark green background if image fails -->
+                <Pane style="-fx-background-color: #2e4a2d; -fx-background-radius: 8;"/>
+                <Pane fx:id="mapPane">
+                    <!-- Sensor Pins overlay -->
+                    <!-- Green -->
+                    <StackPane layoutX="60" layoutY="50" styleClass="map-pin,pin-normal">
+                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
+                    </StackPane>
+                    <StackPane layoutX="260" layoutY="90" styleClass="map-pin,pin-info">
+                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
+                    </StackPane>
+                    <!-- Red -->
+                    <StackPane layoutX="180" layoutY="130" styleClass="map-pin,pin-critical">
+                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
+                    </StackPane>
+                    <!-- Orange -->
+                    <StackPane layoutX="110" layoutY="180" styleClass="map-pin,pin-warning">
+                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
+                    </StackPane>
+                    <!-- Blue -->
+                    <StackPane layoutX="210" layoutY="210" styleClass="map-pin,pin-info">
+                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
+                    </StackPane>
+                </Pane>
+            </StackPane>
+        </VBox>
+    </HBox>
+
+    <!-- Bottom Section: Live Readings & Sensor Status -->
+    <HBox spacing="14" VBox.vgrow="ALWAYS">
+        <!-- Live Sensor Readings -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="600">
+            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+            <Label text="Live Sensor Readings" styleClass="card-title"/>
+            <TableView fx:id="sensorTable" VBox.vgrow="ALWAYS" prefHeight="220">
+                <columns>
+                    <TableColumn fx:id="colPlot"    text="Plot"         prefWidth="130" reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colType"    text="Sensor Type"  prefWidth="120" reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colValue"   text="Value"        prefWidth="100" reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colStatus"  text="Status"       prefWidth="90"  reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colUpdated" text="Last Updated" prefWidth="120" reorderable="false" resizable="false"/>
+                </columns>
+            </TableView>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <padding><Insets top="8"/></padding>
+                <Label fx:id="lblReadingsCount" text="Showing 1 to 6 of 10 readings" styleClass="pagination-text"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Hyperlink text="View All Readings →" styleClass="link-end"/>
+            </HBox>
+        </VBox>
+
+        <!-- Sensor Status -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="400">
+            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+            <Label text="Sensor Status" styleClass="card-title"/>
+            
+            <HBox VBox.vgrow="ALWAYS" alignment="CENTER" spacing="20">
+                <StackPane>
+                    <PieChart fx:id="statusChart" prefWidth="180" prefHeight="180" legendVisible="false" labelsVisible="false"/>
+                    <VBox alignment="CENTER" spacing="0">
+                        <Label text="5" styleClass="donut-value"/>
+                        <Label text="Total" styleClass="donut-label"/>
+                    </VBox>
+                </StackPane>
+                
+                <VBox alignment="CENTER_LEFT" spacing="12">
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Circle radius="5" styleClass="legend-normal"/>
+                        <Label text="Normal" prefWidth="80" styleClass="legend-text"/>
+                        <Label fx:id="lblNormalCount" text="4 (80%)" styleClass="legend-text-right"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Circle radius="5" styleClass="legend-warning"/>
+                        <Label text="Warning" prefWidth="80" styleClass="legend-text"/>
+                        <Label fx:id="lblWarningCount" text="1 (20%)" styleClass="legend-text-right"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Circle radius="5" styleClass="legend-critical"/>
+                        <Label text="Critical" prefWidth="80" styleClass="legend-text"/>
+                        <Label fx:id="lblCriticalCount" text="0 (0%)" styleClass="legend-text-right"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Circle radius="5" styleClass="legend-offline"/>
+                        <Label text="Offline" prefWidth="80" styleClass="legend-text"/>
+                        <Label fx:id="lblOfflineCount" text="0 (0%)" styleClass="legend-text-right"/>
+                    </HBox>
+                </VBox>
+            </HBox>
+            <HBox alignment="BOTTOM_RIGHT">
+                <Hyperlink text="View All Sensors →" styleClass="link-end"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+</VBox>
