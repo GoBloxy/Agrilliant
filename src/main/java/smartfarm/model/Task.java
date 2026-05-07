@@ -1,6 +1,8 @@
 package smartfarm.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Task {
     public enum Status { PENDING, IN_PROGRESS, DONE }
@@ -9,30 +11,30 @@ public class Task {
     private String description;
     private Status status;
     private LocalDate dueDate;
-    private int workerId;
+    private List<Integer> workerIds;
     private int plotId;
-    private String alertType;
+    private Integer alertId;
 
     // Full constructor (loading from DB)
-    public Task(int taskId, String description, Status status, LocalDate dueDate, int workerId, int plotId, String alertType) {
+    public Task(int taskId, String description, Status status, LocalDate dueDate, List<Integer> workerIds, int plotId, Integer alertId) {
         this.taskId = taskId;
         this.description = description;
         this.status = status;
         this.dueDate = dueDate;
-        this.workerId = workerId;
+        this.workerIds = workerIds != null ? workerIds : new ArrayList<>();
         this.plotId = plotId;
-        this.alertType = alertType;
+        this.alertId = alertId;
     }
 
     // Without taskId (creating a new task)
-    public Task(String description, LocalDate dueDate, int workerId, int plotId, String alertType) {
+    public Task(String description, LocalDate dueDate, int plotId, Integer alertId) {
         this.taskId = -1;
         this.description = description;
         this.status = Status.PENDING;
         this.dueDate = dueDate;
-        this.workerId = workerId;
+        this.workerIds = new ArrayList<>();
         this.plotId = plotId;
-        this.alertType = alertType;
+        this.alertId = alertId;
     }
 
     public int getTaskId() {
@@ -67,12 +69,22 @@ public class Task {
         this.dueDate = dueDate;
     }
 
-    public int getWorkerId() {
-        return workerId;
+    public List<Integer> getWorkerIds() {
+        return workerIds;
     }
 
-    public void setWorkerId(int workerId) {
-        this.workerId = workerId;
+    public void setWorkerIds(List<Integer> workerIds) {
+        this.workerIds = workerIds;
+    }
+
+    public void addWorker(int workerId) {
+        if (!workerIds.contains(workerId)) {
+            workerIds.add(workerId);
+        }
+    }
+
+    public void removeWorker(int workerId) {
+        workerIds.remove(Integer.valueOf(workerId));
     }
 
     public int getPlotId() {
@@ -83,12 +95,12 @@ public class Task {
         this.plotId = plotId;
     }
 
-    public String getAlertType() {
-        return alertType;
+    public Integer getAlertId() {
+        return alertId;
     }
 
-    public void setAlertType(String alertType) {
-        this.alertType = alertType;
+    public void setAlertId(Integer alertId) {
+        this.alertId = alertId;
     }
 
     public boolean isOverdue(){

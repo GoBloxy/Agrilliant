@@ -85,13 +85,10 @@ public class AlertService {
         if (taskService != null) {
             try {
                 Task task = new Task(
-                    -1,
                     "AUTO: " + message,
-                    Task.Status.PENDING,
                     LocalDate.now(),
-                    -1,
                     plotId,
-                    alertType
+                    alert.getAlertId() > 0 ? alert.getAlertId() : null
                 );
                 taskService.autoCreateTask(task);
                 System.out.println("[TASK] Auto-created task for alert: " + alertType);

@@ -1,5 +1,7 @@
 package smartfarm.service;
+import smartfarm.model.Task;
 import smartfarm.model.Worker;
+import smartfarm.dao.TaskDAO;
 import smartfarm.dao.WorkerDAO;
 
 import java.sql.SQLException;
@@ -8,9 +10,16 @@ import java.util.List;
 
 public class WorkerService {
     private final WorkerDAO workerProcess;
+    private final TaskDAO taskDAO;
 
     public WorkerService(WorkerDAO workerProcess) {
         this.workerProcess = workerProcess;
+        this.taskDAO = new TaskDAO();
+    }
+
+    public WorkerService(WorkerDAO workerProcess, TaskDAO taskDAO) {
+        this.workerProcess = workerProcess;
+        this.taskDAO = taskDAO;
     }
 
     public void addWorker(Worker worker){
@@ -46,9 +55,10 @@ public class WorkerService {
 
     public List<Worker> getAvailableWorkers(){
         List<Worker> allWorkers = getAllWorkers();
+        List<Task> allTasks = getAllTasks();
         List<Worker> availableWorkers = new ArrayList<>();
         for(Worker worker : allWorkers){
-            if(worker.isAvailable()){
+            if(worker.isAvailable(allTasks)){
                 availableWorkers.add(worker);
             }
         }
@@ -66,7 +76,7 @@ public class WorkerService {
         if (worker == null) {
             throw new RuntimeException("Worker Not Found");
         }
-        return worker.getActiveTaskCount();
+        return worker.getActiveTaskCount(getAllTasks());
     }
 
     public int getWorkerWorkloadByEmail(String email){
@@ -80,7 +90,16 @@ public class WorkerService {
         if (worker == null) {
             throw new RuntimeException("Worker Not Found");
         }
-        return worker.getActiveTaskCount();
+        return worker.getActiveTaskCount(getAllTasks());
+    }
+
+    private List<Task> getAllTasks() {
+        try {
+            List<Task> tasks = taskDAO.getAll();
+            return tasks != null ? tasks : new ArrayList<>();
+        } catch (SQLException e) {
+            return new ArrayList<>();
+        }
     }
 
     public void deleteWorker(int workerID){

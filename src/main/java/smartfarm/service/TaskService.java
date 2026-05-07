@@ -37,7 +37,7 @@ public class TaskService {
         if(freeWorkers.isEmpty()){
             throw new RuntimeException("No Available Workers Right Now");
         }
-        task.setWorkerId(freeWorkers.get(0).getUserId());
+        task.addWorker(freeWorkers.get(0).getUserId());
         try{
             taskProcess.save(task);
         }
