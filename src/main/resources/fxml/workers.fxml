@@ -1,10 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<!-- Workers — CRUD screen for managing farm workers -->
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.WorkerController">
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.WorkerController"
+      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+    <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
-    <!-- TODO: Table of workers, add/edit/delete forms, workload display -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Users and Workers" styleClass="page-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnAddWorker" text="+ Add Worker" styleClass="btn-primary" onAction="#onAddWorker"/>
+    </HBox>
 
-</BorderPane>
+    <HBox spacing="12">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                    <FontIcon iconLiteral="fth-users" iconSize="20" iconColor="#2e7d32"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label text="Total Workers" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblTotalWorkers" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                    <FontIcon iconLiteral="fth-check-circle" iconSize="20" iconColor="#065f46"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label text="On Duty" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblOnDuty" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                    <FontIcon iconLiteral="fth-clock" iconSize="20" iconColor="#d97706"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label text="Available" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblAvailable" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#fee2e2;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                    <FontIcon iconLiteral="fth-alert-circle" iconSize="20" iconColor="#dc2626"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label text="Busy" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblBusy" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" styleClass="search-box">
+            <padding><Insets right="8" left="8"/></padding>
+            <TextField fx:id="txtSearch" promptText="Search workers..." styleClass="search-field"/>
+            <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
+        </HBox>
+        <ComboBox fx:id="cmbStatus" promptText="All Status" styleClass="filter-combo"/>
+    </HBox>
+
+    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
+        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+        <Label text="All Workers" styleClass="card-title"/>
+        <TableView fx:id="workerTable" VBox.vgrow="ALWAYS" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="colName"     text="Name"       prefWidth="160"/>
+                <TableColumn fx:id="colPhone"    text="Phone"      prefWidth="130"/>
+                <TableColumn fx:id="colJobTitle" text="Job Title"  prefWidth="120"/>
+                <TableColumn fx:id="colSkills"   text="Skills"     prefWidth="150"/>
+                <TableColumn fx:id="colStatus"   text="Status"     prefWidth="90"/>
+                <TableColumn fx:id="colWorkload" text="Workload"   prefWidth="90"/>
+                <TableColumn fx:id="colActions"  text="Actions"    prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>
