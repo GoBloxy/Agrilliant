@@ -59,6 +59,15 @@ public class DashboardController {
 
     private ContextMenu userMenu;
     private Button activeNavButton;
+    private smartfarm.model.User currentUser;
+
+    public void setCurrentUser(smartfarm.model.User user) {
+        this.currentUser = user;
+        if (user != null) {
+            lblUserName.setText(user.getFullName());
+            lblUserRole.setText(user.getRole().name());
+        }
+    }
 
     @FXML
     public void initialize() {

@@ -1,10 +1,41 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.geometry.Insets?>
 
-<!-- Sign In — username & password login form -->
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.SignInController">
+<HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.SignInController"
+      styleClass="auth-root" prefWidth="1000" prefHeight="650">
 
-    <!-- TODO: Username field, password field, sign-in button, "Go to Sign Up" link, error label -->
+    <VBox styleClass="auth-left" prefWidth="420" alignment="CENTER" spacing="16">
+        <padding><Insets top="60" right="40" bottom="60" left="40"/></padding>
+        <ImageView styleClass="auth-logo" fitWidth="80" fitHeight="80">
+            <Image url="@/images/logo-auth.png"/>
+        </ImageView>
+        <Label text="Agrilliant" styleClass="auth-app-name"/>
+        <Label text="Smart Farming, Brighter Future" styleClass="auth-tagline"/>
+        <Region VBox.vgrow="ALWAYS"/>
+        <Label text="© 2026 Agrilliant. All rights reserved." styleClass="auth-footer"/>
+    </VBox>
 
-</BorderPane>
+    <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="18">
+        <padding><Insets top="40" right="60" bottom="40" left="60"/></padding>
+        <VBox spacing="6" alignment="CENTER">
+            <Label text="Welcome Back" styleClass="auth-title"/>
+            <Label text="Sign in to your account to continue" styleClass="auth-subtitle"/>
+        </VBox>
+        <VBox spacing="10" alignment="CENTER">
+            <TextField fx:id="txtEmail" promptText="Email address" styleClass="auth-field"/>
+            <PasswordField fx:id="txtPassword" promptText="Password" styleClass="auth-field"/>
+            <Hyperlink text="Forgot Password?" styleClass="auth-forgot" onAction="#onForgotPassword"/>
+            <Label fx:id="lblError" styleClass="auth-error" visible="false"/>
+            <Button fx:id="btnSignIn" text="Sign In" styleClass="auth-btn" onAction="#onSignIn"/>
+        </VBox>
+        <HBox spacing="4" alignment="CENTER">
+            <Label text="Don't have an account?" styleClass="auth-subtitle"/>
+            <Hyperlink text="Sign Up" styleClass="auth-link" onAction="#onGoToSignUp"/>
+        </HBox>
+    </VBox>
+</HBox>

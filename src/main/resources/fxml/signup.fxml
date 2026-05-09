@@ -1,10 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.geometry.Insets?>
 
-<!-- Sign Up — registration form for new users -->
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.SignUpController">
+<HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.SignUpController"
+      styleClass="auth-root" prefWidth="1000" prefHeight="700">
 
-    <!-- TODO: Username, password, full name, role dropdown, sign-up button, "Go to Sign In" link, error label -->
+    <VBox styleClass="auth-left" prefWidth="420" alignment="CENTER" spacing="16">
+        <padding><Insets top="60" right="40" bottom="60" left="40"/></padding>
+        <ImageView styleClass="auth-logo" fitWidth="80" fitHeight="80">
+            <Image url="@/images/logo-auth.png"/>
+        </ImageView>
+        <Label text="Agrilliant" styleClass="auth-app-name"/>
+        <Label text="Smart Farming, Brighter Future" styleClass="auth-tagline"/>
+        <Region VBox.vgrow="ALWAYS"/>
+        <Label text="© 2026 Agrilliant. All rights reserved." styleClass="auth-footer"/>
+    </VBox>
 
-</BorderPane>
+    <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="14">
+        <padding><Insets top="30" right="60" bottom="30" left="60"/></padding>
+        <VBox spacing="6" alignment="CENTER">
+            <Label text="Create Account" styleClass="auth-title"/>
+            <Label text="Join Agrilliant to manage your farm" styleClass="auth-subtitle"/>
+        </VBox>
+        <VBox spacing="8" alignment="CENTER">
+            <TextField fx:id="txtFullName" promptText="Full Name" styleClass="auth-field"/>
+            <TextField fx:id="txtUsername" promptText="Username" styleClass="auth-field"/>
+            <TextField fx:id="txtEmail" promptText="Email address" styleClass="auth-field"/>
+            <TextField fx:id="txtPhone" promptText="Phone (optional)" styleClass="auth-field"/>
+            <PasswordField fx:id="txtPassword" promptText="Password" styleClass="auth-field"/>
+            <PasswordField fx:id="txtConfirm" promptText="Confirm Password" styleClass="auth-field"/>
+            <ComboBox fx:id="cmbRole" promptText="Role" styleClass="auth-combo"/>
+            <Label fx:id="lblError" styleClass="auth-error" visible="false"/>
+            <Button fx:id="btnSignUp" text="Sign Up" styleClass="auth-btn" onAction="#onSignUp"/>
+        </VBox>
+        <HBox spacing="4" alignment="CENTER">
+            <Label text="Already have an account?" styleClass="auth-subtitle"/>
+            <Hyperlink text="Sign In" styleClass="auth-link" onAction="#onGoToSignIn"/>
+        </HBox>
+    </VBox>
+</HBox>

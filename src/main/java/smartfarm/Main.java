@@ -15,8 +15,8 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
-        Scene scene = new Scene(root, 1440, 900);
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
+        Scene scene = new Scene(root, 1000, 650);
         scene.getStylesheets().add(getClass().getResource("/css/farm-theme.css").toExternalForm());
         primaryStage.setTitle("Agrilliant — Smart Farm Management System");
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo-dark.png")));

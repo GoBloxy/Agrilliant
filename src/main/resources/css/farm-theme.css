@@ -847,3 +847,107 @@
     -fx-text-fill: #2563eb;
     -fx-cursor: hand;
 }
+
+/* ═══════════════ AUTH PAGES ═══════════════ */
+.auth-root {
+    -fx-background-color: #f5f7fa;
+}
+.auth-left {
+    -fx-background-color: linear-gradient(from 0px 0px to 0px 100%, #143218, #0a1a0c);
+}
+.auth-app-name {
+    -fx-text-fill: white;
+    -fx-font-size: 28;
+    -fx-font-weight: bold;
+}
+.auth-tagline {
+    -fx-text-fill: #81c784;
+    -fx-font-size: 14;
+}
+.auth-right {
+    -fx-background-color: white;
+}
+.auth-title {
+    -fx-text-fill: #1f2937;
+    -fx-font-size: 24;
+    -fx-font-weight: bold;
+}
+.auth-subtitle {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 13;
+}
+.auth-field {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 12 14 12 14;
+    -fx-font-size: 13;
+    -fx-pref-width: 360;
+}
+.auth-field:focused {
+    -fx-border-color: #2e7d32;
+    -fx-background-color: white;
+}
+.auth-field-prompt {
+    -fx-text-fill: #9ca3af;
+}
+.auth-btn {
+    -fx-background-color: #2e7d32;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-background-radius: 8;
+    -fx-padding: 12 0 12 0;
+    -fx-cursor: hand;
+    -fx-pref-width: 360;
+}
+.auth-btn:hover {
+    -fx-background-color: #1b5e20;
+}
+.auth-link {
+    -fx-text-fill: #2e7d32;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-underline: false;
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.auth-link:hover {
+    -fx-text-fill: #1b5e20;
+    -fx-underline: true;
+}
+.auth-forgot {
+    -fx-text-fill: #2e7d32;
+    -fx-font-size: 12;
+    -fx-cursor: hand;
+    -fx-underline: false;
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.auth-forgot:hover {
+    -fx-text-fill: #1b5e20;
+    -fx-underline: true;
+}
+.auth-error {
+    -fx-text-fill: #dc2626;
+    -fx-font-size: 12;
+}
+.auth-combo {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-pref-width: 360;
+    -fx-font-size: 13;
+}
+.auth-combo .list-cell {
+    -fx-padding: 10 14 10 14;
+}
+.auth-footer {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 11;
+}
