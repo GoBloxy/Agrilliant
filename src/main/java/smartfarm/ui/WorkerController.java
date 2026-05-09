@@ -125,7 +125,7 @@ public class WorkerController {
     private void updateSummaryCards() {
         int total = allWorkers.size();
         long onDuty = allWorkers.stream().filter(Worker::isOnDuty).count();
-        long available = allWorkers.stream().filter(w -> w.isAvailable(allTasks)).count();
+        long available = allWorkers.stream().filter(w -> w.isOnDuty() && w.isAvailable(allTasks)).count();
         long busy = onDuty - available;
         lblTotalWorkers.setText(String.valueOf(total));
         lblOnDuty.setText(String.valueOf(onDuty));
