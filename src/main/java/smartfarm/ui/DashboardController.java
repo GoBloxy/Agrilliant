@@ -184,10 +184,10 @@ public class DashboardController {
     @FXML private void onNavWorkers()    { loadFxmlPage("/fxml/workers.fxml", btnWorkers); }
     @FXML private void onNavTasks()      { showPlaceholder("Tasks",        "fth-check-square", btnTasks); }
     @FXML private void onNavHarvests()   { showPlaceholder("Harvests",     "fth-package",      btnHarvests); }
-    @FXML private void onNavReports()    { showPlaceholder("Reports",      "fth-bar-chart-2",  btnReports); }
+    @FXML private void onNavReports()    { loadFxmlPage("/fxml/reports.fxml", btnReports); }
     @FXML private void onNavSettings()   { showPlaceholder("Settings",     "fth-settings",     btnSettings); }
     @FXML private void onNavUsers()      { loadFxmlPage("/fxml/workers.fxml", btnUsers); }
-    @FXML private void onNavLogs()       { showPlaceholder("Logs",         "fth-file-text",    btnLogs); }
+    @FXML private void onNavLogs()       { loadFxmlPage("/fxml/logs.fxml", btnLogs); }
 
     private void showPage(Node page, Button navBtn) {
         pageContainer.getChildren().setAll(page);

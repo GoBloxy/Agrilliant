@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.LogsController"
+      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+    <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Activity Logs" styleClass="page-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnExport" text="Export CSV" styleClass="btn-primary" onAction="#onExport"/>
+        <Button fx:id="btnClear" text="Clear Logs" styleClass="btn-danger" onAction="#onClear"/>
+    </HBox>
+
+    <HBox spacing="12">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                    <FontIcon iconLiteral="fth-file-text" iconSize="20" iconColor="#2e7d32"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label text="Total Logs" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblTotal" text="0" style="-fx-font-size:22;-fx-font-weight:bold;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#dbeafe;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                    <FontIcon iconLiteral="fth-info" iconSize="20" iconColor="#1d4ed8"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label text="Info" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblInfo" text="0" style="-fx-font-size:22;-fx-font-weight:bold;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                    <FontIcon iconLiteral="fth-alert-triangle" iconSize="20" iconColor="#d97706"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label text="Warnings" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblWarnings" text="0" style="-fx-font-size:22;-fx-font-weight:bold;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#fee2e2;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                    <FontIcon iconLiteral="fth-x-circle" iconSize="20" iconColor="#dc2626"/>
+                </StackPane>
+                <VBox spacing="0">
+                    <Label text="Errors" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblErrors" text="0" style="-fx-font-size:22;-fx-font-weight:bold;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" styleClass="search-box">
+            <padding><Insets right="8" left="8"/></padding>
+            <TextField fx:id="txtSearch" promptText="Search logs..." styleClass="search-field"/>
+            <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
+        </HBox>
+        <ComboBox fx:id="cmbType" promptText="All Types" styleClass="filter-combo"/>
+        <DatePicker fx:id="dpFrom" promptText="From" styleClass="filter-combo"/>
+        <DatePicker fx:id="dpTo" promptText="To" styleClass="filter-combo"/>
+    </HBox>
+
+    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
+        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+        <Label text="System Logs" styleClass="card-title"/>
+        <TableView fx:id="logTable" VBox.vgrow="ALWAYS" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="colTimestamp" text="Timestamp"  prefWidth="150"/>
+                <TableColumn fx:id="colType"      text="Type"       prefWidth="80"/>
+                <TableColumn fx:id="colSource"    text="Source"     prefWidth="120"/>
+                <TableColumn fx:id="colMessage"   text="Message"    prefWidth="280"/>
+                <TableColumn fx:id="colUser"      text="User"       prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>
