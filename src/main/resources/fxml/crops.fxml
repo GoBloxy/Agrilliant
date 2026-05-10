@@ -30,7 +30,7 @@
                 </StackPane>
                 <VBox spacing="2">
                     <Label text="Total Crops" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotalCrops" text="24" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label fx:id="lblTotalCrops" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
                     <Label text="Active crops across all plots" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
@@ -45,7 +45,7 @@
                 </StackPane>
                 <VBox spacing="2">
                     <Label text="Growing" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblGrowing" text="18" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label fx:id="lblGrowing" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
                     <Label text="Crops in growth phase" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
@@ -60,7 +60,7 @@
                 </StackPane>
                 <VBox spacing="2">
                     <Label text="Ready to Harvest" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblReady" text="4" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label fx:id="lblReady" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
                     <Label text="Ready for collection" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
@@ -75,7 +75,7 @@
                 </StackPane>
                 <VBox spacing="2">
                     <Label text="At Risk" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblAtRisk" text="2" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label fx:id="lblAtRisk" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
                     <Label text="Require attention" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
