@@ -1,10 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<!-- Harvest — logging screen with yield analytics -->
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.HarvestController">
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.HarvestController"
+      spacing="16" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-    <!-- TODO: Harvest log table, record form, yield summary, export button -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Harvest Records" styleClass="page-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnRecordHarvest" text="+ Record Harvest" styleClass="btn-primary" onAction="#onRecordHarvest"/>
+    </HBox>
 
-</BorderPane>
+    <HBox spacing="16">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-package" iconSize="18" iconColor="#2e7d32"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Total Harvested" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblTotalHarvested" text="0 kg" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Total yield collected" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-dollar-sign" iconSize="18" iconColor="#065f46"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Total Revenue" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblTotalRevenue" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Gross income from harvests" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-trending-down" iconSize="18" iconColor="#d97706"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Total Cost" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblTotalCost" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Operational expenses" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#e0e7ff;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-trending-up" iconSize="18" iconColor="#4338ca"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Net Profit" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblNetProfit" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Revenue minus costs" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" styleClass="search-box">
+            <padding><Insets right="8" left="8"/></padding>
+            <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
+            <TextField fx:id="txtSearch" promptText="Search harvests..." styleClass="search-field"/>
+        </HBox>
+        <ComboBox fx:id="cmbQuality" promptText="All Quality" styleClass="filter-combo"/>
+    </HBox>
+
+    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
+        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+        <Label text="All Harvest Records" styleClass="card-title"/>
+        <TableView fx:id="harvestTable" VBox.vgrow="ALWAYS" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="colCrop"     text="Crop"          prefWidth="150"/>
+                <TableColumn fx:id="colPlot"     text="Plot"          prefWidth="120"/>
+                <TableColumn fx:id="colQuantity" text="Quantity (kg)" prefWidth="120"/>
+                <TableColumn fx:id="colDate"     text="Date"          prefWidth="120"/>
+                <TableColumn fx:id="colQuality"  text="Quality"       prefWidth="90"/>
+                <TableColumn fx:id="colRevenue"  text="Revenue"       prefWidth="100"/>
+                <TableColumn fx:id="colActions"  text="Actions"       prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

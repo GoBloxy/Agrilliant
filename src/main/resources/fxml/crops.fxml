@@ -1,10 +1,124 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<!-- Crops — CRUD screen for managing crops on plots -->
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.CropController">
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.CropController"
+      spacing="16" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-    <!-- TODO: Table of crops, add/edit/delete forms, growth stage advancement -->
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Crops" styleClass="page-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnExport" text="Export" styleClass="btn-secondary" onAction="#onExport">
+            <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
+        </Button>
+        <Button fx:id="btnAddCrop" text="+ Add Crop" styleClass="btn-primary" onAction="#onAddCrop"/>
+    </HBox>
 
-</BorderPane>
+    <!-- Summary Cards -->
+    <HBox spacing="16">
+        <!-- Total Crops -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-feather" iconSize="18" iconColor="#2e7d32"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Total Crops" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblTotalCrops" text="24" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Active crops across all plots" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Growing -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#dbeafe;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-sun" iconSize="18" iconColor="#1d4ed8"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Growing" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblGrowing" text="18" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Crops in growth phase" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Ready to Harvest -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-check-circle" iconSize="18" iconColor="#d97706"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Ready to Harvest" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblReady" text="4" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Ready for collection" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- At Risk -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color:#fee2e2;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-alert-triangle" iconSize="18" iconColor="#dc2626"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="At Risk" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblAtRisk" text="2" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Require attention" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <!-- Filters -->
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" styleClass="search-box">
+            <padding><Insets right="8" left="8"/></padding>
+            <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
+            <TextField fx:id="txtSearch" promptText="Search crops..." styleClass="search-field"/>
+        </HBox>
+        <ComboBox fx:id="cmbPlot" promptText="All Plots" styleClass="filter-combo"/>
+        <ComboBox fx:id="cmbStage" promptText="All Stages" styleClass="filter-combo"/>
+    </HBox>
+
+    <!-- Table -->
+    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="0">
+        <padding><Insets top="8" right="8" bottom="8" left="8"/></padding>
+        <TableView fx:id="cropTable" VBox.vgrow="ALWAYS" prefHeight="400" style="-fx-table-cell-border-color:transparent;">
+            <columns>
+                <TableColumn fx:id="colCropName"    text="Crop Name"    prefWidth="140"/>
+                <TableColumn fx:id="colPlot"        text="Plot"         prefWidth="100"/>
+                <TableColumn fx:id="colVariety"     text="Variety"      prefWidth="120"/>
+                <TableColumn fx:id="colPlantedDate" text="Planted Date" prefWidth="120"/>
+                <TableColumn fx:id="colHarvestDate" text="Harvest Date" prefWidth="120"/>
+                <TableColumn fx:id="colStatus"      text="Status"       prefWidth="100"/>
+                <TableColumn fx:id="colActions"     text="Actions"      prefWidth="100"/>
+            </columns>
+        </TableView>
+
+        <!-- Pagination -->
+        <HBox alignment="CENTER_LEFT" style="-fx-padding:12 0 4 0;">
+            <Label fx:id="lblPagination" text="Showing 1 to 8 of 24 crops" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox spacing="4">
+                <Button text="&lt;" styleClass="page-btn"/>
+                <Button text="1" styleClass="page-btn,page-btn-active"/>
+                <Button text="2" styleClass="page-btn"/>
+                <Button text="3" styleClass="page-btn"/>
+                <Button text="&gt;" styleClass="page-btn"/>
+            </HBox>
+        </HBox>
+    </VBox>
+</VBox>
