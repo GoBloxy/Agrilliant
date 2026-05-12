@@ -67,6 +67,30 @@ public class AlertService {
                 plotId
             );
         }
+
+        // Soil moisture checks (FC-28)
+        float soil = reading.getSoilMoisture();
+        if (!Float.isNaN(soil)) {
+            if (soil <= ThresholdConfig.SOIL_CRITICAL_DRY) {
+                createAlertWithTask(
+                    "DRY_SOIL", Severity.CRITICAL,
+                    "Soil critically dry: " + soil + "% — irrigation needed",
+                    plotId
+                );
+            } else if (soil <= ThresholdConfig.SOIL_WARNING_DRY) {
+                createAlertOnly(
+                    "DRY_SOIL", Severity.WARNING,
+                    "Soil moisture low: " + soil + "%",
+                    plotId
+                );
+            } else if (soil >= ThresholdConfig.SOIL_WARNING_WET) {
+                createAlertOnly(
+                    "WET_SOIL", Severity.WARNING,
+                    "Soil too wet: " + soil + "% — possible overwatering",
+                    plotId
+                );
+            }
+        }
     }
 
     // Save an alert AND auto-create a task for it

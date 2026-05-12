@@ -8,6 +8,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import smartfarm.model.User;
 import smartfarm.service.AuthService;
+import smartfarm.service.SessionManager;
 
 public class SignInController {
 
@@ -37,6 +38,7 @@ public class SignInController {
 
         try {
             User user = authService.signIn(email, password);
+            SessionManager.saveSession(email);
             navigateToDashboard(user);
         } catch (RuntimeException e) {
             showError(e.getMessage());

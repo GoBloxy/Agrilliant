@@ -7,7 +7,11 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import smartfarm.model.User;
 import smartfarm.server.FarmServer;
+import smartfarm.service.AuthService;
+import smartfarm.service.SessionManager;
+import smartfarm.ui.DashboardController;
 
 public class Main extends Application {
 
@@ -15,7 +19,29 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
+        Parent root;
+        String savedEmail = SessionManager.loadSession();
+        User restoredUser = null;
+
+        // Try to restore previous session
+        if (savedEmail != null) {
+            try {
+                AuthService authService = new AuthService();
+                restoredUser = authService.restoreSession(savedEmail);
+            } catch (Exception e) {
+                SessionManager.clearSession();
+            }
+        }
+
+        if (restoredUser != null) {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
+            root = loader.load();
+            DashboardController controller = loader.getController();
+            controller.setCurrentUser(restoredUser);
+        } else {
+            root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
+        }
+
         Scene scene = new Scene(root, 1000, 650);
         scene.getStylesheets().add(getClass().getResource("/css/farm-theme.css").toExternalForm());
         primaryStage.setTitle("Agrilliant — Smart Farm Management System");

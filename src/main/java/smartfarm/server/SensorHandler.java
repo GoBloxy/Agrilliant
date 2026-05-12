@@ -34,7 +34,7 @@ public class SensorHandler implements Runnable {
                     lastDeviceCode = parsed.deviceCode;
                     int deviceId = resolveDeviceId(parsed.deviceCode);
                     SensorReading reading = new SensorReading(
-                        deviceId, parsed.temperature, parsed.humidity, LocalDateTime.now()
+                        deviceId, parsed.temperature, parsed.humidity, parsed.soilMoisture, LocalDateTime.now()
                     );
                     sensorService.processReading(reading, parsed.deviceCode);
                 }
@@ -58,14 +58,15 @@ public class SensorHandler implements Runnable {
         }
     }
 
-    // Parses "DEVICE:plot1_sensor,TEMP:27.50,HUM:63.20"
+    // Parses "DEVICE:plot1_sensor,TEMP:27.50,HUM:63.20,SOIL:54.30"
     private Parsed parseLine(String raw) {
         try {
             String[] parts = raw.split(",");
             String deviceCode = parts[0].split(":")[1];
             float temp = Float.parseFloat(parts[1].split(":")[1]);
             float hum  = Float.parseFloat(parts[2].split(":")[1]);
-            return new Parsed(deviceCode, temp, hum);
+            float soil = parts.length > 3 ? Float.parseFloat(parts[3].split(":")[1]) : Float.NaN;
+            return new Parsed(deviceCode, temp, hum, soil);
         } catch (Exception e) {
             System.err.println("Bad data format: " + raw);
             return null;
@@ -76,10 +77,12 @@ public class SensorHandler implements Runnable {
         final String deviceCode;
         final float temperature;
         final float humidity;
-        Parsed(String deviceCode, float temperature, float humidity) {
+        final float soilMoisture;
+        Parsed(String deviceCode, float temperature, float humidity, float soilMoisture) {
             this.deviceCode = deviceCode;
             this.temperature = temperature;
             this.humidity = humidity;
+            this.soilMoisture = soilMoisture;
         }
     }
 }

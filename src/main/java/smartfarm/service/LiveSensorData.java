@@ -20,6 +20,7 @@ public class LiveSensorData {
 
     private final SimpleFloatProperty temperature = new SimpleFloatProperty(Float.NaN);
     private final SimpleFloatProperty humidity = new SimpleFloatProperty(Float.NaN);
+    private final SimpleFloatProperty soilMoisture = new SimpleFloatProperty(Float.NaN);
     private final SimpleStringProperty deviceId = new SimpleStringProperty("--");
     private final SimpleIntegerProperty activeSensors = new SimpleIntegerProperty(0);
 
@@ -38,6 +39,7 @@ public class LiveSensorData {
         Platform.runLater(() -> {
             temperature.set(reading.getTemperature());
             humidity.set(reading.getHumidity());
+            if (!Float.isNaN(reading.getSoilMoisture())) soilMoisture.set(reading.getSoilMoisture());
             if (deviceCode != null) deviceId.set(deviceCode);
             else deviceId.set(String.valueOf(reading.getDeviceId()));
             activeSensors.set(connectedDevices.size());
@@ -53,6 +55,7 @@ public class LiveSensorData {
     // JavaFX properties for binding/listening
     public SimpleFloatProperty temperatureProperty()    { return temperature; }
     public SimpleFloatProperty humidityProperty()       { return humidity; }
+    public SimpleFloatProperty soilMoistureProperty()   { return soilMoisture; }
     public SimpleStringProperty deviceIdProperty()      { return deviceId; }
     public SimpleIntegerProperty activeSensorsProperty() { return activeSensors; }
 }

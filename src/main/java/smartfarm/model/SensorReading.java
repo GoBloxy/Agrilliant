@@ -7,21 +7,24 @@ public class SensorReading {
     private int deviceId;
     private float temperature;
     private float humidity;
+    private float soilMoisture;
     private LocalDateTime timestamp;
 
-    public SensorReading(int readingId, int deviceId, float temperature, float humidity, LocalDateTime timestamp) {
+    public SensorReading(int readingId, int deviceId, float temperature, float humidity, float soilMoisture, LocalDateTime timestamp) {
         this.readingId = readingId;
         this.deviceId = deviceId;
         this.temperature = temperature;
         this.humidity = humidity;
+        this.soilMoisture = soilMoisture;
         this.timestamp = timestamp;
     }
 
-    public SensorReading(int deviceId, float temperature, float humidity, LocalDateTime timestamp) {
+    public SensorReading(int deviceId, float temperature, float humidity, float soilMoisture, LocalDateTime timestamp) {
         this.readingId = -1;
         this.deviceId = deviceId;
         this.temperature = temperature;
         this.humidity = humidity;
+        this.soilMoisture = soilMoisture;
         this.timestamp = timestamp;
     }
 
@@ -29,16 +32,18 @@ public class SensorReading {
     public int getDeviceId()         { return deviceId; }
     public float getTemperature()    { return temperature; }
     public float getHumidity()       { return humidity; }
+    public float getSoilMoisture()   { return soilMoisture; }
     public LocalDateTime getTimestamp() { return timestamp; }
 
     public void setReadingId(int readingId)          { this.readingId = readingId; }
     public void setDeviceId(int deviceId)            { this.deviceId = deviceId; }
     public void setTemperature(float temperature)    { this.temperature = temperature; }
     public void setHumidity(float humidity)           { this.humidity = humidity; }
+    public void setSoilMoisture(float soilMoisture)  { this.soilMoisture = soilMoisture; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 
     @Override
     public String toString() {
-        return "[" + timestamp + "] Device: " + deviceId + " | Temp: " + temperature + "C | Hum: " + humidity + "%";
+        return "[" + timestamp + "] Device: " + deviceId + " | Temp: " + temperature + "C | Hum: " + humidity + "% | Soil: " + soilMoisture + "%";
     }
 }

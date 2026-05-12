@@ -93,7 +93,19 @@ public class DashboardController {
         MenuItem profile = new MenuItem("Profile");
         MenuItem settings = new MenuItem("Settings");
         MenuItem logout = new MenuItem("Logout");
+        logout.setOnAction(e -> onLogout());
         userMenu.getItems().addAll(profile, settings, new SeparatorMenuItem(), logout);
+    }
+
+    private void onLogout() {
+        smartfarm.service.SessionManager.clearSession();
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
+            Stage stage = (Stage) lblUserName.getScene().getWindow();
+            stage.getScene().setRoot(root);
+        } catch (Exception e) {
+            System.err.println("Logout navigation error: " + e.getMessage());
+        }
     }
 
     private void updateSidebarStatus() {
@@ -132,44 +144,72 @@ public class DashboardController {
     private void subscribeLiveSensor() {
         LiveSensorData live = LiveSensorData.getInstance();
 
-        live.temperatureProperty().addListener((obs, oldVal, newVal) -> {
-            float t = newVal.floatValue();
-            lblTemperature.setText(String.format("%.1f °C", t));
-            // Update status badge based on threshold
-            lblTempStatus.getStyleClass().removeAll("badge-normal", "badge-high", "badge-low");
-            if (t > 35) {
-                lblTempStatus.setText("High");
-                lblTempStatus.getStyleClass().add("badge-high");
-            } else if (t < 10) {
-                lblTempStatus.setText("Low");
-                lblTempStatus.getStyleClass().add("badge-low");
-            } else {
-                lblTempStatus.setText("Normal");
-                lblTempStatus.getStyleClass().add("badge-normal");
-            }
-        });
+        live.temperatureProperty().addListener((obs, oldVal, newVal) -> updateTemperature(newVal.floatValue()));
+        live.humidityProperty().addListener((obs, oldVal, newVal) -> updateHumidity(newVal.floatValue()));
+        live.soilMoistureProperty().addListener((obs, oldVal, newVal) -> updateSoilMoisture(newVal.floatValue()));
+        live.deviceIdProperty().addListener((obs, oldVal, newVal) -> updatePlotLabels(newVal));
 
-        live.humidityProperty().addListener((obs, oldVal, newVal) -> {
-            float h = newVal.floatValue();
-            lblHumidity.setText(String.format("%.0f %%", h));
-            lblHumStatus.getStyleClass().removeAll("badge-normal", "badge-high", "badge-low");
-            if (h > 80) {
-                lblHumStatus.setText("High");
-                lblHumStatus.getStyleClass().add("badge-high");
-            } else if (h < 30) {
-                lblHumStatus.setText("Low");
-                lblHumStatus.getStyleClass().add("badge-low");
-            } else {
-                lblHumStatus.setText("Normal");
-                lblHumStatus.getStyleClass().add("badge-normal");
-            }
-        });
+        // Display current values immediately (data may have arrived before dashboard loaded)
+        float t = live.temperatureProperty().get();
+        float h = live.humidityProperty().get();
+        float s = live.soilMoistureProperty().get();
+        String dev = live.deviceIdProperty().get();
+        if (!Float.isNaN(t)) updateTemperature(t);
+        if (!Float.isNaN(h)) updateHumidity(h);
+        if (!Float.isNaN(s)) updateSoilMoisture(s);
+        if (dev != null && !dev.equals("--")) updatePlotLabels(dev);
+    }
 
-        live.deviceIdProperty().addListener((obs, oldVal, newVal) -> {
-            String plot = newVal.replace("_sensor", "").replace("plot", "Plot ");
-            lblTempPlot.setText(plot);
-            lblHumPlot.setText(plot);
-        });
+    private void updateTemperature(float t) {
+        lblTemperature.setText(String.format("%.1f °C", t));
+        lblTempStatus.getStyleClass().removeAll("badge-normal", "badge-high", "badge-low");
+        if (t > 35) {
+            lblTempStatus.setText("High");
+            lblTempStatus.getStyleClass().add("badge-high");
+        } else if (t < 10) {
+            lblTempStatus.setText("Low");
+            lblTempStatus.getStyleClass().add("badge-low");
+        } else {
+            lblTempStatus.setText("Normal");
+            lblTempStatus.getStyleClass().add("badge-normal");
+        }
+    }
+
+    private void updateHumidity(float h) {
+        lblHumidity.setText(String.format("%.0f %%", h));
+        lblHumStatus.getStyleClass().removeAll("badge-normal", "badge-high", "badge-low");
+        if (h > 80) {
+            lblHumStatus.setText("High");
+            lblHumStatus.getStyleClass().add("badge-high");
+        } else if (h < 30) {
+            lblHumStatus.setText("Low");
+            lblHumStatus.getStyleClass().add("badge-low");
+        } else {
+            lblHumStatus.setText("Normal");
+            lblHumStatus.getStyleClass().add("badge-normal");
+        }
+    }
+
+    private void updateSoilMoisture(float s) {
+        lblSoilMoisture.setText(String.format("%.0f %%", s));
+        lblSoilStatus.getStyleClass().removeAll("badge-normal", "badge-high", "badge-low");
+        if (s < 30) {
+            lblSoilStatus.setText("Dry");
+            lblSoilStatus.getStyleClass().add("badge-low");
+        } else if (s > 85) {
+            lblSoilStatus.setText("Wet");
+            lblSoilStatus.getStyleClass().add("badge-high");
+        } else {
+            lblSoilStatus.setText("Normal");
+            lblSoilStatus.getStyleClass().add("badge-normal");
+        }
+    }
+
+    private void updatePlotLabels(String devId) {
+        String plot = devId.replace("_sensor", "").replace("plot", "Plot ");
+        lblTempPlot.setText(plot);
+        lblHumPlot.setText(plot);
+        lblSoilPlot.setText(plot);
     }
 
     @FXML

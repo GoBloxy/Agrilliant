@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -12,7 +12,7 @@
     <VBox styleClass="auth-left" prefWidth="420" alignment="CENTER" spacing="16">
         <padding><Insets top="60" right="40" bottom="60" left="40"/></padding>
         <ImageView styleClass="auth-logo" fitWidth="80" fitHeight="80">
-            <Image url="@/images/logo-auth.png"/>
+            <Image url="@/images/logo.png"/>
         </ImageView>
         <Label text="Agrilliant" styleClass="auth-app-name"/>
         <Label text="Smart Farming, Brighter Future" styleClass="auth-tagline"/>

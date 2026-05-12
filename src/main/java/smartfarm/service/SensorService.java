@@ -4,23 +4,35 @@ import smartfarm.dao.SensorDAO;
 import smartfarm.model.SensorReading;
 
 import java.sql.SQLException;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SensorService {
     private final SensorDAO sensorDAO = new SensorDAO();
     private final AlertService alertService = new AlertService();
 
-    // Push to live UI first (always), then persist to DB
+    private static final long DB_SAVE_INTERVAL_MS = 60_000; // Save to DB every 60 seconds
+    private final ConcurrentHashMap<String, Long> lastSaveTime = new ConcurrentHashMap<>();
+
+    // Push to live UI first (always), then persist to DB at a throttled rate
     public void processReading(SensorReading reading, String deviceCode) {
         // Always push to dashboard UI regardless of DB state
         LiveSensorData.getInstance().update(reading, deviceCode);
 
+        // Only save to database every DB_SAVE_INTERVAL_MS per device
+        String key = deviceCode != null ? deviceCode : "unknown";
+        long now = System.currentTimeMillis();
+        long lastSave = lastSaveTime.getOrDefault(key, 0L);
+
+        if (now - lastSave < DB_SAVE_INTERVAL_MS) return;
+
         try {
             sensorDAO.save(reading);
+            lastSaveTime.put(key, now);
 
             int plotId = resolvePlotId(deviceCode);
             alertService.checkAndAlert(reading, plotId);
 
-            System.out.println("Processed: " + reading);
+            System.out.println("Saved: " + reading);
         } catch (Exception e) {
             System.err.println("DB/alert error (UI still updated): " + e.getMessage());
         }

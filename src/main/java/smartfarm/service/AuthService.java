@@ -77,6 +77,24 @@ public class AuthService {
         }
     }
 
+    public User restoreSession(String email) {
+        try {
+            Admin admin = adminDAO.getByEmail(email);
+            if (admin != null && admin.isActive()) {
+                return new User(admin.getAdminId(), admin.getUsername(), admin.getEmail(),
+                                admin.getFullName(), User.Role.ADMIN);
+            }
+            Manager manager = managerDAO.getByEmail(email);
+            if (manager != null && manager.isActive()) {
+                return new User(manager.getManagerId(), manager.getUsername(), manager.getEmail(),
+                                manager.getFullName(), User.Role.MANAGER);
+            }
+        } catch (SQLException e) {
+            System.err.println("Session restore failed: " + e.getMessage());
+        }
+        return null;
+    }
+
     public static String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt(10));
     }

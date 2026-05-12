@@ -15,5 +15,8 @@ public class ThresholdConfig {
     public static final float HUM_WARNING_LOW  = 30.0f;
     public static final float HUM_WARNING_HIGH = 85.0f;
 
-    // TODO: Add more thresholds as needed
+    // Soil moisture thresholds (%) — FC-28 sensor
+    public static final float SOIL_CRITICAL_DRY = 20.0f;
+    public static final float SOIL_WARNING_DRY  = 30.0f;
+    public static final float SOIL_WARNING_WET  = 85.0f;
 }

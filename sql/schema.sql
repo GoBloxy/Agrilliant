@@ -88,11 +88,12 @@ CREATE TABLE crops (
 
 -- ═══════════════ SENSOR READINGS ═══════════════
 CREATE TABLE sensor_readings (
-    reading_id  INT AUTO_INCREMENT PRIMARY KEY,
-    device_id   INT          NOT NULL,
-    temperature FLOAT,
-    humidity    FLOAT,
-    timestamp   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    reading_id    INT AUTO_INCREMENT PRIMARY KEY,
+    device_id     INT          NOT NULL,
+    temperature   FLOAT,
+    humidity      FLOAT,
+    soil_moisture FLOAT,
+    timestamp     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE
 );
 

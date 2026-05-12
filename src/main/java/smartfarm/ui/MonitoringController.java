@@ -59,6 +59,29 @@ public class MonitoringController {
         setupTrendChart();
         setupStatusChart();
         setupTable();
+        subscribeLiveSensor();
+    }
+
+    private void subscribeLiveSensor() {
+        LiveSensorData live = LiveSensorData.getInstance();
+
+        live.temperatureProperty().addListener((obs, oldVal, newVal) -> {
+            float t = newVal.floatValue();
+            lblTemp.setText(String.format("%.1f°C", t));
+            lblTempSub.setText(t > 35 ? "High" : t < 10 ? "Low" : "Normal");
+        });
+
+        live.humidityProperty().addListener((obs, oldVal, newVal) -> {
+            float h = newVal.floatValue();
+            lblHum.setText(String.format("%.0f%%", h));
+            lblHumSub.setText(h > 80 ? "High" : h < 30 ? "Low" : "Normal");
+        });
+
+        live.soilMoistureProperty().addListener((obs, oldVal, newVal) -> {
+            float s = newVal.floatValue();
+            lblSoil.setText(String.format("%.0f%%", s));
+            lblSoilSub.setText(s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal");
+        });
     }
 
     private void setupTrendChart() {

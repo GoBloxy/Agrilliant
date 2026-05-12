@@ -20,18 +20,20 @@ public class SensorDAO implements GenericDAO<SensorReading> {
             rs.getInt("device_id"),
             rs.getFloat("temperature"),
             rs.getFloat("humidity"),
+            rs.getFloat("soil_moisture"),
             rs.getObject("timestamp", LocalDateTime.class)
         );
     }
 
     @Override
     public void save(SensorReading item) throws SQLException {
-        String sql = "INSERT INTO sensor_readings (device_id, temperature, humidity, timestamp) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO sensor_readings (device_id, temperature, humidity, soil_moisture, timestamp) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, item.getDeviceId());
             stmt.setFloat(2, item.getTemperature());
             stmt.setFloat(3, item.getHumidity());
-            stmt.setObject(4, item.getTimestamp());
+            stmt.setFloat(4, item.getSoilMoisture());
+            stmt.setObject(5, item.getTimestamp());
             stmt.executeUpdate();
         }
     }

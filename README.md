@@ -17,7 +17,8 @@ Physical sensors measure field conditions â†’ a Java server processes the data â
 | Server          | Java ServerSocket          | Receives ESP32 TCP connections   |
 | Concurrency     | ExecutorService            | Thread pool for device handlers  |
 | Microcontroller | ESP32                     | Field device with WiFi           |
-| Sensor          | DHT11                     | Temperature & humidity sensor    |
+| Sensors         | DHT11 + FC-28             | Temp/humidity + soil moisture    |
+| Display         | SH1106 OLED 1.3"          | On-device live readings screen   |
 | Firmware        | Arduino C++               | ESP32 programming                |
 | Build Tool      | Maven                     | Dependency management            |
 
