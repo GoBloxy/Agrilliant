@@ -6,8 +6,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -90,8 +93,10 @@ public class DashboardController {
 
     private void setupUserMenu() {
         userMenu = new ContextMenu();
-        MenuItem profile = new MenuItem("Profile");
+        MenuItem profile = new MenuItem("About");
+        profile.setOnAction(e -> showPage(new AboutPage(), null));
         MenuItem settings = new MenuItem("Settings");
+        settings.setOnAction(e -> showPage(new SettingsPage(), btnSettings));
         MenuItem logout = new MenuItem("Logout");
         logout.setOnAction(e -> onLogout());
         userMenu.getItems().addAll(profile, settings, new SeparatorMenuItem(), logout);
@@ -228,13 +233,13 @@ public class DashboardController {
     @FXML private void onNavDashboard()  { showPage(dashboardPage,  btnDashboard); }
     @FXML private void onNavMonitoring() { loadFxmlPage("/fxml/monitoring.fxml", btnMonitoring); }
     @FXML private void onNavAlerts()     { loadFxmlPage("/fxml/alerts.fxml", btnAlerts); }
-    @FXML private void onNavCropsList()  { showPlaceholder("Crops",        "fth-feather",      btnCropsCrops); }
+    @FXML private void onNavCropsList()  { showPage(new CropsPage(), btnCropsCrops); }
     @FXML private void onNavPlotsList()  { loadFxmlPage("/fxml/plots.fxml", btnCropsPlots); }
     @FXML private void onNavWorkers()    { loadFxmlPage("/fxml/workers.fxml", btnWorkers); }
     @FXML private void onNavTasks()      { loadFxmlPage("/fxml/tasks.fxml", btnTasks); }
     @FXML private void onNavHarvests()   { loadFxmlPage("/fxml/harvest.fxml", btnHarvests); }
     @FXML private void onNavReports()    { loadFxmlPage("/fxml/reports.fxml", btnReports); }
-    @FXML private void onNavSettings()   { showPlaceholder("Settings",     "fth-settings",     btnSettings); }
+    @FXML private void onNavSettings()   { showPage(new SettingsPage(), btnSettings); }
     @FXML private void onNavUsers()      { loadFxmlPage("/fxml/workers.fxml", btnUsers); }
     @FXML private void onNavLogs()       { loadFxmlPage("/fxml/logs.fxml", btnLogs); }
 

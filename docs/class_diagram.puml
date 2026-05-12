@@ -1,0 +1,515 @@
+@startuml Agrilliant Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontSize 11
+
+title Agrilliant — Smart Farm Management System\nClass Diagram
+
+' ════════════════════════════════════════
+'  MODEL LAYER
+' ════════════════════════════════════════
+package "model" #E8F5E9 {
+
+    class User {
+        - id : int
+        - username : String
+        - email : String
+        - fullName : String
+        - role : Role
+        + getId() : int
+        + getUsername() : String
+        + getEmail() : String
+        + getFullName() : String
+        + getRole() : Role
+    }
+
+    enum "User.Role" as UserRole {
+        ADMIN
+        MANAGER
+        WORKER
+    }
+
+    class Admin {
+        - adminId : int
+        - fullName : String
+        - username : String
+        - email : String
+        - passwordHash : String
+        - phone : String
+        - active : boolean
+        - createdAt : LocalDateTime
+        - updatedAt : LocalDateTime
+        + isActive() : boolean
+    }
+
+    class Manager {
+        - managerId : int
+        - fullName : String
+        - username : String
+        - email : String
+        - passwordHash : String
+        - phone : String
+        - active : boolean
+        - createdAt : LocalDateTime
+        - updatedAt : LocalDateTime
+        + isActive() : boolean
+    }
+
+    class Worker {
+        - workerId : int
+        - fullName : String
+        - phone : String
+        - jobTitle : String
+        - skills : String
+        - onDuty : boolean
+        - managerId : int
+        - createdAt : LocalDateTime
+        - updatedAt : LocalDateTime
+        + getActiveTaskCount(List<Task>) : int
+        + isAvailable(List<Task>) : boolean
+    }
+
+    class Plot {
+        - plotId : int
+        - name : String
+        - location : String
+        - sizeAcres : double
+        - soilType : String
+        - managerId : int
+        - createdAt : LocalDateTime
+        - updatedAt : LocalDateTime
+    }
+
+    class Crop {
+        - cropId : int
+        - cropName : String
+        - plantingDate : LocalDate
+        - harvestDate : LocalDate
+        - growthStage : GrowthStage
+        - plotId : int
+        - expectedYield : double
+        + advanceStage() : void
+        + isOverdue() : boolean
+    }
+
+    enum "Crop.GrowthStage" as GrowthStage {
+        SEED
+        SEEDLING
+        VEGETATIVE
+        FLOWERING
+        FRUITING
+        HARVESTED
+    }
+
+    class Device {
+        - deviceId : int
+        - deviceCode : String
+        - type : Type
+        - status : Status
+        - plotId : int
+        - firmwareVersion : String
+        - lastSeenAt : LocalDateTime
+        - createdAt : LocalDateTime
+    }
+
+    enum "Device.Type" as DeviceType {
+        TEMP_HUM
+        SOIL_MOISTURE
+        LIGHT
+        WEATHER_STATION
+    }
+
+    enum "Device.Status" as DeviceStatus {
+        ONLINE
+        OFFLINE
+        MAINTENANCE
+    }
+
+    class SensorReading {
+        - readingId : int
+        - deviceId : int
+        - temperature : float
+        - humidity : float
+        - soilMoisture : float
+        - timestamp : LocalDateTime
+        + getTemperature() : float
+        + getHumidity() : float
+        + getSoilMoisture() : float
+    }
+
+    class Alert {
+        - alertId : int
+        - alertType : String
+        - severity : Severity
+        - message : String
+        - resolved : boolean
+        - timestamp : LocalDateTime
+        - plotId : int
+        + resolve() : void
+        + isCritical() : boolean
+        + isResolved() : boolean
+    }
+
+    enum "Alert.Severity" as Severity {
+        INFO
+        WARNING
+        CRITICAL
+    }
+
+    class Task {
+        - taskId : int
+        - description : String
+        - status : Status
+        - dueDate : LocalDate
+        - plotId : int
+        - alertId : Integer
+        - assignedByMgrId : int
+        - alertType : String
+        - workerIds : List<Integer>
+        + addWorker(int) : void
+        + removeWorker(int) : void
+        + isOverdue() : boolean
+        + advanceStatus() : void
+        + revertStatus() : void
+    }
+
+    enum "Task.Status" as TaskStatus {
+        PENDING
+        IN_PROGRESS
+        DONE
+    }
+
+    class HarvestRecord {
+        - recordId : int
+        - harvestDate : LocalDate
+        - quantityKg : double
+        - grade : Grade
+        - cropId : int
+    }
+
+    enum "HarvestRecord.Grade" as Grade {
+        A
+        B
+        C
+        REJECT
+    }
+
+    class Notification {
+        - notificationId : int
+        - recipientId : int
+        - recipientRole : RecipientRole
+        - channel : Channel
+        - subject : String
+        - body : String
+        - status : Status
+        - relatedEntityType : String
+        - relatedEntityId : Integer
+    }
+
+    class SystemLog {
+        - timestamp : LocalDateTime
+        - type : LogType
+        - source : String
+        - message : String
+        - user : String
+        + getFormattedTimestamp() : String
+    }
+
+    enum "SystemLog.LogType" as LogType {
+        INFO
+        WARNING
+        ERROR
+    }
+}
+
+' ════════════════════════════════════════
+'  DAO LAYER
+' ════════════════════════════════════════
+package "dao" #E3F2FD {
+
+    interface GenericDAO<T> {
+        + save(T) : void
+        + getById(int) : T
+        + getAll() : List<T>
+        + update(T) : void
+        + delete(int) : void
+    }
+
+    class AdminDAO {
+        + getByEmail(String) : Admin
+        + getByUsername(String) : Admin
+    }
+
+    class ManagerDAO {
+        + getByEmail(String) : Manager
+        + getByUsername(String) : Manager
+    }
+
+    class WorkerDAO
+    class PlotDAO
+    class CropDAO
+    class DeviceDAO {
+        + getByCode(String) : Device
+    }
+    class SensorDAO {
+        + getRecent(int) : List<SensorReading>
+    }
+    class AlertDAO
+    class TaskDAO
+    class HarvestDAO
+    class UserDAO
+
+    GenericDAO <|.. AdminDAO
+    GenericDAO <|.. ManagerDAO
+    GenericDAO <|.. WorkerDAO
+    GenericDAO <|.. PlotDAO
+    GenericDAO <|.. CropDAO
+    GenericDAO <|.. DeviceDAO
+    GenericDAO <|.. SensorDAO
+    GenericDAO <|.. AlertDAO
+    GenericDAO <|.. TaskDAO
+    GenericDAO <|.. HarvestDAO
+}
+
+' ════════════════════════════════════════
+'  SERVICE LAYER
+' ════════════════════════════════════════
+package "service" #FFF3E0 {
+
+    class AuthService {
+        - adminDAO : AdminDAO
+        - managerDAO : ManagerDAO
+        + signIn(String, String) : User
+        + signUp(String, String, String, String, String, Role) : User
+        + restoreSession(String) : User
+        + {static} hashPassword(String) : String
+        + verifyPassword(String, String) : boolean
+    }
+
+    class SensorService {
+        - sensorDAO : SensorDAO
+        - alertService : AlertService
+        - {static} DB_SAVE_INTERVAL_MS : long
+        - lastSaveTime : ConcurrentHashMap
+        + processReading(SensorReading, String) : void
+        + getRecentReadings(int) : List<SensorReading>
+    }
+
+    class AlertService {
+        - alertDAO : AlertDAO
+        - taskDAO : TaskDAO
+        + checkAndAlert(SensorReading, int) : void
+    }
+
+    class LiveSensorData <<Singleton>> {
+        - {static} INSTANCE : LiveSensorData
+        - temperature : SimpleFloatProperty
+        - humidity : SimpleFloatProperty
+        - soilMoisture : SimpleFloatProperty
+        - deviceId : SimpleStringProperty
+        - activeSensors : SimpleIntegerProperty
+        + {static} getInstance() : LiveSensorData
+        + update(SensorReading, String) : void
+        + removeDevice(String) : void
+        + temperatureProperty() : SimpleFloatProperty
+        + humidityProperty() : SimpleFloatProperty
+        + soilMoistureProperty() : SimpleFloatProperty
+    }
+
+    class SessionManager {
+        + {static} saveSession(String) : void
+        + {static} loadSession() : String
+        + {static} clearSession() : void
+    }
+
+    class CropService
+    class HarvestService
+    class TaskService
+    class WorkerService
+    class SystemLogManager
+}
+
+' ════════════════════════════════════════
+'  SERVER LAYER
+' ════════════════════════════════════════
+package "server" #FCE4EC {
+
+    class FarmServer {
+        - {static} PORT : int = 8080
+        + start() : void
+    }
+
+    class SensorHandler implements Runnable {
+        - socket : Socket
+        - sensorService : SensorService
+        - deviceDAO : DeviceDAO
+        - lastDeviceCode : String
+        + run() : void
+        - parseLine(String) : Parsed
+        - resolveDeviceId(String) : int
+    }
+}
+
+' ════════════════════════════════════════
+'  UI LAYER
+' ════════════════════════════════════════
+package "ui" #F3E5F5 {
+
+    class DashboardController {
+        - currentUser : User
+        - pageContainer : StackPane
+        + setCurrentUser(User) : void
+        - subscribeLiveSensor() : void
+        - updateTemperature(float) : void
+        - updateHumidity(float) : void
+        - updateSoilMoisture(float) : void
+        - onLogout() : void
+    }
+
+    class SignInController {
+        - authService : AuthService
+        - onSignIn() : void
+        - navigateToDashboard(User) : void
+    }
+
+    class SignUpController {
+        - authService : AuthService
+        - onSignUp() : void
+    }
+
+    class MonitoringController {
+        - subscribeLiveSensor() : void
+    }
+
+    class AlertController
+    class CropController
+    class HarvestController
+    class LogsController
+
+    class SettingsPage extends javafx.scene.layout.VBox {
+        - txtServerIp : TextField
+        - txtServerPort : TextField
+        - spnReadInterval : Spinner
+    }
+
+    class AboutPage extends javafx.scene.layout.VBox {
+    }
+
+    class CropsPage extends javafx.scene.layout.VBox {
+        - table : TableView
+        - data : ObservableList
+        - showAddDialog() : void
+    }
+}
+
+' ════════════════════════════════════════
+'  UTIL LAYER
+' ════════════════════════════════════════
+package "util" #ECEFF1 {
+
+    class DBConnection {
+        - {static} connection : Connection
+        + {static} getInstance() : Connection
+    }
+
+    class ThresholdConfig {
+        + {static} TEMP_CRITICAL_HIGH : float = 35.0
+        + {static} TEMP_WARNING_HIGH : float = 30.0
+        + {static} TEMP_CRITICAL_LOW : float = 5.0
+        + {static} HUM_WARNING_LOW : float = 30.0
+        + {static} HUM_WARNING_HIGH : float = 85.0
+        + {static} SOIL_CRITICAL_DRY : float = 20.0
+        + {static} SOIL_WARNING_DRY : float = 30.0
+        + {static} SOIL_WARNING_WET : float = 85.0
+    }
+
+    class CSVExporter {
+        + {static} exportSensorData(List<SensorReading>) : String
+    }
+
+    class Logger {
+        + {static} logger(Runnable) : void
+    }
+}
+
+' ════════════════════════════════════════
+'  APPLICATION ENTRY
+' ════════════════════════════════════════
+class Main extends javafx.application.Application {
+    + start(Stage) : void
+    + {static} main(String[]) : void
+}
+
+' ════════════════════════════════════════
+'  RELATIONSHIPS
+' ════════════════════════════════════════
+
+' Model enums
+User *-- UserRole
+Crop *-- GrowthStage
+Device *-- DeviceType
+Device *-- DeviceStatus
+Alert *-- Severity
+Task *-- TaskStatus
+HarvestRecord *-- Grade
+SystemLog *-- LogType
+
+' Model associations
+Manager "1" --> "*" Worker : manages
+Manager "1" --> "*" Plot : oversees
+Plot "1" --> "*" Crop : contains
+Plot "1" --> "*" Device : has
+Device "1" --> "*" SensorReading : produces
+Plot "1" --> "*" Alert : generates
+Alert "0..1" --> "*" Task : triggers
+Task "*" --> "*" Worker : assigned to
+Crop "1" --> "*" HarvestRecord : yields
+
+' DAO uses model
+AdminDAO --> Admin
+ManagerDAO --> Manager
+WorkerDAO --> Worker
+PlotDAO --> Plot
+CropDAO --> Crop
+DeviceDAO --> Device
+SensorDAO --> SensorReading
+AlertDAO --> Alert
+TaskDAO --> Task
+HarvestDAO --> HarvestRecord
+
+' DAO uses DBConnection
+GenericDAO ..> DBConnection : <<uses>>
+
+' Service uses DAO
+AuthService --> AdminDAO
+AuthService --> ManagerDAO
+SensorService --> SensorDAO
+SensorService --> AlertService
+AlertService --> AlertDAO
+AlertService --> TaskDAO
+AlertService ..> ThresholdConfig : <<uses>>
+SensorService --> LiveSensorData
+
+' Server
+FarmServer --> SensorHandler : creates
+SensorHandler --> SensorService
+SensorHandler --> DeviceDAO
+
+' UI dependencies
+Main --> FarmServer : starts
+Main --> AuthService
+Main --> SessionManager
+Main --> DashboardController
+SignInController --> AuthService
+SignInController --> SessionManager
+SignInController --> DashboardController
+DashboardController --> LiveSensorData : subscribes
+MonitoringController --> LiveSensorData : subscribes
+DashboardController --> SettingsPage : navigates
+DashboardController --> AboutPage : navigates
+DashboardController --> CropsPage : navigates
+
+@enduml
