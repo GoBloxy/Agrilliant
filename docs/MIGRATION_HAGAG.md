@@ -516,7 +516,68 @@ checks.
   matches the pre-migration behaviour).
 
 ### H7. FingerprintService — Android stub + desktop impl split
-> Status: **pending**.
+> Status: **done**, 2026-05-13.
+
+`service/FingerprintService.java` is now a thin facade over a
+`FingerprintService.Backend` SPI:
+- Public surface is **identical** to the pre-H7 implementation —
+  every method signature 3bdelbary's controllers call
+  (`new FingerprintService()`, `autoConnect()`, `disconnect()`,
+  `isConnected()`, `scanAndMatch()`, `getTemplateCount()`,
+  `deleteTemplate(int)`, `enroll(int, EnrollCallback)`,
+  `static String[] getAvailablePorts()`) lives in the facade and just
+  forwards to the chosen backend.
+- The facade resolves the backend lazily via
+  `Class.forName("smartfarm.service.desktop.FingerprintServiceDesktop")`.
+  On desktop this succeeds and you get full hardware functionality;
+  on Android the class is absent (Maven excludes it) and we fall
+  through to `NULL_BACKEND`, which returns `false` / `-1` / `"N/A"`
+  for every method and emits a single startup warning via
+  `Logger.w(...)`.
+
+`service/desktop/FingerprintServiceDesktop.java` is the original
+implementation, moved into its own sub-package and made to
+`implements FingerprintService.Backend`. Same protocol, same
+`jSerialComm` usage, same logs (now via the H5 Logger).
+
+The `EnrollCallback` interface is owned by the facade only (one
+type used by both backends — keeps the lambda compatibility the
+controllers depend on).
+
+#### pom.xml change
+- `android` profile's `maven-compiler-plugin` now excludes
+  `**/smartfarm/service/desktop/**/*.java` (and preemptively
+  `**/smartfarm/server/**/*.java` for H9). Excludes work cleanly for
+  `service/desktop/**` because nothing imports it statically —
+  javac's sourcepath has nothing to pull back in.
+
+#### Verification (run 2026-05-13)
+| Gate                                                              | Result |
+|-------------------------------------------------------------------|--------|
+| `mvn -Pdesktop clean compile` (71 sources, incl. FingerprintServiceDesktop) | BUILD SUCCESS |
+| `mvn -Pandroid clean compile` (67 sources, FingerprintServiceDesktop absent) | BUILD SUCCESS |
+| `dependency:list -Pandroid \| grep jSerialComm`                   | (no matches) |
+| `dependency:list -Pdesktop \| grep jSerialComm`                   | present |
+| `target/h7-smoke/H7Smoke.java`: facade returns N/A + -1 + false when no ESP32 attached | OK |
+| same smoke: `autoConnect()` actually scans serial ports via the real backend | OK (`W/FingerprintDesktop: ESP32 not found on any COM port`) |
+
+#### Note on `server/**` exclude
+The android profile also excludes `server/**`, but as expected javac
+still implicit-compiles `FarmServer.java` and `SensorHandler.java`
+because `Main.java` statically imports them. The `.class` files end
+up in `target/classes`. **H9** + 3bdelbary's **B1** address the
+remaining server-on-Android issue — see §H9 in this file.
+
+#### TODOs for the merge phase
+
+- `// TODO(phase-2)`: once 3bdelbary's B1 drops the `import
+  smartfarm.server.FarmServer;` from `Main.java`, the
+  `**/smartfarm/server/**/*.java` exclude in the android profile
+  becomes effective end-to-end.
+- `// TODO(phase-2)`: Android USB-OTG fingerprint support via Gluon
+  Attach would slot in here as a third `Backend` impl
+  (`FingerprintServiceAndroid`). Out of scope for Phase 1 — see
+  plan §M9 "Known follow-ups".
 
 ### H8. CSVExporter — Gluon Storage + desktop fallback
 > Status: **pending**.

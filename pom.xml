@@ -273,26 +273,22 @@
         <!-- ===========================================================
              ANDROID profile.
 
-             Switches GluonFX target to `android`. The Android build
-             also needs:
+             Switches GluonFX target to `android` AND drops the
+             desktop-only sources that won't link on Android (they
+             depend on jSerialComm native libs or on the desktop
+             TCP server that Android can't keep alive in the
+             background):
 
-               - H7: split `service/FingerprintService.java` into an
-                     Android-safe stub (same path) + a desktop-only
-                     `service/desktop/FingerprintServiceDesktop.java`.
-               - H9: profile-guard `server/**` (FarmServer +
-                     SensorHandler) out of the Android compile.
-               - 3bdelbary B1: convert `Main.java` to a Gluon
-                     `MobileApplication` so it stops importing
-                     `smartfarm.server.FarmServer`.
+               - service/desktop/**        (H7: jSerialComm fingerprint)
+               - server/**                 (H9: FarmServer + SensorHandler)
 
-             Until those land, `mvn -Pandroid compile` will fail with
-             jSerialComm import errors in FingerprintService. The
-             structural verification for H1 is `mvn -Pandroid validate`
-             plus the effective-pom check (see docs/MIGRATION_HAGAG.md).
+             Both packages are referenced only at runtime via
+             reflection / a profile guard, so a clean exclude here
+             leaves the rest of the source compileable on Android.
 
-             Per-source exclusions go in H7 + H9 once the desktop-only
-             code has its own path (`service/desktop/**`, `server/**`)
-             that isn't imported by any Android-compiled source.
+             Full `mvn -Pandroid compile` still depends on 3bdelbary's
+             B1 (Main.java → MobileApplication so it stops importing
+             smartfarm.server.FarmServer). See docs/MIGRATION_HAGAG.md.
              =========================================================== -->
         <profile>
             <id>android</id>
@@ -300,6 +296,27 @@
             <properties>
                 <gluonfx.target>android</gluonfx.target>
             </properties>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.13.0</version>
+                        <executions>
+                            <execution>
+                                <id>default-compile</id>
+                                <configuration>
+                                    <excludes>
+                                        <exclude>**/smartfarm/service/desktop/**/*.java</exclude>
+                                        <exclude>**/smartfarm/server/**/*.java</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>
