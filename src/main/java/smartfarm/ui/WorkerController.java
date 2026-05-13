@@ -54,6 +54,16 @@ public class WorkerController {
     }
 
     private void setupTableColumns() {
+        workerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colName.setResizable(false);
+        colPhone.setResizable(false);
+        colJobTitle.setResizable(false);
+        colSkills.setResizable(false);
+        colStatus.setResizable(false);
+        colWorkload.setResizable(false);
+        colFingerprint.setResizable(false);
+        colActions.setResizable(false);
+
         colName.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(data.getValue().getFullName()));
         colPhone.setCellValueFactory(data ->

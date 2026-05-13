@@ -55,6 +55,14 @@ public class ReportsController {
     }
 
     private void setupTableColumns() {
+        harvestTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colDate.setResizable(false);
+        colCrop.setResizable(false);
+        colPlot.setResizable(false);
+        colQty.setResizable(false);
+        colGrade.setResizable(false);
+        colRevenue.setResizable(false);
+
         colDate.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getHarvestDate() != null ? data.getValue().getHarvestDate().toString() : "--"));

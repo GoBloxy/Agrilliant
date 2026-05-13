@@ -13,8 +13,16 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import smartfarm.dao.CropDAO;
+import smartfarm.dao.PlotDAO;
+import smartfarm.model.Crop;
+import smartfarm.model.Plot;
+
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PlotController {
 
@@ -340,6 +348,16 @@ public class PlotController {
 
     private void setupTable() {
         plotTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colPlotId.setResizable(false);
+        colField.setResizable(false);
+        colCrop.setResizable(false);
+        colArea.setResizable(false);
+        colStatus.setResizable(false);
+        colSoil.setResizable(false);
+        colIrrigation.setResizable(false);
+        colLastActivity.setResizable(false);
+        colActions.setResizable(false);
+
         colPlotId.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("plotId"));
         colField.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("field"));
         colCrop.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("crop"));
@@ -479,18 +497,60 @@ public class PlotController {
             }
         });
 
-        // ── Data ──
-        ObservableList<PlotRecord> data = FXCollections.observableArrayList(
-            new PlotRecord("Plot 1 - West Field",    "West Field",    "Wheat",    "2.5", "Under Cultivation", "Loamy",      "Drip",      "May 21, 2025\nIrrigation"),
-            new PlotRecord("Plot 2 - East Field",    "East Field",    "Maize",    "3.0", "Under Cultivation", "Sandy Loam", "Sprinkler", "May 20, 2025\nFertilizer Applied"),
-            new PlotRecord("Plot 3 - North Field",   "North Field",   "Tomatoes", "2.0", "Under Cultivation", "Loamy",      "Drip",      "May 21, 2025\nPest Control"),
-            new PlotRecord("Plot 4 - South Field",   "South Field",   "Beans",    "1.5", "Under Cultivation", "Clay Loam",  "Drip",      "May 18, 2025\nWeeding"),
-            new PlotRecord("Plot 5 - Central Field", "Central Field", "—",        "2.5", "Fallow",            "Loamy",      "—",         "May 10, 2025\nField Cleared"),
-            new PlotRecord("Plot 6 - West Field",    "West Field",    "Wheat",    "2.3", "Under Cultivation", "Loamy",      "Sprinkler", "May 21, 2025\nIrrigation"),
-            new PlotRecord("Plot 7 - East Field",    "East Field",    "Maize",    "2.7", "Under Cultivation", "Sandy Loam", "Drip",      "May 20, 2025\nFertilizer Applied"),
-            new PlotRecord("Plot 8 - South Field",   "South Field",   "—",        "1.8", "Available",         "Loamy",      "—",         "—")
-        );
-        plotTable.setItems(data);
+        // ── Data from database ──
+        loadPlotData();
+    }
+
+    // ═══════════════ DB DATA LOADING ═══════════════
+
+    private void loadPlotData() {
+        PlotDAO plotDAO = new PlotDAO();
+        CropDAO cropDAO = new CropDAO();
+        try {
+            List<Plot> plots = plotDAO.getAll();
+            List<Crop> crops = cropDAO.getAll();
+
+            // Build a map: plotId → crop name
+            Map<Integer, String> plotCropMap = new HashMap<>();
+            for (Crop c : crops) {
+                if (c.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
+                    plotCropMap.put(c.getPlotId(), c.getCropName());
+                }
+            }
+
+            ObservableList<PlotRecord> records = FXCollections.observableArrayList();
+            int cultivation = 0, available = 0, fallow = 0;
+
+            for (Plot p : plots) {
+                String cropName = plotCropMap.getOrDefault(p.getPlotId(), "—");
+                boolean hasCrop = !cropName.equals("—");
+                String status = hasCrop ? "Under Cultivation" : "Available";
+                if (hasCrop) cultivation++; else available++;
+
+                String plotLabel = p.getName() + " - " + p.getLocation();
+                String area = String.format("%.1f", p.getSizeAcres());
+                String updated = p.getUpdatedAt() != null
+                        ? p.getUpdatedAt().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                        : "—";
+
+                records.add(new PlotRecord(
+                        plotLabel, p.getLocation(), cropName, area,
+                        status, p.getSoilType(), hasCrop ? "Drip" : "—", updated
+                ));
+            }
+
+            plotTable.setItems(records);
+
+            // Update summary cards
+            lblTotalPlots.setText(String.valueOf(plots.size()));
+            lblCultivation.setText(String.valueOf(cultivation));
+            lblAvailable.setText(String.valueOf(available));
+            lblFallow.setText(String.valueOf(fallow));
+
+        } catch (SQLException e) {
+            System.err.println("Failed to load plot data: " + e.getMessage());
+            plotTable.setPlaceholder(new Label("Could not load plots from database"));
+        }
     }
 
     // ═══════════════ DATA MODEL ═══════════════

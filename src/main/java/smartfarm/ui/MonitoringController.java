@@ -8,7 +8,11 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
+import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
+import smartfarm.service.SensorService;
+
+import java.time.format.DateTimeFormatter;
 
 public class MonitoringController {
 
@@ -29,12 +33,12 @@ public class MonitoringController {
     @FXML private ComboBox<String> cmbMapSensors;
     @FXML private Pane mapPane;
 
-    @FXML private TableView<SensorReading> sensorTable;
-    @FXML private TableColumn<SensorReading, String> colPlot;
-    @FXML private TableColumn<SensorReading, String> colType;
-    @FXML private TableColumn<SensorReading, String> colValue;
-    @FXML private TableColumn<SensorReading, String> colStatus;
-    @FXML private TableColumn<SensorReading, String> colUpdated;
+    @FXML private TableView<SensorRow> sensorTable;
+    @FXML private TableColumn<SensorRow, String> colPlot;
+    @FXML private TableColumn<SensorRow, String> colType;
+    @FXML private TableColumn<SensorRow, String> colValue;
+    @FXML private TableColumn<SensorRow, String> colStatus;
+    @FXML private TableColumn<SensorRow, String> colUpdated;
     
     @FXML private Label lblReadingsCount;
 
@@ -122,27 +126,67 @@ public class MonitoringController {
     }
 
     private void setupTable() {
+        sensorTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colPlot.setResizable(false);
+        colType.setResizable(false);
+        colValue.setResizable(false);
+        colStatus.setResizable(false);
+        colUpdated.setResizable(false);
+
         colPlot.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("plot"));
         colType.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("type"));
         colValue.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("value"));
         colStatus.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("status"));
         colUpdated.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("updated"));
 
-        ObservableList<SensorReading> data = FXCollections.observableArrayList(
-            new SensorReading("Plot 1 - North Field", "Temperature", "28.6 °C", "Normal", "10:30:30 AM"),
-            new SensorReading("Plot 1 - North Field", "Humidity", "65 %", "Normal", "10:30:30 AM"),
-            new SensorReading("Plot 2 - East Field", "Soil Moisture", "32 %", "Low", "10:30:30 AM"),
-            new SensorReading("Plot 2 - East Field", "Light Intensity", "750 lux", "Normal", "10:30:30 AM"),
-            new SensorReading("Plot 3 - North Field", "Temperature", "31.2 °C", "High", "10:30:30 AM"),
-            new SensorReading("Plot 3 - North Field", "Humidity", "58 %", "Normal", "10:30:30 AM")
-        );
-        sensorTable.setItems(data);
+        loadSensorReadings();
     }
-    
+
+    private void loadSensorReadings() {
+        SensorService sensorService = new SensorService();
+        java.util.List<SensorReading> readings = sensorService.getRecentReadings(50);
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm:ss a");
+
+        ObservableList<SensorRow> rows = FXCollections.observableArrayList();
+        int normal = 0, warning = 0;
+
+        for (SensorReading r : readings) {
+            String plotName = "Plot " + (r.getDeviceId() > 0 ? r.getDeviceId() : "?");
+            String time = r.getTimestamp() != null ? r.getTimestamp().format(timeFmt) : "—";
+
+            // Temperature row
+            float t = r.getTemperature();
+            String tStatus = t > 35 ? "High" : t < 10 ? "Low" : "Normal";
+            if (tStatus.equals("Normal")) normal++; else warning++;
+            rows.add(new SensorRow(plotName, "Temperature", String.format("%.1f °C", t), tStatus, time));
+
+            // Humidity row
+            float h = r.getHumidity();
+            String hStatus = h > 80 ? "High" : h < 30 ? "Low" : "Normal";
+            if (hStatus.equals("Normal")) normal++; else warning++;
+            rows.add(new SensorRow(plotName, "Humidity", String.format("%.0f %%", h), hStatus, time));
+
+            // Soil moisture row
+            float s = r.getSoilMoisture();
+            if (!Float.isNaN(s)) {
+                String sStatus = s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal";
+                if (sStatus.equals("Normal")) normal++; else warning++;
+                rows.add(new SensorRow(plotName, "Soil Moisture", String.format("%.0f %%", s), sStatus, time));
+            }
+        }
+
+        sensorTable.setItems(rows);
+        lblReadingsCount.setText(rows.size() + " readings");
+        lblNormalCount.setText(String.valueOf(normal));
+        lblWarningCount.setText(String.valueOf(warning));
+        lblCriticalCount.setText("0");
+        lblOfflineCount.setText("0");
+    }
+
     // Inner class for TableView items
-    public static class SensorReading {
-        private String plot, type, value, status, updated;
-        public SensorReading(String p, String t, String v, String s, String u) {
+    public static class SensorRow {
+        private final String plot, type, value, status, updated;
+        public SensorRow(String p, String t, String v, String s, String u) {
             plot = p; type = t; value = v; status = s; updated = u;
         }
         public String getPlot() { return plot; }

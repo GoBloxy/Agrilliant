@@ -250,7 +250,7 @@ public class DashboardController {
     @FXML private void onNavDashboard()  { showPage(dashboardPage,  btnDashboard); }
     @FXML private void onNavMonitoring() { loadFxmlPage("/fxml/monitoring.fxml", btnMonitoring); }
     @FXML private void onNavAlerts()     { loadFxmlPage("/fxml/alerts.fxml", btnAlerts); }
-    @FXML private void onNavCropsList()  { showPage(new CropsPage(), btnCropsCrops); }
+    @FXML private void onNavCropsList()  { loadFxmlPage("/fxml/crops.fxml", btnCropsCrops); }
     @FXML private void onNavPlotsList()  { loadFxmlPage("/fxml/plots.fxml", btnCropsPlots); }
     @FXML private void onNavWorkers()    { loadFxmlPage("/fxml/workers.fxml", btnWorkers); }
     @FXML private void onNavAttendance() { showPage(new AttendancePage(), btnAttendance); }

@@ -55,6 +55,15 @@ public class TaskController {
     }
 
     private void setupTableColumns() {
+        taskTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colTask.setResizable(false);
+        colAssignedTo.setResizable(false);
+        colPlot.setResizable(false);
+        colDueDate.setResizable(false);
+        colPriority.setResizable(false);
+        colStatus.setResizable(false);
+        colActions.setResizable(false);
+
         colTask.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(data.getValue().getDescription()));
         colAssignedTo.setCellValueFactory(data -> {

@@ -58,6 +58,15 @@ public class HarvestController {
     }
 
     private void setupTableColumns() {
+        harvestTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colCrop.setResizable(false);
+        colPlot.setResizable(false);
+        colQuantity.setResizable(false);
+        colDate.setResizable(false);
+        colQuality.setResizable(false);
+        colRevenue.setResizable(false);
+        colActions.setResizable(false);
+
         colCrop.setCellValueFactory(data -> {
             Crop c = cropCache.get(data.getValue().getCropId());
             return new javafx.beans.property.SimpleStringProperty(

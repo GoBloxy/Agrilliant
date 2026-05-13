@@ -21,6 +21,7 @@ public class Worker {
     public Worker(int workerId, String fullName, String phone, String email, String passwordHash,
                   String jobTitle, String skills, boolean onDuty, Integer fingerprintId,
                   int managerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+<<<<<<< HEAD
         this.workerId       = workerId;
         this.fullName       = fullName;
         this.phone          = phone;
@@ -33,11 +34,26 @@ public class Worker {
         this.managerId      = managerId;
         this.createdAt      = createdAt;
         this.updatedAt      = updatedAt;
+=======
+        this.workerId      = workerId;
+        this.fullName      = fullName;
+        this.phone         = phone;
+        this.email         = email;
+        this.passwordHash  = passwordHash;
+        this.jobTitle      = jobTitle;
+        this.skills        = skills;
+        this.onDuty        = onDuty;
+        this.fingerprintId = fingerprintId;
+        this.managerId     = managerId;
+        this.createdAt     = createdAt;
+        this.updatedAt     = updatedAt;
+>>>>>>> abeef33c9b32dc137da99049bd0492f90fbc85e0
     }
 
     // Without workerId (creating new)
     public Worker(String fullName, String phone, String email, String passwordHash,
                   String jobTitle, String skills, int managerId) {
+<<<<<<< HEAD
         this.workerId       = -1;
         this.fullName       = fullName;
         this.phone          = phone;
@@ -50,6 +66,20 @@ public class Worker {
         this.managerId      = managerId;
         this.createdAt      = LocalDateTime.now();
         this.updatedAt      = LocalDateTime.now();
+=======
+        this.workerId      = -1;
+        this.fullName      = fullName;
+        this.phone         = phone;
+        this.email         = email;
+        this.passwordHash  = passwordHash;
+        this.jobTitle      = jobTitle;
+        this.skills        = skills;
+        this.onDuty        = false;
+        this.fingerprintId = null;
+        this.managerId     = managerId;
+        this.createdAt     = LocalDateTime.now();
+        this.updatedAt     = LocalDateTime.now();
+>>>>>>> abeef33c9b32dc137da99049bd0492f90fbc85e0
     }
 
     public int getWorkerId() { return workerId; }

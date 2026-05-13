@@ -141,6 +141,15 @@ public class AlertController {
     }
 
     private void setupColumns() {
+        alertTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colSeverity.setResizable(false);
+        colType.setResizable(false);
+        colPlot.setResizable(false);
+        colMessage.setResizable(false);
+        colTimestamp.setResizable(false);
+        colStatus.setResizable(false);
+        colAction.setResizable(false);
+
         // ── Severity — colour-coded badge ──
         colSeverity.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getSeverity().name()));
