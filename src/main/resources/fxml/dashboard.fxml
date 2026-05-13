@@ -124,8 +124,8 @@
             <HBox alignment="CENTER" spacing="8">
                 <FontIcon iconLiteral="fth-cloud" iconSize="22" styleClass="weather-icon"/>
                 <VBox spacing="0">
-                    <Label fx:id="lblTempTop" text="28°C" styleClass="topbar-strong"/>
-                    <Label text="Partly Cloudy" styleClass="topbar-muted"/>
+                    <Label fx:id="lblTempTop" text="--°C" styleClass="topbar-strong"/>
+                    <Label fx:id="lblWeatherDesc" text="Awaiting data" styleClass="topbar-muted"/>
                 </VBox>
             </HBox>
 
@@ -226,22 +226,8 @@
                     </HBox>
 
                     <!-- Field Map (visual representation of plots) -->
-                    <Pane fx:id="fieldMap" styleClass="field-map" prefHeight="330" minHeight="330">
-                        <Rectangle layoutX="20"  layoutY="30"  width="100" height="80"  styleClass="plot-normal"/>
-                        <Label    layoutX="55"  layoutY="60"  text="Plot 1" styleClass="plot-label"/>
+                    <Pane fx:id="fieldMap" styleClass="field-map" prefHeight="330" minHeight="330" prefWidth="260"/>
 
-                        <Rectangle layoutX="140" layoutY="30"  width="110" height="100" styleClass="plot-warning"/>
-                        <Label    layoutX="180" layoutY="70"  text="Plot 2" styleClass="plot-label"/>
-
-                        <Rectangle layoutX="20"  layoutY="130" width="100" height="100" styleClass="plot-critical"/>
-                        <Label    layoutX="55"  layoutY="170" text="Plot 3" styleClass="plot-label"/>
-
-                        <Rectangle layoutX="140" layoutY="150" width="110" height="80"  styleClass="plot-normal"/>
-                        <Label    layoutX="180" layoutY="180" text="Plot 4" styleClass="plot-label"/>
-
-                        <Rectangle layoutX="60"  layoutY="250" width="170" height="70"  styleClass="plot-normal"/>
-                        <Label    layoutX="130" layoutY="280" text="Plot 5" styleClass="plot-label"/>
-                    </Pane>
 
                     <!-- Legend -->
                     <HBox spacing="10" alignment="CENTER" styleClass="map-legend">

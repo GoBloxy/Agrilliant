@@ -84,12 +84,12 @@
         <Label text="All Tasks" styleClass="card-title"/>
         <TableView fx:id="taskTable" VBox.vgrow="ALWAYS" prefHeight="400">
             <columns>
-                <TableColumn fx:id="colTask"       text="Task"        prefWidth="200"/>
+                <TableColumn fx:id="colTask"       text="Description"  prefWidth="200"/>
                 <TableColumn fx:id="colAssignedTo" text="Assigned To" prefWidth="130"/>
                 <TableColumn fx:id="colPlot"       text="Plot"        prefWidth="100"/>
-                <TableColumn fx:id="colDueDate"    text="Due Date"    prefWidth="120"/>
-                <TableColumn fx:id="colPriority"   text="Priority"    prefWidth="90"/>
-                <TableColumn fx:id="colStatus"     text="Status"      prefWidth="100"/>
+                <TableColumn fx:id="colDueDate"    text="Due Date"    prefWidth="110"/>
+                <TableColumn fx:id="colAlertType"  text="Alert Type"  prefWidth="100"/>
+                <TableColumn fx:id="colStatus"     text="Status"      prefWidth="90"/>
                 <TableColumn fx:id="colActions"    text="Actions"     prefWidth="140"/>
             </columns>
         </TableView>

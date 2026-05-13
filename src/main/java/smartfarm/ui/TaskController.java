@@ -9,8 +9,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import smartfarm.dao.PlotDAO;
 import smartfarm.dao.TaskDAO;
 import smartfarm.dao.WorkerDAO;
+import smartfarm.model.Plot;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
 
@@ -27,17 +29,25 @@ public class TaskController {
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbStatus;
     @FXML private TableView<Task> taskTable;
-    @FXML private TableColumn<Task, String> colTask, colAssignedTo, colPlot, colDueDate, colPriority, colStatus, colActions;
+    @FXML private TableColumn<Task, String> colTask, colAssignedTo, colPlot, colDueDate, colAlertType, colStatus, colActions;
     @FXML private Button btnAddTask;
 
     private final TaskDAO taskDAO = new TaskDAO();
     private final WorkerDAO workerDAO = new WorkerDAO();
+    private final PlotDAO plotDAO = new PlotDAO();
     private final ObservableList<Task> allTasks = FXCollections.observableArrayList();
     private final Map<Integer, Worker> workerCache = new HashMap<>();
+    private final Map<String, Integer> plotNameToId = new HashMap<>();
+    private final Map<Integer, String> plotIdToName = new HashMap<>();
+    private final List<String> plotLabels = new java.util.ArrayList<>();
+
+    private static int currentManagerId = 1;
+    public static void setCurrentManagerId(int id) { currentManagerId = id; }
 
     @FXML
     public void initialize() {
         loadWorkerCache();
+        loadPlotCache();
         setupTableColumns();
         loadTasks();
         setupFilters();
@@ -54,13 +64,29 @@ public class TaskController {
         }
     }
 
+    private void loadPlotCache() {
+        plotNameToId.clear();
+        plotIdToName.clear();
+        plotLabels.clear();
+        try {
+            for (Plot p : plotDAO.getAll()) {
+                String label = p.getName() + " (ID: " + p.getPlotId() + ")";
+                plotNameToId.put(label, p.getPlotId());
+                plotIdToName.put(p.getPlotId(), p.getName());
+                plotLabels.add(label);
+            }
+        } catch (SQLException e) {
+            // cache will be empty
+        }
+    }
+
     private void setupTableColumns() {
         taskTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colTask.setResizable(false);
         colAssignedTo.setResizable(false);
         colPlot.setResizable(false);
         colDueDate.setResizable(false);
-        colPriority.setResizable(false);
+        colAlertType.setResizable(false);
         colStatus.setResizable(false);
         colActions.setResizable(false);
 
@@ -77,19 +103,22 @@ public class TaskController {
                     .collect(Collectors.joining(", "));
             return new javafx.beans.property.SimpleStringProperty(names);
         });
-        colPlot.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty("Plot " + data.getValue().getPlotId()));
+        colPlot.setCellValueFactory(data -> {
+            String name = plotIdToName.get(data.getValue().getPlotId());
+            return new javafx.beans.property.SimpleStringProperty(name != null ? name : "Plot " + data.getValue().getPlotId());
+        });
         colDueDate.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getDueDate() != null ? data.getValue().getDueDate().toString() : "--"));
-        colPriority.setCellValueFactory(data -> {
-            Task t = data.getValue();
-            String priority;
-            if (t.isOverdue()) priority = "Overdue";
-            else if (t.getDueDate() != null && t.getDueDate().isBefore(LocalDate.now().plusDays(2))) priority = "High";
-            else if (t.getDueDate() != null && t.getDueDate().isBefore(LocalDate.now().plusDays(5))) priority = "Medium";
-            else priority = "Low";
-            return new javafx.beans.property.SimpleStringProperty(priority);
+        colAlertType.setCellValueFactory(data -> {
+            String at = data.getValue().getAlertType();
+            if (at == null || at.isEmpty()) return new javafx.beans.property.SimpleStringProperty("Manual");
+            String[] parts = at.toLowerCase().split("_");
+            StringBuilder sb = new StringBuilder();
+            for (String p : parts) {
+                if (!p.isEmpty()) sb.append(Character.toUpperCase(p.charAt(0))).append(p.substring(1)).append(" ");
+            }
+            return new javafx.beans.property.SimpleStringProperty(sb.toString().trim());
         });
         colStatus.setCellValueFactory(data -> {
             String s = data.getValue().getStatus().name();
@@ -100,11 +129,13 @@ public class TaskController {
         colActions.setCellFactory(col -> new TableCell<Task, String>() {
             private final Button advanceBtn = new Button("", new FontIcon("fth-arrow-right"));
             private final Button revertBtn = new Button("", new FontIcon("fth-arrow-left"));
+            private final Button editBtn = new Button("", new FontIcon("fth-edit"));
             private final Button delBtn = new Button("", new FontIcon("fth-trash-2"));
-            private final HBox box = new HBox(4, advanceBtn, revertBtn, delBtn);
+            private final HBox box = new HBox(4, advanceBtn, revertBtn, editBtn, delBtn);
             {
                 advanceBtn.getStyleClass().add("icon-btn");
                 revertBtn.getStyleClass().add("icon-btn");
+                editBtn.getStyleClass().add("icon-btn");
                 delBtn.getStyleClass().add("icon-btn");
                 advanceBtn.setOnAction(e -> {
                     Task t = getTableRow() != null ? getTableRow().getItem() : null;
@@ -113,6 +144,10 @@ public class TaskController {
                 revertBtn.setOnAction(e -> {
                     Task t = getTableRow() != null ? getTableRow().getItem() : null;
                     if (t != null) onRevertStatus(t);
+                });
+                editBtn.setOnAction(e -> {
+                    Task t = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (t != null) onEditTask(t);
                 });
                 delBtn.setOnAction(e -> {
                     Task t = getTableRow() != null ? getTableRow().getItem() : null;
@@ -156,7 +191,21 @@ public class TaskController {
         String search = txtSearch.getText() != null ? txtSearch.getText().toLowerCase().trim() : "";
         String status = cmbStatus.getValue();
         List<Task> filtered = allTasks.stream()
-                .filter(t -> search.isEmpty() || t.getDescription().toLowerCase().contains(search))
+                .filter(t -> {
+                    if (search.isEmpty()) return true;
+                    if (t.getDescription().toLowerCase().contains(search)) return true;
+                    String plotName = plotIdToName.getOrDefault(t.getPlotId(), "");
+                    if (plotName.toLowerCase().contains(search)) return true;
+                    String alertType = t.getAlertType() != null ? t.getAlertType().toLowerCase().replace("_", " ") : "";
+                    if (alertType.contains(search)) return true;
+                    if (t.getWorkerIds() != null) {
+                        for (int wid : t.getWorkerIds()) {
+                            Worker w = workerCache.get(wid);
+                            if (w != null && w.getFullName().toLowerCase().contains(search)) return true;
+                        }
+                    }
+                    return false;
+                })
                 .filter(t -> {
                     if ("All".equals(status)) return true;
                     if ("Overdue".equals(status)) return t.isOverdue();
@@ -166,12 +215,13 @@ public class TaskController {
                     return true;
                 })
                 .collect(Collectors.toList());
-        taskTable.setItems(FXCollections.observableArrayList(filtered));
+
         if (filtered.isEmpty() && !search.isEmpty()) {
             taskTable.setPlaceholder(new Label("No tasks matching \"" + search + "\""));
         } else if (filtered.isEmpty()) {
             taskTable.setPlaceholder(new Label("No tasks found"));
         }
+        taskTable.setItems(FXCollections.observableArrayList(filtered));
     }
 
     private void updateSummaryCards() {
@@ -223,6 +273,20 @@ public class TaskController {
         }
     }
 
+    private void onEditTask(Task task) {
+        if (task == null) return;
+        Dialog<Task> dialog = createTaskDialog(task);
+        dialog.showAndWait().ifPresent(updated -> {
+            try {
+                taskDAO.update(updated);
+                loadTasks();
+                updateSummaryCards();
+            } catch (SQLException e) {
+                showAlert("Error", "Failed to update: " + e.getMessage());
+            }
+        });
+    }
+
     private void onDeleteTask(Task task) {
         if (task == null) return;
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
@@ -254,8 +318,18 @@ public class TaskController {
 
         DatePicker duePicker = new DatePicker(existing != null ? existing.getDueDate() : LocalDate.now().plusDays(1));
 
-        TextField plotField = new TextField(existing != null ? String.valueOf(existing.getPlotId()) : "");
-        plotField.setPromptText("Plot ID");
+        ComboBox<String> plotCombo = new ComboBox<>();
+        plotCombo.setPromptText("Select Plot");
+        plotCombo.setMaxWidth(Double.MAX_VALUE);
+        plotCombo.getItems().addAll(plotLabels);
+        if (existing != null) {
+            for (Map.Entry<String, Integer> entry : plotNameToId.entrySet()) {
+                if (entry.getValue() == existing.getPlotId()) {
+                    plotCombo.setValue(entry.getKey());
+                    break;
+                }
+            }
+        }
 
         ComboBox<String> workerCombo = new ComboBox<>();
         workerCombo.setPromptText("Assign Worker");
@@ -278,7 +352,7 @@ public class TaskController {
         VBox form = new VBox(10,
                 new Label("Description:"), descField,
                 new Label("Due Date:"), duePicker,
-                new Label("Plot ID:"), plotField,
+                new Label("Plot:"), plotCombo,
                 new Label("Assign To:"), workerCombo);
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
@@ -288,18 +362,16 @@ public class TaskController {
             if (descField.getText().trim().isEmpty()) {
                 showAlert("Validation", "Description is required"); event.consume(); return;
             }
-            try {
-                Integer.parseInt(plotField.getText().trim());
-            } catch (NumberFormatException e) {
-                showAlert("Validation", "Invalid Plot ID"); event.consume();
+            if (plotCombo.getValue() == null) {
+                showAlert("Validation", "Please select a plot"); event.consume();
             }
         });
 
         dialog.setResultConverter(btn -> {
             if (btn == saveBtn) {
                 String desc = descField.getText().trim();
-                int plotId = Integer.parseInt(plotField.getText().trim());
-                Task task = new Task(desc, duePicker.getValue(), plotId, null, 1, null);
+                int plotId = plotNameToId.get(plotCombo.getValue());
+                Task task = new Task(desc, duePicker.getValue(), plotId, null, currentManagerId, null);
                 String selectedWorker = workerCombo.getValue();
                 if (selectedWorker != null && workerNameToId.containsKey(selectedWorker)) {
                     task.addWorker(workerNameToId.get(selectedWorker));

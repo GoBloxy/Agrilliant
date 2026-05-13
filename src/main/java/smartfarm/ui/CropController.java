@@ -295,13 +295,8 @@ public class CropController {
             lblMilestoneEta.setText("Harvested");
         }
 
-        // ── Health indicators ──
-        boolean isHealthy = !"At Risk".equals(status) && !"Harvested".equals(status);
-        setHealthLabel(lblHealthOverall, isHealthy ? "Good" : ("At Risk".equals(status) ? "Poor" : "N/A"));
-        setHealthLabel(lblHealthLeaf,    isHealthy ? "Good" : "Fair");
-        setHealthLabel(lblHealthGrowth,  isHealthy ? "Good" : "Slow");
-        setHealthLabel(lblHealthPest,    isHealthy ? "Low" : "Medium");
-        setHealthLabel(lblHealthDisease, isHealthy ? "Low" : "Medium");
+        // ── Health indicators (derived from live sensor data) ──
+        populateHealthFromSensors(crop);
 
         // ── Yield estimate ──
         lblYieldEstimate.setText(String.format("%.0f kg", crop.getExpectedYield()));
@@ -497,9 +492,22 @@ public class CropController {
         LiveSensorData live = LiveSensorData.getInstance();
         String deviceCode = "plot" + plotId + "_sensor";
         SensorReading reading = live.getLatestReading(deviceCode);
+        String source = "Live from " + deviceCode;
+
+        // Fall back to DB sensor history if no live data
+        if (reading == null) {
+            try {
+                smartfarm.dao.SensorDAO sensorDAO = new smartfarm.dao.SensorDAO();
+                List<SensorReading> recent = sensorDAO.getRecentForDevice(plotId, 1);
+                if (!recent.isEmpty()) {
+                    reading = recent.get(0);
+                    source = "Last recorded reading";
+                }
+            } catch (Exception ignored) {}
+        }
 
         if (reading != null) {
-            lblConditionsSource.setText("Live from " + deviceCode);
+            lblConditionsSource.setText(source);
             float t = reading.getTemperature();
             lblEnvTemp.setText(String.format("%.1f °C", t));
             setEnvStatus(lblEnvTempStatus, t > 35 ? "High" : t < 10 ? "Low" : "Normal");
@@ -525,6 +533,65 @@ public class CropController {
             setEnvStatus(lblEnvHumStatus, "Offline");
             setEnvStatus(lblEnvSoilStatus, "Offline");
         }
+    }
+
+    private void populateHealthFromSensors(Crop crop) {
+        LiveSensorData live = LiveSensorData.getInstance();
+        String deviceCode = "plot" + crop.getPlotId() + "_sensor";
+        SensorReading reading = live.getLatestReading(deviceCode);
+
+        // Also try DB sensor history if no live data
+        if (reading == null) {
+            try {
+                smartfarm.dao.SensorDAO sensorDAO = new smartfarm.dao.SensorDAO();
+                List<SensorReading> recent = sensorDAO.getRecentForDevice(crop.getPlotId(), 1);
+                if (!recent.isEmpty()) reading = recent.get(0);
+            } catch (Exception ignored) {}
+        }
+
+        if (reading == null || crop.getGrowthStage() == Crop.GrowthStage.HARVESTED) {
+            String val = crop.getGrowthStage() == Crop.GrowthStage.HARVESTED ? "N/A" : "No Data";
+            setHealthLabel(lblHealthOverall, val);
+            setHealthLabel(lblHealthLeaf, val);
+            setHealthLabel(lblHealthGrowth, val);
+            setHealthLabel(lblHealthPest, val);
+            setHealthLabel(lblHealthDisease, val);
+            return;
+        }
+
+        float temp = reading.getTemperature();
+        float hum = reading.getHumidity();
+        float soil = reading.getSoilMoisture();
+        int issues = 0;
+
+        // Leaf health - based on humidity
+        if (hum >= 30 && hum <= 80) setHealthLabel(lblHealthLeaf, "Good");
+        else if (hum >= 20 && hum <= 90) { setHealthLabel(lblHealthLeaf, "Fair"); issues++; }
+        else { setHealthLabel(lblHealthLeaf, "Poor"); issues += 2; }
+
+        // Growth rate - based on temperature + soil
+        boolean tempOk = temp >= 15 && temp <= 30;
+        boolean soilOk = !Float.isNaN(soil) && soil >= 30 && soil <= 85;
+        if (tempOk && soilOk) setHealthLabel(lblHealthGrowth, "Good");
+        else if (tempOk || soilOk) { setHealthLabel(lblHealthGrowth, "Slow"); issues++; }
+        else { setHealthLabel(lblHealthGrowth, "Poor"); issues += 2; }
+
+        // Pest risk - high humidity + warm temperature increases pest risk
+        if (hum > 80 && temp > 25) { setHealthLabel(lblHealthPest, "High"); issues += 2; }
+        else if (hum > 70 && temp > 20) { setHealthLabel(lblHealthPest, "Medium"); issues++; }
+        else setHealthLabel(lblHealthPest, "Low");
+
+        // Disease risk - very high humidity or very wet soil
+        boolean highHum = hum > 85;
+        boolean wetSoil = !Float.isNaN(soil) && soil > 90;
+        if (highHum && wetSoil) { setHealthLabel(lblHealthDisease, "High"); issues += 2; }
+        else if (highHum || wetSoil) { setHealthLabel(lblHealthDisease, "Medium"); issues++; }
+        else setHealthLabel(lblHealthDisease, "Low");
+
+        // Overall - aggregate of above
+        if (issues == 0) setHealthLabel(lblHealthOverall, "Good");
+        else if (issues <= 2) setHealthLabel(lblHealthOverall, "Fair");
+        else setHealthLabel(lblHealthOverall, "Poor");
     }
 
     private void setEnvStatus(Label lbl, String status) {

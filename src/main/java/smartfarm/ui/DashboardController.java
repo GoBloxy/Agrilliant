@@ -19,9 +19,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import smartfarm.dao.*;
@@ -54,6 +56,9 @@ public class DashboardController {
     @FXML private Label lblTempPlot, lblHumPlot, lblSoilPlot;
     @FXML private Label lblTempStatus, lblHumStatus, lblSoilStatus;
 
+    // ── Field Map ──
+    @FXML private Pane fieldMap;
+
     // ── Chart (real-time JavaFX LineChart) ──
     @FXML private StackPane chartContainer;
     private LineChart<String, Number> sensorChart;
@@ -75,7 +80,7 @@ public class DashboardController {
     @FXML private Label lblTasksTitle;
 
     // ── Top Bar ──
-    @FXML private Label lblDate, lblTime, lblTempTop, lblUserName, lblUserRole;
+    @FXML private Label lblDate, lblTime, lblTempTop, lblWeatherDesc, lblUserName, lblUserRole;
     @FXML private HBox userPill;
 
     // ── Sidebar Status ──
@@ -161,6 +166,7 @@ public class DashboardController {
         loadCropTable();
         loadWorkerTable();
         loadHarvestTable();
+        buildFieldMap();
     }
 
     private void loadAlerts() {
@@ -298,6 +304,85 @@ public class DashboardController {
             harvestTable.setItems(harvestData);
         } catch (SQLException e) {
             System.err.println("Failed to load harvest table: " + e.getMessage());
+        }
+    }
+
+    // ═══════════════ FIELD MAP (DYNAMIC FROM DB) ═══════════════
+
+    private void buildFieldMap() {
+        fieldMap.getChildren().clear();
+        try {
+            if (allPlots == null) allPlots = plotDAO.getAll();
+            if (allPlots.isEmpty()) {
+                Label empty = new Label("No plots defined");
+                empty.setStyle("-fx-text-fill:#9ca3af;-fx-font-size:12;");
+                empty.setLayoutX(80);
+                empty.setLayoutY(150);
+                fieldMap.getChildren().add(empty);
+                return;
+            }
+
+            double mapW = fieldMap.getPrefWidth() > 0 ? fieldMap.getPrefWidth() : 260;
+            double mapH = fieldMap.getPrefHeight() > 0 ? fieldMap.getPrefHeight() : 330;
+            int count = allPlots.size();
+            int cols = Math.max(1, (int) Math.ceil(Math.sqrt(count)));
+            int rows = (int) Math.ceil((double) count / cols);
+
+            double pad = 12;
+            double cellW = (mapW - pad * (cols + 1)) / cols;
+            double cellH = (mapH - pad * (rows + 1)) / rows;
+
+            // Check latest sensor readings for each plot to determine status
+            SensorDAO sensorDAO = new SensorDAO();
+            Map<Integer, String> plotStatus = new HashMap<>();
+            for (Plot p : allPlots) {
+                try {
+                    List<SensorReading> recent = sensorDAO.getRecentForDevice(p.getPlotId(), 1);
+                    if (recent.isEmpty()) {
+                        plotStatus.put(p.getPlotId(), "offline");
+                    } else {
+                        SensorReading r = recent.get(0);
+                        float t = r.getTemperature();
+                        float h = r.getHumidity();
+                        float s = r.getSoilMoisture();
+                        boolean crit = t > 40 || t < 5 || h > 90 || h < 20 || (!Float.isNaN(s) && (s < 15 || s > 95));
+                        boolean warn = t > 35 || t < 10 || h > 80 || h < 30 || (!Float.isNaN(s) && (s < 30 || s > 85));
+                        plotStatus.put(p.getPlotId(), crit ? "critical" : warn ? "warning" : "normal");
+                    }
+                } catch (Exception e) {
+                    plotStatus.put(p.getPlotId(), "offline");
+                }
+            }
+
+            for (int i = 0; i < count; i++) {
+                Plot p = allPlots.get(i);
+                int col = i % cols;
+                int row = i / cols;
+                double x = pad + col * (cellW + pad);
+                double y = pad + row * (cellH + pad);
+
+                Rectangle rect = new Rectangle(cellW, cellH);
+                rect.setArcWidth(8);
+                rect.setArcHeight(8);
+                String status = plotStatus.getOrDefault(p.getPlotId(), "offline");
+                rect.getStyleClass().add("plot-" + status);
+                rect.setLayoutX(x);
+                rect.setLayoutY(y);
+
+                Label lbl = new Label(p.getName());
+                lbl.setStyle("-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#1f2937;");
+                lbl.setLayoutX(x + cellW / 2 - 20);
+                lbl.setLayoutY(y + cellH / 2 - 8);
+
+                Label sizeLbl = new Label(String.format("%.1f ac", p.getSizeAcres()));
+                sizeLbl.setStyle("-fx-font-size:9;-fx-text-fill:#6b7280;");
+                sizeLbl.setLayoutX(x + cellW / 2 - 15);
+                sizeLbl.setLayoutY(y + cellH / 2 + 8);
+
+                fieldMap.getChildren().addAll(rect, lbl, sizeLbl);
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to build field map: " + e.getMessage());
         }
     }
 
@@ -815,6 +900,8 @@ public class DashboardController {
 
     private void updateTemperature(float t) {
         lblTemperature.setText(String.format("%.1f °C", t));
+        lblTempTop.setText(String.format("%.0f°C", t));
+        lblWeatherDesc.setText(t > 35 ? "Hot conditions" : t > 28 ? "Warm" : t > 18 ? "Comfortable" : t > 10 ? "Cool" : "Cold conditions");
         lblTempStatus.getStyleClass().removeAll("badge-normal", "badge-high", "badge-low");
         if (t > 35) { lblTempStatus.setText("High"); lblTempStatus.getStyleClass().add("badge-high"); }
         else if (t < 10) { lblTempStatus.setText("Low"); lblTempStatus.getStyleClass().add("badge-low"); }
