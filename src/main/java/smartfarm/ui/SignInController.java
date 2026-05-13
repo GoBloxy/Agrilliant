@@ -63,7 +63,7 @@ public class SignInController {
             try {
                 if (!fpService.isConnected()) {
                     if (!fpService.autoConnect()) {
-                        updateFpStatus("No fingerprint sensor detected. Connect R307 via USB.");
+                        updateFpStatus("Cannot connect to ESP32. Close Arduino Serial Monitor first.");
                         return;
                     }
                 }

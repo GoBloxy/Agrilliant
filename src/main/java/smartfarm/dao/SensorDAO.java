@@ -32,7 +32,11 @@ public class SensorDAO implements GenericDAO<SensorReading> {
             stmt.setInt(1, item.getDeviceId());
             stmt.setFloat(2, item.getTemperature());
             stmt.setFloat(3, item.getHumidity());
-            stmt.setFloat(4, item.getSoilMoisture());
+            if (Float.isNaN(item.getSoilMoisture())) {
+                stmt.setNull(4, java.sql.Types.FLOAT);
+            } else {
+                stmt.setFloat(4, item.getSoilMoisture());
+            }
             stmt.setObject(5, item.getTimestamp());
             stmt.executeUpdate();
         }

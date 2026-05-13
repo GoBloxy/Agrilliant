@@ -50,6 +50,10 @@ public class Main extends Application {
         primaryStage.setMinWidth(1300);
         primaryStage.setMinHeight(820);
         primaryStage.setMaximized(true);
+        primaryStage.setOnCloseRequest(e -> {
+            System.out.println("Shutting down...");
+            System.exit(0);
+        });
         primaryStage.show();
 
         // Start TCP sensor server on a daemon thread (auto-stops when app closes)

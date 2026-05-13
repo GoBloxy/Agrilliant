@@ -153,6 +153,21 @@ public class FingerprintService {
     }
 
     /**
+     * Delete a fingerprint template from the R307 at the given slot.
+     */
+    public boolean deleteTemplate(int slotId) {
+        if (!isConnected()) return false;
+        try {
+            sendLine("DELETE:" + slotId);
+            String resp = waitForResponse("DELETE_", 5000);
+            return resp != null && resp.startsWith("DELETE_OK");
+        } catch (Exception e) {
+            System.err.println("Delete template error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Enroll a new fingerprint at the given slot. Two scans required.
      * The callback receives progress messages from the ESP32.
      */

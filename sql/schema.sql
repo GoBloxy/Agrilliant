@@ -37,6 +37,8 @@ CREATE TABLE worker (
     worker_id      INT AUTO_INCREMENT PRIMARY KEY,
     full_name      VARCHAR(100) NOT NULL,
     phone          VARCHAR(20),
+    email          VARCHAR(100),
+    password_hash  VARCHAR(255),
     job_title      VARCHAR(50),
     skills         TEXT,
     on_duty        BOOLEAN      NOT NULL DEFAULT TRUE,

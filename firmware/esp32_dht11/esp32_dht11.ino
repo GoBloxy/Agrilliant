@@ -59,7 +59,7 @@
 #define READ_INTERVAL 2000              // Milliseconds between readings (DHT11 min ~1s)
 #define FP_RX_PIN     16               // GPIO pin for R307 TX -> ESP32 RX (UART2)
 #define FP_TX_PIN     17               // GPIO pin for R307 RX -> ESP32 TX (UART2)
-#define FP_CHECK_INTERVAL 500          // Milliseconds between fingerprint scan checks
+#define FP_CHECK_INTERVAL 3000         // Milliseconds between fingerprint scan checks
 
 // FC-28 calibration (adjust after testing with your sensor)
 #define SOIL_DRY      4095              // ADC value when sensor is in dry air
@@ -77,6 +77,7 @@ HardwareSerial fpSerial(2);
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&fpSerial);
 bool fingerprintDetected = false;
 unsigned long lastFpCheck = 0;
+bool serialBridgeActive = false;       // True when desktop app is using R307 via serial
 
 // SH1106 OLED (128x64, I2C on default SDA=21, SCL=22)
 U8G2_SH1106_128X64_NONAME_F_HW_I2C oled(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -158,7 +159,8 @@ void loop() {
     }
 
     // Check fingerprint scanner (non-blocking, every 500ms)
-    if (fingerprintDetected && millis() - lastFpCheck >= FP_CHECK_INTERVAL) {
+    // Skip when desktop app is using R307 via serial bridge
+    if (fingerprintDetected && !serialBridgeActive && millis() - lastFpCheck >= FP_CHECK_INTERVAL) {
         lastFpCheck = millis();
         checkFingerprint();
     }
@@ -304,17 +306,40 @@ void checkFingerprint() {
 //   TEMPLATE_COUNT  → respond: TEMPLATE_COUNT:<n>
 //   PING            → respond: PONG (connection test)
 
+// Helper: show 1-3 lines centered on OLED
+void showOLED(const char* line1, const char* line2 = "", const char* line3 = "") {
+    oled.clearBuffer();
+    oled.setFont(u8g2_font_6x10_tf);
+    oled.drawStr(10, 20, line1);
+    if (strlen(line2) > 0) oled.drawStr(10, 35, line2);
+    if (strlen(line3) > 0) oled.drawStr(10, 50, line3);
+    oled.sendBuffer();
+}
+
 void handleSerialCommand(String cmd) {
     if (!fingerprintDetected) {
         Serial.println("FP_ERROR:No sensor");
+        showOLED("[Bridge]", "No R307 sensor!");
         return;
     }
 
     if (cmd == "PING") {
         Serial.println("PONG");
+        showOLED("[Bridge]", "Desktop connected");
+        return;
     }
-    else if (cmd == "SCAN") {
+    else if (cmd == "RELEASE") {
+        serialBridgeActive = false;
+        Serial.println("RELEASED");
+        return;
+    }
+
+    // All commands below lock the R307 for the desktop app
+    serialBridgeActive = true;
+
+    if (cmd == "SCAN") {
         handleScan();
+        serialBridgeActive = false;
     }
     else if (cmd.startsWith("ENROLL:")) {
         int slot = cmd.substring(7).toInt();
@@ -323,15 +348,31 @@ void handleSerialCommand(String cmd) {
             return;
         }
         handleEnroll(slot);
+        serialBridgeActive = false;
     }
     else if (cmd == "TEMPLATE_COUNT") {
         finger.getTemplateCount();
         Serial.println("TEMPLATE_COUNT:" + String(finger.templateCount));
+        serialBridgeActive = false;
+    }
+    else if (cmd.startsWith("DELETE:")) {
+        int slot = cmd.substring(7).toInt();
+        uint8_t p = finger.deleteModel(slot);
+        if (p == FINGERPRINT_OK) {
+            Serial.println("DELETE_OK:" + String(slot));
+            showOLED("[Delete]", "Removed ID:", String(slot).c_str());
+        } else {
+            Serial.println("DELETE_FAIL:" + String(slot));
+            showOLED("[Delete]", "Failed!");
+        }
+        delay(1000);
+        serialBridgeActive = false;
     }
 }
 
 void handleScan() {
     Serial.println("SCAN_WAITING");
+    showOLED("[Login Scan]", "Place finger...");
 
     // Wait up to 10 seconds for a finger
     unsigned long start = millis();
@@ -341,35 +382,70 @@ void handleScan() {
         if (p == FINGERPRINT_OK) break;
         delay(100);
     }
-    if (p != FINGERPRINT_OK) { Serial.println("SCAN_FAIL:No finger"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("SCAN_FAIL:No finger");
+        showOLED("[Login Scan]", "No finger", "Timed out");
+        delay(1500);
+        return;
+    }
 
+    showOLED("[Login Scan]", "Processing...");
     p = finger.image2Tz();
-    if (p != FINGERPRINT_OK) { Serial.println("SCAN_FAIL:Image error"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("SCAN_FAIL:Image error");
+        showOLED("[Login Scan]", "Image error");
+        delay(1500);
+        return;
+    }
 
     p = finger.fingerSearch();
-    if (p != FINGERPRINT_OK) { Serial.println("SCAN_FAIL:Not recognized"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("SCAN_FAIL:Not recognized");
+        showOLED("[Login Scan]", "Not recognized!");
+        delay(1500);
+        return;
+    }
 
+    char buf[32];
+    snprintf(buf, sizeof(buf), "ID: %d  Conf: %d", finger.fingerID, finger.confidence);
     Serial.println("SCAN_OK:" + String(finger.fingerID) + "," + String(finger.confidence));
+    showOLED("[Login Scan]", "Match found!", buf);
+    delay(1500);
 }
 
 void handleEnroll(int slot) {
     uint8_t p;
+    char buf[32];
+    snprintf(buf, sizeof(buf), "Slot: %d", slot);
 
     // ── First scan ──
     Serial.println("ENROLL_PLACE1");
+    showOLED("[Enroll]", "Place finger...", buf);
     unsigned long start = millis();
     while (millis() - start < 15000) {
         p = finger.getImage();
         if (p == FINGERPRINT_OK) break;
         delay(100);
     }
-    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:No finger (scan 1)"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("ENROLL_FAIL:No finger (scan 1)");
+        showOLED("[Enroll]", "No finger!", "Timed out");
+        delay(1500);
+        return;
+    }
 
+    showOLED("[Enroll]", "Processing 1/2...");
     p = finger.image2Tz(1);
-    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:Image error (scan 1)"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("ENROLL_FAIL:Image error (scan 1)");
+        showOLED("[Enroll]", "Image error (1)");
+        delay(1500);
+        return;
+    }
 
     // ── Remove finger ──
     Serial.println("ENROLL_REMOVE");
+    showOLED("[Enroll]", "Remove finger...");
     start = millis();
     while (millis() - start < 5000) {
         p = finger.getImage();
@@ -379,24 +455,50 @@ void handleEnroll(int slot) {
 
     // ── Second scan ──
     Serial.println("ENROLL_PLACE2");
+    showOLED("[Enroll]", "Same finger again", buf);
     start = millis();
     while (millis() - start < 15000) {
         p = finger.getImage();
         if (p == FINGERPRINT_OK) break;
         delay(100);
     }
-    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:No finger (scan 2)"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("ENROLL_FAIL:No finger (scan 2)");
+        showOLED("[Enroll]", "No finger!", "Timed out");
+        delay(1500);
+        return;
+    }
 
+    showOLED("[Enroll]", "Processing 2/2...");
     p = finger.image2Tz(2);
-    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:Image error (scan 2)"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("ENROLL_FAIL:Image error (scan 2)");
+        showOLED("[Enroll]", "Image error (2)");
+        delay(1500);
+        return;
+    }
 
     // ── Create model ──
+    showOLED("[Enroll]", "Creating model...");
     p = finger.createModel();
-    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:Prints did not match"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("ENROLL_FAIL:Prints did not match");
+        showOLED("[Enroll]", "No match!", "Try again");
+        delay(1500);
+        return;
+    }
 
     // ── Store ──
     p = finger.storeModel(slot);
-    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:Store failed"); return; }
+    if (p != FINGERPRINT_OK) {
+        Serial.println("ENROLL_FAIL:Store failed");
+        showOLED("[Enroll]", "Store failed!");
+        delay(1500);
+        return;
+    }
 
+    snprintf(buf, sizeof(buf), "Saved as ID: %d", slot);
     Serial.println("ENROLL_OK:" + String(slot));
+    showOLED("[Enroll]", "Success!", buf);
+    delay(2000);
 }

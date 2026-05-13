@@ -30,7 +30,8 @@ public class WorkerService {
             workerProcess.save(worker);
         }
         catch (SQLException err){
-            throw new RuntimeException("Server Error! Try again later");
+            err.printStackTrace();
+            throw new RuntimeException("Server Error: " + err.getMessage());
         }
     }
 

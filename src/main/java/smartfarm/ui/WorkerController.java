@@ -41,8 +41,8 @@ public class WorkerController {
     public void initialize() {
         loadTasks();
         setupTableColumns();
-        loadWorkers();
         setupFilters();
+        loadWorkers();
         updateSummaryCards();
     }
 
@@ -128,9 +128,11 @@ public class WorkerController {
         txtSearch.textProperty().addListener((obs, old, val) -> applyFilters());
     }
 
+    private final ObservableList<Worker> filteredWorkers = FXCollections.observableArrayList();
+
     private void applyFilters() {
         String search = txtSearch.getText() != null ? txtSearch.getText().toLowerCase().trim() : "";
-        String status = cmbStatus.getValue();
+        String status = cmbStatus.getValue() != null ? cmbStatus.getValue() : "All";
         List<Worker> filtered = allWorkers.stream()
                 .filter(w -> search.isEmpty()
                         || w.getFullName().toLowerCase().contains(search)
@@ -139,7 +141,8 @@ public class WorkerController {
                         || ("On Duty".equals(status) && w.isOnDuty())
                         || ("Off Duty".equals(status) && !w.isOnDuty()))
                 .collect(Collectors.toList());
-        workerTable.setItems(FXCollections.observableArrayList(filtered));
+        filteredWorkers.setAll(filtered);
+        workerTable.setItems(filteredWorkers);
     }
 
     private void updateSummaryCards() {
@@ -162,6 +165,18 @@ public class WorkerController {
                 loadWorkers();
                 updateSummaryCards();
             } catch (RuntimeException e) {
+                // Rollback: delete enrolled fingerprint from R307 if save failed
+                if (worker.getFingerprintId() != null && worker.getFingerprintId() > 0) {
+                    int fpId = worker.getFingerprintId();
+                    new Thread(() -> {
+                        FingerprintService fps = new FingerprintService();
+                        if (fps.autoConnect()) {
+                            fps.deleteTemplate(fpId);
+                            fps.disconnect();
+                            System.out.println("Rolled back fingerprint ID " + fpId + " from R307");
+                        }
+                    }).start();
+                }
                 showAlert("Error", e.getMessage());
             }
         });
@@ -190,6 +205,18 @@ public class WorkerController {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 try {
+                    // Delete fingerprint from R307 if enrolled
+                    if (worker.getFingerprintId() != null && worker.getFingerprintId() > 0) {
+                        int fpId = worker.getFingerprintId();
+                        new Thread(() -> {
+                            FingerprintService fps = new FingerprintService();
+                            if (fps.autoConnect()) {
+                                fps.deleteTemplate(fpId);
+                                fps.disconnect();
+                                System.out.println("Deleted fingerprint ID " + fpId + " from R307");
+                            }
+                        }).start();
+                    }
                     workerService.deleteWorker(worker.getWorkerId());
                     loadWorkers();
                     updateSummaryCards();
@@ -225,6 +252,8 @@ public class WorkerController {
                 ? "Fingerprint enrolled (ID: " + enrolledFpId[0] + ")"
                 : "No fingerprint enrolled");
         fpStatusLabel.setStyle("-fx-font-size: 11; -fx-text-fill: #6b7280;");
+        fpStatusLabel.setWrapText(true);
+        fpStatusLabel.setMaxWidth(300);
         Button enrollBtn = new Button(enrolledFpId[0] >= 0 ? "Re-enroll Fingerprint" : "Enroll Fingerprint");
         enrollBtn.setStyle("-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-font-weight: bold; "
                 + "-fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 16;");
@@ -236,7 +265,7 @@ public class WorkerController {
                 try {
                     if (!fps.autoConnect()) {
                         javafx.application.Platform.runLater(() -> {
-                            fpStatusLabel.setText("No sensor detected. Connect R307 via USB.");
+                            fpStatusLabel.setText("Cannot connect to ESP32. Close Arduino Serial Monitor first.");
                             enrollBtn.setDisable(false);
                         });
                         return;
