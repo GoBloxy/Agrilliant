@@ -18,9 +18,17 @@ public class HarvestDAO implements GenericDAO<HarvestRecord> {
             rs.getInt("record_id"),
             rs.getObject("harvest_date", java.time.LocalDate.class),
             rs.getDouble("quantity_kg"),
-            HarvestRecord.Grade.valueOf(rs.getString("grade")),
+            parseGrade(rs.getString("grade")),
             rs.getInt("crop_id")
         );
+    }
+
+    private HarvestRecord.Grade parseGrade(String value) {
+        if (value == null) return HarvestRecord.Grade.C;
+        for (HarvestRecord.Grade g : HarvestRecord.Grade.values()) {
+            if (g.name().equalsIgnoreCase(value)) return g;
+        }
+        return HarvestRecord.Grade.C;
     }
 
     @Override

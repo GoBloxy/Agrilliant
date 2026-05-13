@@ -6,13 +6,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import smartfarm.service.SettingsManager;
 
 public class SettingsPage extends VBox {
 
     private final TextField txtServerIp = new TextField("192.168.8.141");
     private final TextField txtServerPort = new TextField("8080");
     private final Spinner<Integer> spnReadInterval = new Spinner<>(5, 300, 60, 5);
-    private final ToggleButton tglDarkMode = new ToggleButton("Off");
     private final ToggleButton tglAlerts = new ToggleButton("On");
     private final ComboBox<String> cmbTempUnit = new ComboBox<>();
 
@@ -95,16 +95,11 @@ public class SettingsPage extends VBox {
         grid.setVgap(12);
 
         cmbTempUnit.getItems().addAll("Celsius (°C)", "Fahrenheit (°F)");
-        cmbTempUnit.setValue("Celsius (°C)");
+        cmbTempUnit.setValue(SettingsManager.getInstance().isUseFahrenheit() ? "Fahrenheit (°F)" : "Celsius (°C)");
         cmbTempUnit.setPrefWidth(180);
-
-        tglDarkMode.setStyle("-fx-font-size: 12;");
-        tglDarkMode.selectedProperty().addListener((obs, o, n) -> tglDarkMode.setText(n ? "On" : "Off"));
 
         grid.add(new Label("Temperature Unit"), 0, 0);
         grid.add(cmbTempUnit, 1, 0);
-        grid.add(new Label("Dark Mode"), 0, 1);
-        grid.add(tglDarkMode, 1, 1);
 
         return grid;
     }
@@ -129,6 +124,8 @@ public class SettingsPage extends VBox {
         btnSave.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-size: 14; " +
                 "-fx-padding: 10 28; -fx-background-radius: 6; -fx-cursor: hand;");
         btnSave.setOnAction(e -> {
+            SettingsManager.getInstance().setUseFahrenheit(
+                    "Fahrenheit (°F)".equals(cmbTempUnit.getValue()));
             Alert alert = new Alert(Alert.AlertType.INFORMATION, "Settings saved.", ButtonType.OK);
             alert.setHeaderText(null);
             alert.showAndWait();
@@ -141,7 +138,7 @@ public class SettingsPage extends VBox {
             txtServerPort.setText("8080");
             spnReadInterval.getValueFactory().setValue(60);
             cmbTempUnit.setValue("Celsius (°C)");
-            tglDarkMode.setSelected(false);
+            SettingsManager.getInstance().setUseFahrenheit(false);
             tglAlerts.setSelected(true);
         });
 

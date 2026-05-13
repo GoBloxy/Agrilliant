@@ -75,7 +75,7 @@ public class DashboardController {
     @FXML private TableView<HarvestRecord> harvestTable;
     @FXML private TableColumn<Crop, String> colCropName, colCropPlot, colCropStage, colPlantingDate, colCropStatus;
     @FXML private TableColumn<Worker, String> colWorkerName, colWorkerRole, colWorkerStatus, colWorkerTask, colWorkload;
-    @FXML private TableColumn<HarvestRecord, String> colHarvestCrop, colHarvestPlot, colHarvestDate, colHarvestQty, colHarvestGrade, colHarvestExpected, colHarvestPerf;
+    @FXML private TableColumn<HarvestRecord, String> colHarvestCrop, colHarvestPlot, colHarvestDate, colHarvestQty, colHarvestGrade;
 
     // ── Lists ──
     @FXML private ListView<String> alertListView, taskListView;
@@ -300,18 +300,6 @@ public class DashboardController {
             colHarvestDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getHarvestDate() != null ? d.getValue().getHarvestDate().toString() : "—"));
             colHarvestQty.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.1f", d.getValue().getQuantityKg())));
             colHarvestGrade.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getGrade().name()));
-            colHarvestExpected.setCellValueFactory(d -> {
-                Crop c = cropMap.get(d.getValue().getCropId());
-                return new SimpleStringProperty(c != null ? String.format("%.1f", c.getExpectedYield()) : "—");
-            });
-            colHarvestPerf.setCellValueFactory(d -> {
-                Crop c = cropMap.get(d.getValue().getCropId());
-                if (c != null && c.getExpectedYield() > 0) {
-                    double perf = (d.getValue().getQuantityKg() / c.getExpectedYield()) * 100;
-                    return new SimpleStringProperty(String.format("%.0f%%", perf));
-                }
-                return new SimpleStringProperty("—");
-            });
 
             ObservableList<HarvestRecord> harvestData = FXCollections.observableArrayList(records.subList(0, Math.min(records.size(), 10)));
             harvestTable.setItems(harvestData);
@@ -672,17 +660,15 @@ public class DashboardController {
             Map<Integer, String> plotMap = new HashMap<>();
             for (Plot p : plots) plotMap.put(p.getPlotId(), p.getName());
 
-            double pricePerKg = 2.50;
             try (FileWriter writer = new FileWriter(file)) {
-                writer.write("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
+                writer.write("Date,Crop,Plot,Qty (kg),Grade\n");
                 for (HarvestRecord hr : harvests) {
                     Crop c = cropMap.get(hr.getCropId());
                     String cropName = (c != null) ? c.getCropName() : "Crop #" + hr.getCropId();
                     String plotName = (c != null) ? plotMap.getOrDefault(c.getPlotId(), "—") : "—";
-                    writer.write(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
+                    writer.write(String.format("%s,%s,%s,%.1f,%s\n",
                             hr.getHarvestDate(), cropName, plotName,
-                            hr.getQuantityKg(), hr.getGrade().name(),
-                            hr.getQuantityKg() * pricePerKg));
+                            hr.getQuantityKg(), hr.getGrade().name()));
                 }
             }
             showExportSuccess("Report exported successfully!");
@@ -934,8 +920,9 @@ public class DashboardController {
     }
 
     private void updateTemperature(float t) {
-        lblTemperature.setText(String.format("%.1f °C", t));
-        lblTempTop.setText(String.format("%.0f°C", t));
+        smartfarm.service.SettingsManager sm = smartfarm.service.SettingsManager.getInstance();
+        lblTemperature.setText(sm.formatTemp(t));
+        lblTempTop.setText(sm.formatTempShort(t));
         lblWeatherDesc.setText(t > 35 ? "Hot conditions" : t > 28 ? "Warm" : t > 18 ? "Comfortable" : t > 10 ? "Cool" : "Cold conditions");
         lblTempStatus.getStyleClass().removeAll("badge-normal", "badge-high", "badge-low");
         if (t > 35) { lblTempStatus.setText("High"); lblTempStatus.getStyleClass().add("badge-high"); }

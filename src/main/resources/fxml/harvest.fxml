@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
@@ -32,26 +35,26 @@
         <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
-                    <FontIcon iconLiteral="fth-dollar-sign" iconSize="18" iconColor="#065f46"/>
+                <StackPane style="-fx-background-color:#dbeafe;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-file-text" iconSize="18" iconColor="#1d4ed8"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Total Revenue" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotalRevenue" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Gross income from harvests" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Total Records" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblTotalRecords" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Harvest entries" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
-                    <FontIcon iconLiteral="fth-trending-down" iconSize="18" iconColor="#d97706"/>
+                <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                    <FontIcon iconLiteral="fth-award" iconSize="18" iconColor="#065f46"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Total Cost" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotalCost" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Operational expenses" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Grade A" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblGradeA" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Top quality harvests" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -59,12 +62,12 @@
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#e0e7ff;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
-                    <FontIcon iconLiteral="fth-trending-up" iconSize="18" iconColor="#4338ca"/>
+                    <FontIcon iconLiteral="fth-bar-chart-2" iconSize="18" iconColor="#4338ca"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Net Profit" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblNetProfit" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Revenue minus costs" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Avg Quantity" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
+                    <Label fx:id="lblAvgQuantity" text="0 kg" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Per harvest record" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -79,6 +82,20 @@
         <ComboBox fx:id="cmbQuality" promptText="All Quality" styleClass="filter-combo"/>
     </HBox>
 
+    <HBox spacing="14">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <FontIcon iconLiteral="fth-bar-chart-2" iconSize="14" iconColor="#2e7d32"/>
+                <Label text="Grade Distribution" style="-fx-font-size:14;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+            </HBox>
+            <BarChart fx:id="gradeBarChart" animated="false" legendVisible="false" prefHeight="200" maxHeight="220">
+                <xAxis><CategoryAxis label="Grade"/></xAxis>
+                <yAxis><NumberAxis label="Count"/></yAxis>
+            </BarChart>
+        </VBox>
+    </HBox>
+
     <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
         <Label text="All Harvest Records" styleClass="card-title"/>
@@ -88,8 +105,7 @@
                 <TableColumn fx:id="colPlot"     text="Plot"          prefWidth="120"/>
                 <TableColumn fx:id="colQuantity" text="Quantity (kg)" prefWidth="120"/>
                 <TableColumn fx:id="colDate"     text="Date"          prefWidth="120"/>
-                <TableColumn fx:id="colQuality"  text="Quality"       prefWidth="90"/>
-                <TableColumn fx:id="colRevenue"  text="Revenue"       prefWidth="100"/>
+                <TableColumn fx:id="colQuality"  text="Grade"         prefWidth="90"/>
                 <TableColumn fx:id="colActions"  text="Actions"       prefWidth="100"/>
             </columns>
         </TableView>

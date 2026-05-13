@@ -355,7 +355,7 @@ public class MonitoringController {
             if (t > 40 || t < 5) { tStatus = "Critical"; critical++; }
             else if (t > 35 || t < 10) { tStatus = "Warning"; warning++; }
             else { tStatus = "Normal"; normal++; }
-            rows.add(new SensorRow(plotName, "Temperature", String.format("%.1f °C", t), tStatus, time));
+            rows.add(new SensorRow(plotName, "Temperature", smartfarm.service.SettingsManager.getInstance().formatTemp(t), tStatus, time));
 
             // Humidity row
             float h = r.getHumidity();

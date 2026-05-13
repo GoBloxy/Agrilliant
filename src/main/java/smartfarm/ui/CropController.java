@@ -510,7 +510,7 @@ public class CropController {
         if (reading != null) {
             lblConditionsSource.setText(source);
             float t = reading.getTemperature();
-            lblEnvTemp.setText(String.format("%.1f °C", t));
+            lblEnvTemp.setText(smartfarm.service.SettingsManager.getInstance().formatTemp(t));
             setEnvStatus(lblEnvTempStatus, t > 35 ? "High" : t < 10 ? "Low" : "Normal");
 
             float h = reading.getHumidity();
@@ -527,7 +527,7 @@ public class CropController {
             }
         } else {
             lblConditionsSource.setText("No live data for plot " + plotId);
-            lblEnvTemp.setText("-- °C");
+            lblEnvTemp.setText(smartfarm.service.SettingsManager.getInstance().isUseFahrenheit() ? "-- °F" : "-- °C");
             lblEnvHumidity.setText("-- %");
             lblEnvSoil.setText("-- %");
             setEnvStatus(lblEnvTempStatus, "Offline");

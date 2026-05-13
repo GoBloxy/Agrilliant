@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public class HarvestRecord {
 
-    public enum Grade { A, B, C }
+    public enum Grade { A, B, C, Reject }
 
     private int recordId;
     private LocalDate harvestDate;
