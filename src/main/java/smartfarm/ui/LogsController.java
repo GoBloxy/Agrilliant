@@ -1,9 +1,12 @@
 package smartfarm.ui;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
+import javafx.util.Duration;
 import smartfarm.model.SystemLog;
 import smartfarm.service.SystemLogManager;
 
@@ -11,6 +14,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,12 +30,22 @@ public class LogsController {
     @FXML private Button btnExport, btnClear;
 
     private final SystemLogManager logManager = SystemLogManager.getInstance();
+    private int lastKnownSize = -1;
 
     @FXML
     public void initialize() {
         setupTableColumns();
         setupFilters();
         refresh();
+
+        // Auto-refresh every 3 seconds so new log entries appear automatically
+        Timeline autoRefresh = new Timeline(new KeyFrame(Duration.seconds(3), e -> {
+            if (logManager.size() != lastKnownSize) {
+                refresh();
+            }
+        }));
+        autoRefresh.setCycleCount(Timeline.INDEFINITE);
+        autoRefresh.play();
     }
 
     private void setupTableColumns() {
@@ -84,6 +99,8 @@ public class LogsController {
 
     private void refresh() {
         List<SystemLog> logs = logManager.getLogs();
+        lastKnownSize = logs.size();
+
         String search = txtSearch.getText() != null ? txtSearch.getText().toLowerCase().trim() : "";
         String type = cmbType.getValue();
         LocalDate from = dpFrom.getValue();
@@ -97,8 +114,10 @@ public class LogsController {
                 .filter(l -> "All".equals(type) || l.getType().name().equals(type))
                 .filter(l -> from == null || !l.getTimestamp().toLocalDate().isBefore(from))
                 .filter(l -> to == null || !l.getTimestamp().toLocalDate().isAfter(to))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
 
+        // Show newest logs first
+        Collections.reverse(filtered);
         logTable.setItems(FXCollections.observableArrayList(filtered));
 
         long infoCount = logs.stream().filter(l -> l.getType() == SystemLog.LogType.INFO).count();

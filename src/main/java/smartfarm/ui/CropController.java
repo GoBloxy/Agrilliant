@@ -22,6 +22,7 @@ import smartfarm.model.Crop;
 import smartfarm.model.Plot;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
+import smartfarm.service.SystemLogManager;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -342,12 +343,10 @@ public class CropController {
 
     private Crop.GrowthStage getNextStage(Crop.GrowthStage current) {
         return switch (current) {
-            case SEED       -> Crop.GrowthStage.SEEDLING;
-            case SEEDLING   -> Crop.GrowthStage.VEGETATIVE;
-            case VEGETATIVE -> Crop.GrowthStage.FLOWERING;
-            case FLOWERING  -> Crop.GrowthStage.FRUITING;
-            case FRUITING   -> Crop.GrowthStage.HARVESTED;
-            case HARVESTED  -> null;
+            case PLANTED   -> Crop.GrowthStage.GROWING;
+            case GROWING   -> Crop.GrowthStage.READY;
+            case READY     -> Crop.GrowthStage.HARVESTED;
+            case HARVESTED -> null;
         };
     }
 
@@ -696,7 +695,7 @@ public class CropController {
 
     private String getStatusLabel(Crop c) {
         if (c.getGrowthStage() == Crop.GrowthStage.HARVESTED) return "Harvested";
-        if (c.getGrowthStage() == Crop.GrowthStage.FRUITING) return "Ready";
+        if (c.getGrowthStage() == Crop.GrowthStage.READY) return "Ready";
         if (c.isOverdue()) return "At Risk";
         return "Growing";
     }
@@ -721,10 +720,14 @@ public class CropController {
         dialog.showAndWait().ifPresent(crop -> {
             try {
                 cropDAO.save(crop);
+                SystemLogManager.getInstance().info("CropController",
+                        "Crop '" + crop.getCropName() + "' added to Plot " + crop.getPlotId(), "manager");
                 loadCrops();
                 updateSummaryCards();
                 setupFilters();
             } catch (SQLException e) {
+                SystemLogManager.getInstance().error("CropController",
+                        "Failed to save crop: " + e.getMessage(), "system");
                 showAlert("Error", "Failed to save: " + e.getMessage());
             }
         });
@@ -737,9 +740,13 @@ public class CropController {
             try {
                 updated.setCropId(crop.getCropId());
                 cropDAO.update(updated);
+                SystemLogManager.getInstance().info("CropController",
+                        "Crop '" + updated.getCropName() + "' updated", "manager");
                 loadCrops();
                 updateSummaryCards();
             } catch (SQLException e) {
+                SystemLogManager.getInstance().error("CropController",
+                        "Failed to update crop: " + e.getMessage(), "system");
                 showAlert("Error", "Failed to update: " + e.getMessage());
             }
         });
@@ -754,9 +761,13 @@ public class CropController {
             if (btn == ButtonType.YES) {
                 try {
                     cropDAO.delete(crop.getCropId());
+                    SystemLogManager.getInstance().info("CropController",
+                            "Crop '" + crop.getCropName() + "' deleted", "manager");
                     loadCrops();
                     updateSummaryCards();
                 } catch (SQLException e) {
+                    SystemLogManager.getInstance().error("CropController",
+                            "Failed to delete crop: " + e.getMessage(), "system");
                     showAlert("Error", "Failed to delete: " + e.getMessage());
                 }
             }
@@ -808,7 +819,7 @@ public class CropController {
 
         ComboBox<Crop.GrowthStage> stageCombo = new ComboBox<>();
         stageCombo.getItems().addAll(Crop.GrowthStage.values());
-        stageCombo.setValue(existing != null ? existing.getGrowthStage() : Crop.GrowthStage.SEED);
+        stageCombo.setValue(existing != null ? existing.getGrowthStage() : Crop.GrowthStage.PLANTED);
         stageCombo.setMaxWidth(Double.MAX_VALUE);
 
         VBox form = new VBox(10,

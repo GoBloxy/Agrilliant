@@ -13,6 +13,7 @@ import smartfarm.dao.CropDAO;
 import smartfarm.dao.HarvestDAO;
 import smartfarm.model.Crop;
 import smartfarm.model.HarvestRecord;
+import smartfarm.service.SystemLogManager;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -124,7 +125,7 @@ public class HarvestController {
     }
 
     private void setupFilters() {
-        cmbQuality.getItems().addAll("All", "A", "B", "C", "REJECT");
+        cmbQuality.getItems().addAll("All", "A", "B", "C");
         cmbQuality.setValue("All");
         cmbQuality.setOnAction(e -> applyFilters());
         txtSearch.textProperty().addListener((obs, old, val) -> applyFilters());
@@ -163,9 +164,13 @@ public class HarvestController {
         dialog.showAndWait().ifPresent(record -> {
             try {
                 harvestDAO.save(record);
+                SystemLogManager.getInstance().info("HarvestService",
+                        "Harvest recorded: " + record.getQuantityKg() + " kg (Grade " + record.getGrade() + ")", "manager");
                 loadRecords();
                 updateSummaryCards();
             } catch (SQLException e) {
+                SystemLogManager.getInstance().error("HarvestService",
+                        "Failed to save harvest: " + e.getMessage(), "system");
                 showAlert("Error", "Failed to save: " + e.getMessage());
             }
         });
@@ -195,9 +200,13 @@ public class HarvestController {
             if (btn == ButtonType.YES) {
                 try {
                     harvestDAO.delete(record.getRecordId());
+                    SystemLogManager.getInstance().info("HarvestService",
+                            "Harvest record #" + record.getRecordId() + " deleted", "manager");
                     loadRecords();
                     updateSummaryCards();
                 } catch (SQLException e) {
+                    SystemLogManager.getInstance().error("HarvestService",
+                            "Failed to delete harvest: " + e.getMessage(), "system");
                     showAlert("Error", "Failed to delete: " + e.getMessage());
                 }
             }

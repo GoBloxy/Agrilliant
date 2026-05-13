@@ -12,6 +12,7 @@ import smartfarm.model.Worker;
 import smartfarm.service.AuthService;
 import smartfarm.service.FingerprintService;
 import smartfarm.service.SessionManager;
+import smartfarm.service.SystemLogManager;
 
 public class SignInController {
 
@@ -46,8 +47,12 @@ public class SignInController {
         try {
             User user = authService.signIn(email, password);
             SessionManager.saveSession(email);
+            SystemLogManager.getInstance().info("AuthService",
+                    user.getFullName() + " logged in successfully", user.getFullName());
             navigateToDashboard(user);
         } catch (RuntimeException e) {
+            SystemLogManager.getInstance().warning("AuthService",
+                    "Failed login attempt for " + email, "system");
             showError(e.getMessage());
         }
     }
@@ -87,6 +92,8 @@ public class SignInController {
                         worker.getEmail() != null ? worker.getEmail() : "",
                         worker.getFullName(), User.Role.WORKER);
 
+                SystemLogManager.getInstance().info("AuthService",
+                        worker.getFullName() + " logged in via fingerprint", worker.getFullName());
                 javafx.application.Platform.runLater(() -> {
                     lblFpStatus.setVisible(false);
                     navigateToDashboard(user);

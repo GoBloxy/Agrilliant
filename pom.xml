@@ -78,16 +78,13 @@
             <version>2.11.0</version>
         </dependency>
 
-        <!-- JFreeChart for advanced charts -->
+        <!-- Charts: using JavaFX built-in charts (LineChart, BarChart, PieChart) -->
+
+        <!-- Eclipse Paho MQTT — real-time sensor broadcast to all clients -->
         <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.5.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart-fx</artifactId>
-            <version>1.0.1</version>
+            <groupId>org.eclipse.paho</groupId>
+            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+            <version>1.2.5</version>
         </dependency>
     </dependencies>
 

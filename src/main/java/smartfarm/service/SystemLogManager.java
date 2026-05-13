@@ -13,7 +13,6 @@ public class SystemLogManager {
     private final List<SystemLog> logs = new ArrayList<>();
 
     private SystemLogManager() {
-        seedSampleLogs();
     }
 
     public static SystemLogManager getInstance() {
@@ -44,18 +43,7 @@ public class SystemLogManager {
         logs.clear();
     }
 
-    private void seedSampleLogs() {
-        info("AuthService", "Admin user logged in successfully", "admin");
-        info("SensorHandler", "Sensor plot1_sensor connected and streaming", "system");
-        info("TaskService", "Task #1 assigned to worker John", "manager1");
-        warning("SensorHandler", "Sensor plot3_sensor battery low (15%)", "system");
-        info("HarvestService", "Harvest recorded for crop Corn (45.2 kg)", "manager1");
-        error("DeviceDAO", "Failed to reach device TEMP_003 — timeout after 5s", "system");
-        info("AuthService", "Manager logged in", "manager1");
-        warning("CropDAO", "Crop Wheat is overdue for harvest by 3 days", "system");
-        info("WorkerService", "Worker Jane marked on duty", "manager1");
-        info("AlertService", "Alert #5 resolved: High temperature in Plot 2", "manager1");
-        error("DBConnection", "Connection pool exhausted — retrying", "system");
-        info("AuthService", "User session refreshed", "admin");
+    public int size() {
+        return logs.size();
     }
 }

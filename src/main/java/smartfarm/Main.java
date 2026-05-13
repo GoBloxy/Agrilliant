@@ -9,6 +9,8 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import smartfarm.model.User;
 import smartfarm.server.FarmServer;
+import smartfarm.server.MqttBridge;
+import smartfarm.server.MqttSensorSubscriber;
 import smartfarm.service.AuthService;
 import smartfarm.service.SessionManager;
 import smartfarm.ui.DashboardController;
@@ -61,6 +63,12 @@ public class Main extends Application {
         serverThread.setDaemon(true);
         serverThread.setName("FarmServer-TCP");
         serverThread.start();
+
+        // Start MQTT bridge (publishes TCP-received data to broker for other clients)
+        MqttBridge.getInstance().connect();
+
+        // Start MQTT subscriber (receives data from broker → LiveSensorData → UI)
+        MqttSensorSubscriber.getInstance().start();
     }
 
     public static void main(String[] args) {

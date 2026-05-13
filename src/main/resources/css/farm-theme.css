@@ -752,6 +752,29 @@
 .detail-scroll > .viewport {
     -fx-background-color: transparent;
 }
+.detail-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8;
+}
+.detail-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #d1d5db;
+    -fx-background-radius: 4;
+}
+.detail-scroll .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #9ca3af;
+}
+.detail-scroll .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+.detail-scroll .scroll-bar:vertical .increment-button,
+.detail-scroll .scroll-bar:vertical .decrement-button {
+    -fx-pref-height: 0;
+    -fx-padding: 0;
+}
+.detail-scroll .scroll-bar:horizontal {
+    -fx-pref-height: 0;
+    -fx-padding: 0;
+}
 .detail-status-text {
     -fx-font-size: 12;
     -fx-text-fill: #374151;

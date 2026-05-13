@@ -97,4 +97,20 @@
             </TableView>
         </VBox>
     </HBox>
+
+    <HBox spacing="16" VBox.vgrow="ALWAYS">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+            <Label text="Monthly Harvest Trend" styleClass="card-title"/>
+            <LineChart fx:id="monthlyChart" animated="false" legendVisible="false" VBox.vgrow="ALWAYS" prefHeight="260" createSymbols="true">
+                <xAxis><CategoryAxis label="Month"/></xAxis>
+                <yAxis><NumberAxis label="kg"/></yAxis>
+            </LineChart>
+        </VBox>
+        <VBox styleClass="card" prefWidth="340" minWidth="300" spacing="10">
+            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+            <Label text="Quality Distribution" styleClass="card-title"/>
+            <PieChart fx:id="gradeChart" animated="false" legendVisible="true" prefHeight="260" labelsVisible="false"/>
+        </VBox>
+    </HBox>
 </VBox>

@@ -21,6 +21,7 @@ import smartfarm.model.Alert;
 import smartfarm.model.SensorReading;
 import smartfarm.model.Task;
 import smartfarm.service.AlertService;
+import smartfarm.service.SystemLogManager;
 import smartfarm.util.ThresholdConfig;
 
 import java.sql.SQLException;
@@ -351,8 +352,8 @@ public class AlertController {
         // Chart — real sensor data
         populateRealChart(alert.getPlotId(), alertType);
 
-        // Suggested action
-        lblSuggestedAction.setText(getSuggestedAction(alertType));
+        // Suggested action — derived from alert type + current value
+        lblSuggestedAction.setText(getSuggestedAction(alertType, alert.getMessage()));
 
         // Related task
         loadRelatedTask(alert.getAlertId());
@@ -387,7 +388,7 @@ public class AlertController {
 
         try {
             SensorDAO sensorDAO = new SensorDAO();
-            List<SensorReading> readings = sensorDAO.getRecentForDevice(plotId, 6);
+            List<SensorReading> readings = sensorDAO.getRecentForPlot(plotId, 20);
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
 
             for (int i = readings.size() - 1; i >= 0; i--) {
@@ -411,6 +412,14 @@ public class AlertController {
             series.getData().add(new XYChart.Data<>("No data", 0));
         }
         detailChart.getData().add(series);
+
+        // Style the chart line
+        javafx.application.Platform.runLater(() -> {
+            if (!detailChart.getData().isEmpty()) {
+                javafx.scene.Node line = detailChart.lookup(".chart-series-line");
+                if (line != null) line.setStyle("-fx-stroke: #ef4444; -fx-stroke-width: 2px;");
+            }
+        });
     }
 
     // ═══════════════ RELATED TASK ═══════════════
@@ -452,6 +461,8 @@ public class AlertController {
         try {
             alertService.resolveAlert(alert.getAlertId());
             alert.resolve();
+            SystemLogManager.getInstance().info("AlertService",
+                    "Alert #" + alert.getAlertId() + " resolved: " + alert.getAlertType() + " in Plot " + alert.getPlotId(), "manager");
             alertTable.refresh();
             updateSummaryCards();
             applyFilterAndPaginate();
@@ -519,7 +530,7 @@ public class AlertController {
                             duePicker.getValue(),
                             alert.getPlotId(),
                             alert.getAlertId() > 0 ? alert.getAlertId() : null,
-                            0,
+                            1,
                             alert.getAlertType()
                     );
                     taskDAO.save(task);
@@ -556,14 +567,21 @@ public class AlertController {
         return "N/A";
     }
 
-    private String getSuggestedAction(String alertType) {
+    private String getSuggestedAction(String alertType, String message) {
         if (alertType == null) return "Monitor the situation and take action if needed.";
-        if (alertType.contains("HIGH_TEMP")) return "Activate cooling/ventilation systems. Increase irrigation to reduce soil temperature.";
-        if (alertType.contains("LOW_TEMP")) return "Enable greenhouse heating. Cover crops with protective frost blankets.";
-        if (alertType.contains("HIGH_HUMIDITY")) return "Improve ventilation and air circulation. Reduce irrigation frequency.";
-        if (alertType.contains("LOW_HUMIDITY")) return "Increase misting or irrigation. Check for leaks in irrigation system.";
-        if (alertType.contains("DRY_SOIL")) return "Start irrigation immediately. Check for blocked drip lines or pump failures.";
-        if (alertType.contains("WET_SOIL")) return "Reduce watering schedule. Ensure proper drainage. Check for overwatering.";
+        String val = extractValueFromMessage(message);
+        if (alertType.contains("HIGH_TEMP"))
+            return "Reading at " + val + ". Activate cooling/ventilation systems. Increase irrigation to reduce soil temperature.";
+        if (alertType.contains("LOW_TEMP"))
+            return "Reading at " + val + ". Enable greenhouse heating. Cover crops with protective frost blankets.";
+        if (alertType.contains("HIGH_HUMIDITY"))
+            return "Reading at " + val + ". Improve ventilation and air circulation. Reduce irrigation frequency.";
+        if (alertType.contains("LOW_HUMIDITY"))
+            return "Reading at " + val + ". Increase misting or irrigation. Check for leaks in irrigation system.";
+        if (alertType.contains("DRY_SOIL"))
+            return "Reading at " + val + ". Start irrigation immediately. Check for blocked drip lines or pump failures.";
+        if (alertType.contains("WET_SOIL"))
+            return "Reading at " + val + ". Reduce watering schedule. Ensure proper drainage. Check for overwatering.";
         return "Monitor the situation and take corrective action as needed.";
     }
 

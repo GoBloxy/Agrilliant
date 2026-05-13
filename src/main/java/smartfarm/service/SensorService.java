@@ -2,6 +2,7 @@ package smartfarm.service;
 
 import smartfarm.dao.SensorDAO;
 import smartfarm.model.SensorReading;
+import smartfarm.server.MqttBridge;
 
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,8 +16,12 @@ public class SensorService {
 
     // Push to live UI first (always), then persist to DB at a throttled rate
     public void processReading(SensorReading reading, String deviceCode) {
-        // Always push to dashboard UI regardless of DB state
+        // Always push to local dashboard UI regardless of DB state
         LiveSensorData.getInstance().update(reading, deviceCode);
+
+        // Broadcast to all remote clients via MQTT (non-blocking async publish)
+        MqttBridge.getInstance().publishReading(
+                deviceCode, reading.getTemperature(), reading.getHumidity(), reading.getSoilMoisture());
 
         // Only save to database every DB_SAVE_INTERVAL_MS per device
         String key = deviceCode != null ? deviceCode : "unknown";

@@ -9,18 +9,22 @@ public class Plot {
     private double sizeAcres;
     private String soilType;
     private int managerId;
+    private String irrigationType;
+    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // Full constructor (loading from DB)
     public Plot(int plotId, String name, String location, double sizeAcres, String soilType,
-                int managerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                int managerId, String irrigationType, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.plotId = plotId;
         this.name = name;
         this.location = location;
         this.sizeAcres = sizeAcres;
         this.soilType = soilType;
         this.managerId = managerId;
+        this.irrigationType = irrigationType;
+        this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -33,6 +37,8 @@ public class Plot {
         this.sizeAcres = sizeAcres;
         this.soilType = soilType;
         this.managerId = managerId;
+        this.irrigationType = null;
+        this.status = null;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -49,6 +55,10 @@ public class Plot {
     public void setSoilType(String soilType) { this.soilType = soilType; }
     public int getManagerId() { return managerId; }
     public void setManagerId(int managerId) { this.managerId = managerId; }
+    public String getIrrigationType() { return irrigationType; }
+    public void setIrrigationType(String irrigationType) { this.irrigationType = irrigationType; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

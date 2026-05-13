@@ -33,6 +33,7 @@ import smartfarm.model.SensorReading;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
 import smartfarm.service.LiveSensorData;
+import smartfarm.service.SystemLogManager;
 import smartfarm.util.DBConnection;
 
 import java.io.File;
@@ -59,6 +60,7 @@ public class DashboardController {
     private LineChart<String, Number> sensorChart;
     private XYChart.Series<String, Number> tempSeries;
     private XYChart.Series<String, Number> humSeries;
+    private XYChart.Series<String, Number> soilSeries;
     private int dataPointIndex = 0;
     private static final int MAX_DATA_POINTS = 40;
 
@@ -119,6 +121,7 @@ public class DashboardController {
             lblUserName.setText(user.getFullName());
             lblUserRole.setText(user.getRole().name());
             WorkerController.setCurrentManagerId(user.getId());
+            PlotController.setCurrentManagerId(user.getId());
             applyRolePermissions(user.getRole());
             // For workers, show "My Tasks" instead of "Tasks"
             if (user.getRole() == smartfarm.model.User.Role.WORKER) {
@@ -151,6 +154,16 @@ public class DashboardController {
         updateSidebarStatus();
         loadDashboardData();
         activeNavButton = btnDashboard;
+
+        // Log DB connection status
+        try {
+            Connection c = DBConnection.getInstance();
+            if (c != null && !c.isClosed()) {
+                SystemLogManager.getInstance().info("DBConnection", "Database connected successfully", "system");
+            }
+        } catch (SQLException ignored) {
+            SystemLogManager.getInstance().error("DBConnection", "Database connection failed", "system");
+        }
     }
 
     // ═══════════════ DATA LOADING ═══════════════
@@ -350,7 +363,7 @@ public class DashboardController {
 
         ComboBox<Crop.GrowthStage> stageCombo = new ComboBox<>();
         stageCombo.getItems().addAll(Crop.GrowthStage.values());
-        stageCombo.setValue(Crop.GrowthStage.SEED);
+        stageCombo.setValue(Crop.GrowthStage.PLANTED);
         stageCombo.setMaxWidth(Double.MAX_VALUE);
 
         VBox form = new VBox(10,
@@ -698,9 +711,31 @@ public class DashboardController {
         tempSeries.setName("Temperature (°C)");
         humSeries = new XYChart.Series<>();
         humSeries.setName("Humidity (%)");
+        soilSeries = new XYChart.Series<>();
+        soilSeries.setName("Soil Moisture (%)");
 
-        sensorChart.getData().addAll(tempSeries, humSeries);
+        sensorChart.getData().addAll(tempSeries, humSeries, soilSeries);
         chartContainer.getChildren().add(sensorChart);
+
+        loadHistoricalChartData();
+    }
+
+    private void loadHistoricalChartData() {
+        try {
+            List<SensorReading> readings = sensorDAO.getRecent(MAX_DATA_POINTS);
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
+            for (int i = readings.size() - 1; i >= 0; i--) {
+                SensorReading r = readings.get(i);
+                String label = r.getTimestamp() != null ? r.getTimestamp().format(fmt) : String.valueOf(i);
+                tempSeries.getData().add(new XYChart.Data<>(label, r.getTemperature()));
+                humSeries.getData().add(new XYChart.Data<>(label, r.getHumidity()));
+                if (!Float.isNaN(r.getSoilMoisture())) {
+                    soilSeries.getData().add(new XYChart.Data<>(label, r.getSoilMoisture()));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to load historical chart data: " + e.getMessage());
+        }
     }
 
     // ═══════════════ DATE/TIME ═══════════════
@@ -809,6 +844,10 @@ public class DashboardController {
         addChartDataPoint(humSeries, h);
     }
 
+    private void updateSoilChart(float s) {
+        if (!Float.isNaN(s)) addChartDataPoint(soilSeries, s);
+    }
+
     private void addChartDataPoint(XYChart.Series<String, Number> series, float value) {
         if (series == null) return;
         dataPointIndex++;
@@ -825,6 +864,7 @@ public class DashboardController {
         if (s < 30) { lblSoilStatus.setText("Dry"); lblSoilStatus.getStyleClass().add("badge-low"); }
         else if (s > 85) { lblSoilStatus.setText("Wet"); lblSoilStatus.getStyleClass().add("badge-high"); }
         else { lblSoilStatus.setText("Normal"); lblSoilStatus.getStyleClass().add("badge-normal"); }
+        updateSoilChart(s);
     }
 
     private void updatePlotLabels(String devId) {

@@ -99,9 +99,11 @@ public class AlertService {
         Alert alert = new Alert(alertType, severity, message, plotId);
         try {
             alertDAO.save(alert);
-            System.out.println("[ALERT] " + alert);
+            SystemLogManager.getInstance().warning("AlertService",
+                    severity.name() + " alert: " + message + " (Plot " + plotId + ")", "system");
         } catch (SQLException e) {
-            System.err.println("Failed to save alert: " + e.getMessage());
+            SystemLogManager.getInstance().error("AlertService",
+                    "Failed to save alert: " + e.getMessage(), "system");
             return;
         }
 
@@ -113,11 +115,12 @@ public class AlertService {
                     LocalDate.now(),
                     plotId,
                     alert.getAlertId() > 0 ? alert.getAlertId() : null,
-                    /* assignedByMgrId */ 0,
+                    /* assignedByMgrId — fallback to 1 */ 1,
                     alertType
                 );
                 taskService.autoCreateTask(task);
-                System.out.println("[TASK] Auto-created task for alert: " + alertType);
+                SystemLogManager.getInstance().info("TaskService",
+                        "Auto-created task for " + alertType + " alert in Plot " + plotId, "system");
             } catch (RuntimeException e) {
                 System.err.println("Auto-task creation failed: " + e.getMessage());
             }
@@ -129,9 +132,11 @@ public class AlertService {
         Alert alert = new Alert(alertType, severity, message, plotId);
         try {
             alertDAO.save(alert);
-            System.out.println("[ALERT] " + alert);
+            SystemLogManager.getInstance().warning("AlertService",
+                    severity.name() + " alert: " + message + " (Plot " + plotId + ")", "system");
         } catch (SQLException e) {
-            System.err.println("Failed to save alert: " + e.getMessage());
+            SystemLogManager.getInstance().error("AlertService",
+                    "Failed to save alert: " + e.getMessage(), "system");
         }
     }
 

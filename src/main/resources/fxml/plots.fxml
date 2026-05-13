@@ -21,7 +21,7 @@
                 </StackPane>
                 <VBox spacing="0">
                     <Label text="Total Plots" style="-fx-font-size: 11; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblTotalPlots" text="12" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label fx:id="lblTotalPlots" text="0" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                     <Label text="Across all fields" style="-fx-font-size: 10; -fx-text-fill: #9ca3af;"/>
                 </VBox>
             </HBox>
@@ -34,7 +34,7 @@
                 </StackPane>
                 <VBox spacing="0">
                     <Label text="Under Cultivation" style="-fx-font-size: 11; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblCultivation" text="8" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label fx:id="lblCultivation" text="0" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                     <Label text="Plots with active crops" style="-fx-font-size: 10; -fx-text-fill: #9ca3af;"/>
                 </VBox>
             </HBox>
@@ -47,7 +47,7 @@
                 </StackPane>
                 <VBox spacing="0">
                     <Label text="Available" style="-fx-font-size: 11; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblAvailable" text="2" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label fx:id="lblAvailable" text="0" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                     <Label text="Ready for planting" style="-fx-font-size: 10; -fx-text-fill: #9ca3af;"/>
                 </VBox>
             </HBox>
@@ -60,15 +60,15 @@
                 </StackPane>
                 <VBox spacing="0">
                     <Label text="Fallow" style="-fx-font-size: 11; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblFallow" text="2" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label fx:id="lblFallow" text="0" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                     <Label text="Not in use" style="-fx-font-size: 10; -fx-text-fill: #9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
         <HBox spacing="10" alignment="CENTER_RIGHT">
-            <Button text="+ Add New Plot" styleClass="btn-primary" style="-fx-padding: 10 18;"/>
-            <Button text="Export" styleClass="btn-secondary" style="-fx-padding: 10 18;">
+            <Button fx:id="btnAddPlot" text="+ Add New Plot" styleClass="btn-primary" style="-fx-padding: 10 18;" onAction="#onAddPlot"/>
+            <Button fx:id="btnExport" text="Export" styleClass="btn-secondary" style="-fx-padding: 10 18;" onAction="#onExport">
                 <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
             </Button>
         </HBox>
@@ -78,20 +78,20 @@
     <HBox spacing="14" alignment="CENTER_LEFT">
         <HBox alignment="CENTER_LEFT" styleClass="search-box">
             <padding><Insets right="8" left="8"/></padding>
-            <TextField promptText="Search plots..." styleClass="search-field"/>
+            <TextField fx:id="txtSearch" promptText="Search plots..." styleClass="search-field"/>
             <Region HBox.hgrow="ALWAYS"/>
             <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
         </HBox>
-        <ComboBox promptText="All Fields" styleClass="filter-combo"/>
-        <ComboBox promptText="All Status" styleClass="filter-combo"/>
-        <ComboBox promptText="All Crops" styleClass="filter-combo"/>
+        <ComboBox fx:id="cmbField" promptText="All Fields" styleClass="filter-combo"/>
+        <ComboBox fx:id="cmbStatus" promptText="All Status" styleClass="filter-combo"/>
+        <ComboBox fx:id="cmbCrop" promptText="All Crops" styleClass="filter-combo"/>
     </HBox>
 
     <!-- Map + Overview -->
     <HBox spacing="14">
         <VBox styleClass="card" HBox.hgrow="ALWAYS">
             <StackPane prefHeight="380" style="-fx-background-color: #2d5a27; -fx-background-radius: 10;">
-                <ImageView fitHeight="380" fitWidth="780" preserveRatio="false" style="-fx-opacity: 0.95;">
+                <ImageView fitHeight="380" fitWidth="780" preserveRatio="false" style="-fx-opacity: 0.95;" mouseTransparent="true">
                     <image><Image url="@../images/farm_map.png"/></image>
                 </ImageView>
                 <Pane fx:id="plotMapPane" style="-fx-background-color: transparent;"/>
@@ -122,7 +122,7 @@
             <HBox spacing="16" alignment="CENTER_LEFT">
                 <StackPane fx:id="chartContainer" prefWidth="130" prefHeight="130" minWidth="130">
                     <VBox alignment="CENTER" spacing="0" mouseTransparent="true">
-                        <Label text="12" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                        <Label fx:id="lblChartTotal" text="0" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                         <Label text="Total Plots" style="-fx-font-size: 9; -fx-text-fill: #6b7280;"/>
                     </VBox>
                 </StackPane>
@@ -131,19 +131,19 @@
                         <Circle radius="5" fill="#28a745"/>
                         <Label text="Under Cultivation" style="-fx-font-size: 11; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="8 (66.7\%)" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
+                        <Label fx:id="lblLegendCultivation" text="0 (0%)" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
                     </HBox>
                     <HBox spacing="6" alignment="CENTER_LEFT">
                         <Circle radius="5" fill="#ffc107"/>
                         <Label text="Available" style="-fx-font-size: 11; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="2 (16.7\%)" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
+                        <Label fx:id="lblLegendAvailable" text="0 (0%)" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
                     </HBox>
                     <HBox spacing="6" alignment="CENTER_LEFT">
                         <Circle radius="5" fill="#6f42c1"/>
                         <Label text="Fallow" style="-fx-font-size: 11; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="2 (16.7\%)" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
+                        <Label fx:id="lblLegendFallow" text="0 (0%)" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
                     </HBox>
                 </VBox>
             </HBox>
@@ -153,21 +153,21 @@
                         <FontIcon iconLiteral="fth-map" iconSize="11" iconColor="#9ca3af"/>
                         <Label text="Total Area" style="-fx-font-size: 10; -fx-text-fill: #6b7280;"/>
                     </HBox>
-                    <Label text="24.5 ha" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label fx:id="lblTotalArea" text="0.0 ha" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                 </VBox>
                 <VBox HBox.hgrow="ALWAYS">
                     <HBox spacing="4" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fth-map" iconSize="11" iconColor="#9ca3af"/>
                         <Label text="Cultivated Area" style="-fx-font-size: 10; -fx-text-fill: #6b7280;"/>
                     </HBox>
-                    <Label text="16.8 ha (68.6\%)" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label fx:id="lblCultivatedArea" text="0.0 ha" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                 </VBox>
                 <VBox HBox.hgrow="ALWAYS">
                     <HBox spacing="4" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fth-map" iconSize="11" iconColor="#9ca3af"/>
                         <Label text="Available Area" style="-fx-font-size: 10; -fx-text-fill: #6b7280;"/>
                     </HBox>
-                    <Label text="4.5 ha" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label fx:id="lblAvailableArea" text="0.0 ha" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                 </VBox>
             </HBox>
             <Separator/>
@@ -176,21 +176,21 @@
                 <HBox spacing="8" alignment="CENTER_LEFT">
                     <Circle radius="4" fill="#28a745"/>
                     <Label text="Under Cultivation" prefWidth="115" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
-                    <Label text="8" style="-fx-font-size: 11; -fx-text-fill: #374151;" prefWidth="25"/>
+                    <Label fx:id="lblStatusCultCount" text="0" style="-fx-font-size: 11; -fx-text-fill: #374151;" prefWidth="25"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Label text="Active crops growing" style="-fx-font-size: 11; -fx-text-fill: #9ca3af;"/>
                 </HBox>
                 <HBox spacing="8" alignment="CENTER_LEFT">
                     <Circle radius="4" fill="#ffc107"/>
                     <Label text="Available" prefWidth="115" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
-                    <Label text="2" style="-fx-font-size: 11; -fx-text-fill: #374151;" prefWidth="25"/>
+                    <Label fx:id="lblStatusAvailCount" text="0" style="-fx-font-size: 11; -fx-text-fill: #374151;" prefWidth="25"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Label text="Ready for planting" style="-fx-font-size: 11; -fx-text-fill: #9ca3af;"/>
                 </HBox>
                 <HBox spacing="8" alignment="CENTER_LEFT">
                     <Circle radius="4" fill="#6f42c1"/>
                     <Label text="Fallow" prefWidth="115" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
-                    <Label text="2" style="-fx-font-size: 11; -fx-text-fill: #374151;" prefWidth="25"/>
+                    <Label fx:id="lblStatusFallowCount" text="0" style="-fx-font-size: 11; -fx-text-fill: #374151;" prefWidth="25"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Label text="Not in use" style="-fx-font-size: 11; -fx-text-fill: #9ca3af;"/>
                 </HBox>
@@ -204,19 +204,19 @@
         <Label text="All Plots" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
         <TableView fx:id="plotTable" VBox.vgrow="ALWAYS" prefHeight="250" style="-fx-fixed-cell-size: 46;">
             <columns>
-                <TableColumn fx:id="colPlotId" text="Plot ID" prefWidth="125" minWidth="100"/>
-                <TableColumn fx:id="colField" text="Field" prefWidth="85" minWidth="70"/>
-                <TableColumn fx:id="colCrop" text="Crop" prefWidth="95" minWidth="80"/>
-                <TableColumn fx:id="colArea" text="Area (ha)" prefWidth="65" minWidth="55"/>
-                <TableColumn fx:id="colStatus" text="Status" prefWidth="120" minWidth="100"/>
-                <TableColumn fx:id="colSoil" text="Soil Type" prefWidth="80" minWidth="70"/>
-                <TableColumn fx:id="colIrrigation" text="Irrigation" prefWidth="85" minWidth="70"/>
-                <TableColumn fx:id="colLastActivity" text="Last Activity" prefWidth="120" minWidth="100"/>
-                <TableColumn fx:id="colActions" text="Actions" prefWidth="75" minWidth="75"/>
+                <TableColumn fx:id="colPlotId" text="Plot ID" prefWidth="160" minWidth="120" reorderable="false"/>
+                <TableColumn fx:id="colField" text="Field" prefWidth="100" minWidth="80" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colCrop" text="Crop" prefWidth="110" minWidth="90" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colArea" text="Area (ha)" prefWidth="75" minWidth="65" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colStatus" text="Status" prefWidth="140" minWidth="120" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colSoil" text="Soil Type" prefWidth="95" minWidth="80" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colIrrigation" text="Irrigation" prefWidth="95" minWidth="80" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colLastActivity" text="Last Activity" prefWidth="130" minWidth="110" reorderable="false" resizable="false"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="95" minWidth="95" reorderable="false" resizable="false" sortable="false"/>
             </columns>
         </TableView>
         <HBox alignment="CENTER_LEFT" spacing="10">
-            <Label text="Showing 1 to 8 of 12 plots" style="-fx-font-size: 11; -fx-text-fill: #6b7280;"/>
+            <Label fx:id="lblPagination" text="" style="-fx-font-size: 11; -fx-text-fill: #6b7280;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <HBox spacing="4">
                 <Button text="&lt;" styleClass="page-btn"/>

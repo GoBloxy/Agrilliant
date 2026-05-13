@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public class Crop {
 
-    public enum GrowthStage { SEED, SEEDLING, VEGETATIVE, FLOWERING, FRUITING, HARVESTED }
+    public enum GrowthStage { PLANTED, GROWING, READY, HARVESTED }
 
     private int cropId;
     private String cropName;
@@ -18,7 +18,7 @@ public class Crop {
         this.cropName = cropName;
         this.plantingDate = plantingDate;
         this.harvestDate = harvestDate;
-        this.growthStage = GrowthStage.SEED;
+        this.growthStage = GrowthStage.PLANTED;
         this.plotId = plotId;
         this.expectedYield = expectedYield;
     }
@@ -26,12 +26,10 @@ public class Crop {
     // Advance to the next stage
     public void advanceStage() {
         switch (growthStage) {
-            case SEED       -> growthStage = GrowthStage.SEEDLING;
-            case SEEDLING   -> growthStage = GrowthStage.VEGETATIVE;
-            case VEGETATIVE -> growthStage = GrowthStage.FLOWERING;
-            case FLOWERING  -> growthStage = GrowthStage.FRUITING;
-            case FRUITING   -> growthStage = GrowthStage.HARVESTED;
-            case HARVESTED  -> { /* already done */ }
+            case PLANTED   -> growthStage = GrowthStage.GROWING;
+            case GROWING   -> growthStage = GrowthStage.READY;
+            case READY     -> growthStage = GrowthStage.HARVESTED;
+            case HARVESTED -> { /* already done */ }
         }
     }
 
@@ -39,7 +37,7 @@ public class Crop {
      * Check if crop is overdue for harvest
      */
     public boolean isOverdue() {
-        return growthStage == GrowthStage.FRUITING && LocalDate.now().isAfter(harvestDate);
+        return growthStage == GrowthStage.READY && LocalDate.now().isAfter(harvestDate);
     }
 
     // ── Getters ──
