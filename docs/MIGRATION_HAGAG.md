@@ -213,7 +213,73 @@ land the android compile gate runs cleanly. Tracking TODO:
 
 
 ### H2. GraalVM native-image config
-> Status: **pending**.
+> Status: **done (seed)**, 2026-05-13.
+
+Created `src/main/resources/META-INF/native-image/smartfarm/`:
+- `reflect-config.json` — 12 FXML controllers, 18 model POJOs, ~30
+  JavaFX widget root types referenced in our `.fxml`, Ikonli's
+  `FontIcon` + `Feather` enum + its SPI handler/provider, plus seed
+  MySQL JDBC driver classes (`Driver`, `NonRegisteringDriver`,
+  `SingleConnectionUrl`, `NativeProtocol`, common CJ exceptions).
+- `resource-config.json` — pattern includes for `fxml/**`, `css/**`,
+  `images/**`, the three `*.properties` files, `META-INF/services/*`
+  (JDBC SPI), AtlantaFX theme CSS, and the Ikonli Feather TTF +
+  metadata JSON.
+- `jni-config.json` — empty array (we don't call native code yet;
+  USB OTG fingerprint via Gluon Attach would populate this later).
+
+All three files validated as parseable JSON via `python3 -m json.tool`.
+
+GluonFX plugin discovery: anything under `META-INF/native-image/*/`
+is auto-picked up by GraalVM Native Image at AOT time, so the
+plugin's empty `<reflectionList>` / `<resourcesList>` / `<bundlesList>`
+in `pom.xml` stays empty.
+
+**Deferred:** the only true verification is `mvn -Pandroid
+gluonfx:build` (full AOT compile) showing no "method not registered
+for reflection" warnings. That run is gated by the other H-tasks +
+3bdelbary's UI work; first real APK assembly will surface any missing
+entries — fold them in via the agent flow below.
+
+#### Regenerating reflect-config with the GraalVM agent
+
+The reflect-config is a seed; real apps usually need more entries
+(especially for `mysql-connector-j` which is reflection-heavy). To
+expand it automatically:
+
+```bash
+# 1) Run the desktop app with the native-image agent attached,
+#    pointing at a scratch dir.
+mkdir -p target/native-agent-config
+mvn -Pdesktop javafx:run \
+  -Djavafx.runtime.argsExtra='-agentlib:native-image-agent=config-output-dir=target/native-agent-config'
+
+# 2) Click through every screen in the app: sign-in, sign-up,
+#    dashboard, every nav button, alerts ack, plot create, etc.
+#    The agent records every reflective access while you do this.
+
+# 3) Stop the app. Merge the captured config into our committed seed.
+#    `--config-merge-dir` overwrites only the keys it has new entries for.
+native-image-configure generate \
+  --input-dir=target/native-agent-config \
+  --output-dir=src/main/resources/META-INF/native-image/smartfarm/
+
+# 4) Diff, sanity-check (the agent over-includes — drop anything
+#    in `java.*` or `sun.*` it adds unnecessarily), commit.
+```
+
+If `native-image-configure` isn't on the PATH, it lives inside the
+GraalVM install (`$GRAALVM_HOME/bin/native-image-configure`). On
+machines that don't have it installed yet, the merge can be done
+manually — diff `target/native-agent-config/reflect-config.json`
+against the committed file and add anything new.
+
+#### TODOs for the merge phase
+
+- `// TODO(phase-2)`: run the agent capture flow on a desktop session,
+  fold mysql-connector-j's actual reflection footprint into the seed.
+- `// TODO(phase-2)`: confirm Ikonli Feather pack font path matches
+  the version we ship — current regex assumes `META-INF/resources/feather/<ver>/Feather.ttf`.
 
 ### H3. AndroidManifest.xml + permissions
 > Status: **pending**.

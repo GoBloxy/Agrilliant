@@ -1,0 +1,32 @@
+{
+  "resources": {
+    "includes": [
+      { "pattern": "fxml/.*\\.fxml" },
+      { "pattern": "css/.*\\.css" },
+      { "pattern": "images/.*" },
+
+      { "pattern": "db\\.properties" },
+      { "pattern": "thresholds\\.properties" },
+      { "pattern": "crop-health\\.properties" },
+
+      { "pattern": "META-INF/services/.*" },
+      { "pattern": "META-INF/.*/module-info.properties" },
+
+      {
+        "_comment": "AtlantaFX theme CSS (PrimerLight + variables) lives inside its JAR.",
+        "pattern": "atlantafx/base/theme/.*\\.css"
+      },
+
+      {
+        "_comment": "Ikonli Feather pack TTF font file. Exact path varies by version; regex catches all.",
+        "pattern": "META-INF/resources/feather/.*/[fF]eather\\.ttf"
+      },
+      {
+        "_comment": "Ikonli Feather pack metadata json (icon codepoints).",
+        "pattern": "META-INF/resources/feather/.*/[fF]eather\\.json"
+      }
+    ],
+    "excludes": []
+  },
+  "bundles": []
+}
