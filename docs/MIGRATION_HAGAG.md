@@ -10,6 +10,37 @@
 
 ---
 
+## Status snapshot (2026-05-13)
+
+Phase 1 — Hagag track is **done** on `android/hagag`. Every H-task
+landed as its own commit with a verification gate logged below.
+
+| §     | Task                                                            | Commit      | Status |
+|-------|-----------------------------------------------------------------|-------------|--------|
+| Phase 0 | Branch, toolchain notes, baseline desktop compile              | `97abe9b`   | ✅ done |
+| H1    | GluonFX plugin + desktop / android Maven profiles              | `d68fc9e`   | ✅ done (structural) |
+| H2    | GraalVM `reflect/resource/jni-config.json` seeds               | `0bcb451`   | ✅ done (seed) |
+| H3    | `src/android/AndroidManifest.xml`                              | `4131483`   | ✅ done |
+| H4    | `util/DBConnection` lazy + async + Settings layer              | `59da285`   | ✅ done |
+| H5    | `util/Logger` API + uniform DAO thread-safety javadoc          | `d4248e3`   | ✅ done |
+| H6    | `service/SessionManager` via Gluon Settings + file fallback    | `c4cc9f5`   | ✅ done (smoke-test green) |
+| H7    | FingerprintService Android-safe facade + desktop impl split    | `3879a06`   | ✅ done |
+| H8    | `util/CSVExporter.saveCsv` via Gluon Storage / `~/Downloads`   | `01aa8af`   | ✅ done |
+| H9    | `util/Constants.IS_ANDROID` + "desktop only" headers on server | `0932ab1`   | ✅ done (final gate gated on B1) |
+| H10   | Logger → `android.util.Log` + `ThresholdConfig` from properties| `b2f511a`   | ✅ done |
+| H11   | This file                                                       | _this commit_ | ✅ done |
+
+Three Phase-1 verifications can only be run after 3bdelbary's tree
+lands and a real Android SDK + GraalVM are on the build host:
+1. `mvn -Pandroid gluonfx:compile` end-to-end (needs B1).
+2. APK on emulator smoke-test (needs the full toolchain).
+3. `adb logcat` confirmation that `Logger` lines surface.
+
+The rest of the gates ran here on the desktop profile and are
+logged in the per-task tables below.
+
+---
+
 ## 0. Branch
 
 - Branch: `android/hagag`, forked from `mobile-app` HEAD on
@@ -769,17 +800,77 @@ desktop, and shouldn't introduce surprises.
   email PII) through a redacting helper.
 
 ### H11. Final notes (this file's TODO log)
-> Status: **pending**.
+> Status: **done**, 2026-05-13.
+
+This file is the H11 deliverable. The plan asks for:
+- Final pom profile names → see §H1 + §1.1.
+- GraalVM agent regen command → see §H2 ("Regenerating reflect-config with the GraalVM agent").
+- Install / run on real device → see §1.2 (machine prerequisites) + §4 (cheat sheet).
+- Phase-2 cross-track TODOs → consolidated in §3 below.
 
 ---
 
 ## 3. Cross-track TODOs (for Phase 2 merge)
 
-> Things this track must stop short of (because the other track owns
-> the file). Each `// TODO(phase-2): ...` comment Hagag adds in code
-> gets a corresponding bullet here, with file + reason.
+> Things Hagag's track stops short of because the other track owns
+> the file. Each `// TODO(phase-2): ...` comment in code gets a
+> corresponding bullet here. The Phase-2 merger should `grep -rn
+> 'TODO(phase-2)' src/` and walk the list — every item below maps to
+> one or more in-code bullets.
 
-_Empty for now. Append as we go._
+### 3.1 Things 3bdelbary owns
+
+These need their `Main.java` / controller / FXML edits before they
+fully close on the merged tree:
+
+- **`Main.java` → `MobileApplication` (B1).** Drop the
+  `import smartfarm.server.FarmServer;` and gate the
+  `new FarmServer().start()` line on `!smartfarm.util.Constants.IS_ANDROID`.
+  Closes §H7 (`server/**` exclude becomes structurally effective end-to-end)
+  and §H9 (no `FarmServer.class` in the APK).
+- **Wire `Main#stop()` (and a Gluon `LifecycleService.PAUSE` listener)
+  to call `DBConnection.closeQuietly()`.** Closes the §H4 lifecycle TODO.
+- **B4 controllers — replace `javafx.stage.FileChooser` with
+  `CSVExporter.saveCsv(...)`** in `LogsController`, `ReportsController`,
+  and DashboardController's CSV export. Closes the §H8 controller TODO.
+- **B7 / Android icons** — drop `@mipmap/ic_launcher` and `@mipmap/ic_launcher_round`
+  drawables into `src/android/res/mipmap-*/` so the manifest refs in §H3 resolve.
+- **B-anywhere** — once the controllers wrap DAO calls in
+  `DBConnection.runAsync(...)`, do the per-DAO field refactor
+  (`private final Connection conn = ...` → `private Connection conn() { ... }`)
+  in one mechanical commit. Closes the §H5 per-DAO TODOs (11 files).
+
+### 3.2 Things either track can fold in during the merge
+
+- **Run the GraalVM agent on a desktop session** and merge the
+  captured config into `src/main/resources/META-INF/native-image/smartfarm/`
+  — closes the §H2 mysql-connector-j follow-up.
+- **Confirm Ikonli Feather font path** matches the version we ship
+  (regex in `resource-config.json` assumes `META-INF/resources/feather/<ver>/Feather.ttf`).
+- **Add the Plant.id "Settings" admin screen** (3bdelbary's UI lane,
+  but Hagag's `SettingsService` keys `db.url`/`db.user`/`db.password`
+  back it). Closes the §H4 first-run-credentials TODO.
+- **Optional polish — `ShareService.share(...)` after `CSVExporter.saveCsv`** so
+  users can email / drive-upload the file. §H8 TODO.
+- **Optional polish — redacting helper for `Logger.*`** so JWTs /
+  email PII don't end up in logcat. §H10 TODO.
+
+### 3.3 Things deferred until release/hardening
+
+- **Release-build manifest hygiene**: flip
+  `android:usesCleartextTraffic="false"` and ship a
+  `network_security_config.xml` if any production MySQL host genuinely
+  needs cleartext. Bump `versionCode` per Play Console upload. §H3 TODOs.
+- **`SECRET_KEY` constant relocation** out of source (currently inlined
+  in `SessionManager` as in the pre-migration code). §H6 TODO.
+- **Android USB-OTG fingerprint impl** as a third `FingerprintService.Backend`.
+  Plan §M9 "Known follow-ups".
+- **`adb logcat -s "*" :I` verification** that `Logger` lines surface
+  once a real Android install is on a device. §H10 TODO.
+- **APK content audit** (`unzip -l ...apk | grep server`) once B1 lands
+  to confirm `server.*` is absent. §H9 TODO.
+- **Strict gate `mvn -Pandroid gluonfx:compile`** end-to-end —
+  depends on the full toolchain + B1.
 
 ---
 
