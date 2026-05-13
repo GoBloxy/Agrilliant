@@ -564,7 +564,13 @@ public class AlertController {
         Matcher m = Pattern.compile("([\\d.]+)\\s*[°%]").matcher(message);
         if (m.find()) {
             String val = m.group(1);
-            if (message.contains("°C") || message.toLowerCase().contains("temp")) return val + " °C";
+            if (message.contains("°C") || message.toLowerCase().contains("temp")) {
+                String unit = smartfarm.service.SettingsManager.getInstance().isUseFahrenheit() ? "°F" : "°C";
+                if (smartfarm.service.SettingsManager.getInstance().isUseFahrenheit()) {
+                    float c = Float.parseFloat(val); val = String.format("%.1f", c * 9f / 5f + 32f);
+                }
+                return val + " " + unit;
+            }
             if (message.contains("%")) return val + " %";
             return val;
         }
@@ -573,8 +579,8 @@ public class AlertController {
 
     private String getThresholdForType(String alertType) {
         if (alertType == null) return "N/A";
-        if (alertType.contains("HIGH_TEMP")) return "> " + ThresholdConfig.TEMP_CRITICAL_HIGH + " °C";
-        if (alertType.contains("LOW_TEMP")) return "< " + ThresholdConfig.TEMP_CRITICAL_LOW + " °C";
+        if (alertType.contains("HIGH_TEMP")) return "> " + smartfarm.service.SettingsManager.getInstance().formatTemp(ThresholdConfig.TEMP_CRITICAL_HIGH);
+        if (alertType.contains("LOW_TEMP")) return "< " + smartfarm.service.SettingsManager.getInstance().formatTemp(ThresholdConfig.TEMP_CRITICAL_LOW);
         if (alertType.contains("HIGH_HUMIDITY")) return "> " + ThresholdConfig.HUM_WARNING_HIGH + " %";
         if (alertType.contains("LOW_HUMIDITY")) return "< " + ThresholdConfig.HUM_WARNING_LOW + " %";
         if (alertType.contains("DRY_SOIL")) return "< " + ThresholdConfig.SOIL_WARNING_DRY + " %";

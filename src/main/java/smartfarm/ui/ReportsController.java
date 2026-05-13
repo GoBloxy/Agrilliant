@@ -22,18 +22,16 @@ import java.util.stream.Collectors;
 
 public class ReportsController {
 
-    @FXML private Label lblTotalHarvest, lblAvgYield, lblRevenue, lblProfitMargin;
+    @FXML private Label lblTotalHarvest, lblAvgYield, lblTotalRecords, lblGradeAPct;
     @FXML private BarChart<String, Number> yieldChart;
     @FXML private TableView<HarvestRecord> harvestTable;
-    @FXML private TableColumn<HarvestRecord, String> colDate, colCrop, colPlot, colQty, colGrade, colRevenue;
+    @FXML private TableColumn<HarvestRecord, String> colDate, colCrop, colPlot, colQty, colGrade;
     @FXML private Button btnExport;
 
     private final HarvestDAO harvestDAO = new HarvestDAO();
     private final CropDAO cropDAO = new CropDAO();
     private List<HarvestRecord> allHarvests;
     private List<Crop> allCrops;
-    private static final double PRICE_PER_KG = 2.5;
-    private static final double COST_PER_KG = 0.8;
 
     @FXML
     public void initialize() {
@@ -61,7 +59,6 @@ public class ReportsController {
         colPlot.setResizable(false);
         colQty.setResizable(false);
         colGrade.setResizable(false);
-        colRevenue.setResizable(false);
 
         colDate.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
@@ -80,9 +77,6 @@ public class ReportsController {
         colGrade.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getGrade().name()));
-        colRevenue.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        String.format("$%.2f", data.getValue().getQuantityKg() * PRICE_PER_KG)));
     }
 
     private String getCropName(int cropId) {
@@ -101,21 +95,22 @@ public class ReportsController {
 
     private void updateSummaryCards() {
         double totalKg = allHarvests.stream().mapToDouble(HarvestRecord::getQuantityKg).sum();
-        double totalRevenue = totalKg * PRICE_PER_KG;
-        double totalCost = totalKg * COST_PER_KG;
-        double profitMargin = totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0;
+        long gradeA = allHarvests.stream().filter(r -> r.getGrade() == HarvestRecord.Grade.A).count();
+        double gradeAPct = allHarvests.isEmpty() ? 0 : (gradeA * 100.0 / allHarvests.size());
 
         long plotCount = allCrops.stream().map(Crop::getPlotId).distinct().count();
         double avgYield = plotCount > 0 ? totalKg / plotCount : 0;
 
         lblTotalHarvest.setText(String.format("%.1f kg", totalKg));
         lblAvgYield.setText(String.format("%.1f kg", avgYield));
-        lblRevenue.setText(String.format("$%.2f", totalRevenue));
-        lblProfitMargin.setText(String.format("%.0f%%", profitMargin));
+        lblTotalRecords.setText(String.valueOf(allHarvests.size()));
+        lblGradeAPct.setText(String.format("%.0f%%", gradeAPct));
     }
 
     private void buildYieldChart() {
         yieldChart.getData().clear();
+        yieldChart.setBarGap(4);
+        yieldChart.setCategoryGap(20);
         XYChart.Series<String, Number> series = new XYChart.Series<>();
 
         Map<String, Double> yieldByCrop = allHarvests.stream()
@@ -128,9 +123,13 @@ public class ReportsController {
 
         yieldChart.getData().add(series);
 
-        for (XYChart.Data<String, Number> data : series.getData()) {
-            data.getNode().setStyle("-fx-bar-fill: #22c55e;");
-        }
+        javafx.application.Platform.runLater(() -> {
+            for (XYChart.Data<String, Number> data : series.getData()) {
+                if (data.getNode() != null) {
+                    data.getNode().setStyle("-fx-bar-fill: #22c55e;");
+                }
+            }
+        });
     }
 
     private void populateTable() {
@@ -148,15 +147,14 @@ public class ReportsController {
         if (file == null) return;
 
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
+            writer.write("Date,Crop,Plot,Qty (kg),Grade\n");
             for (HarvestRecord hr : allHarvests) {
-                writer.write(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
+                writer.write(String.format("%s,%s,%s,%.1f,%s\n",
                         hr.getHarvestDate(),
                         getCropName(hr.getCropId()),
                         getPlotName(hr.getCropId()),
                         hr.getQuantityKg(),
-                        hr.getGrade().name(),
-                        hr.getQuantityKg() * PRICE_PER_KG));
+                        hr.getGrade().name()));
             }
             showAlert("Export", "Report exported to " + file.getName(), Alert.AlertType.INFORMATION);
         } catch (IOException e) {

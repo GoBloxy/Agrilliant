@@ -4,6 +4,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -23,15 +25,13 @@ import java.util.stream.Collectors;
 
 public class HarvestController {
 
-    private static final double PRICE_PER_KG = 2.5;
-    private static final double COST_PER_KG = 0.8;
-
-    @FXML private Label lblTotalHarvested, lblTotalRevenue, lblTotalCost, lblNetProfit;
+    @FXML private Label lblTotalHarvested, lblTotalRecords, lblGradeA, lblAvgQuantity;
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbQuality;
     @FXML private TableView<HarvestRecord> harvestTable;
-    @FXML private TableColumn<HarvestRecord, String> colCrop, colPlot, colQuantity, colDate, colQuality, colRevenue, colActions;
+    @FXML private TableColumn<HarvestRecord, String> colCrop, colPlot, colQuantity, colDate, colQuality, colActions;
     @FXML private Button btnRecordHarvest;
+    @FXML private BarChart<String, Number> gradeBarChart;
 
     private final HarvestDAO harvestDAO = new HarvestDAO();
     private final CropDAO cropDAO = new CropDAO();
@@ -42,9 +42,10 @@ public class HarvestController {
     public void initialize() {
         loadCropCache();
         setupTableColumns();
-        loadRecords();
         setupFilters();
+        loadRecords();
         updateSummaryCards();
+        populateGradeChart();
     }
 
     private void loadCropCache() {
@@ -64,7 +65,6 @@ public class HarvestController {
         colQuantity.setResizable(false);
         colDate.setResizable(false);
         colQuality.setResizable(false);
-        colRevenue.setResizable(false);
         colActions.setResizable(false);
 
         colCrop.setCellValueFactory(data -> {
@@ -86,9 +86,6 @@ public class HarvestController {
         colQuality.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getGrade().name()));
-        colRevenue.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        String.format("$%.2f", data.getValue().getQuantityKg() * PRICE_PER_KG)));
 
         colActions.setCellFactory(col -> new TableCell<HarvestRecord, String>() {
             private final Button editBtn = new Button("", new FontIcon("fth-edit-2"));
@@ -124,7 +121,7 @@ public class HarvestController {
     }
 
     private void setupFilters() {
-        cmbQuality.getItems().addAll("All", "A", "B", "C", "REJECT");
+        cmbQuality.getItems().addAll("All", "A", "B", "C", "Reject");
         cmbQuality.setValue("All");
         cmbQuality.setOnAction(e -> applyFilters());
         txtSearch.textProperty().addListener((obs, old, val) -> applyFilters());
@@ -152,14 +149,13 @@ public class HarvestController {
 
     private void updateSummaryCards() {
         double totalKg = allRecords.stream().mapToDouble(HarvestRecord::getQuantityKg).sum();
-        double revenue = totalKg * PRICE_PER_KG;
-        double cost = totalKg * COST_PER_KG;
-        double profit = revenue - cost;
+        long gradeACount = allRecords.stream().filter(r -> r.getGrade() == HarvestRecord.Grade.A).count();
+        double avgQty = allRecords.isEmpty() ? 0 : totalKg / allRecords.size();
 
         lblTotalHarvested.setText(String.format("%.1f kg", totalKg));
-        lblTotalRevenue.setText(String.format("$%.2f", revenue));
-        lblTotalCost.setText(String.format("$%.2f", cost));
-        lblNetProfit.setText(String.format("$%.2f", profit));
+        lblTotalRecords.setText(String.valueOf(allRecords.size()));
+        lblGradeA.setText(String.valueOf(gradeACount));
+        lblAvgQuantity.setText(String.format("%.1f kg", avgQty));
     }
 
     @FXML
@@ -170,6 +166,7 @@ public class HarvestController {
                 harvestDAO.save(record);
                 loadRecords();
                 updateSummaryCards();
+                populateGradeChart();
             } catch (SQLException e) {
                 showAlert("Error", "Failed to save: " + e.getMessage());
             }
@@ -185,6 +182,7 @@ public class HarvestController {
                 harvestDAO.update(updated);
                 loadRecords();
                 updateSummaryCards();
+                populateGradeChart();
             } catch (SQLException e) {
                 showAlert("Error", "Failed to update: " + e.getMessage());
             }
@@ -202,6 +200,7 @@ public class HarvestController {
                     harvestDAO.delete(record.getRecordId());
                     loadRecords();
                     updateSummaryCards();
+                    populateGradeChart();
                 } catch (SQLException e) {
                     showAlert("Error", "Failed to delete: " + e.getMessage());
                 }
@@ -221,7 +220,12 @@ public class HarvestController {
         cropCombo.setPromptText("Select Crop");
         cropCombo.setMaxWidth(Double.MAX_VALUE);
         Map<String, Integer> cropNameToId = new HashMap<>();
+        java.util.Set<Integer> harvestedCropIds = allRecords.stream()
+                .map(HarvestRecord::getCropId)
+                .collect(Collectors.toSet());
         for (Crop c : cropCache.values()) {
+            if (c.getGrowthStage() == Crop.GrowthStage.HARVESTED
+                    || harvestedCropIds.contains(c.getCropId())) continue;
             String label = c.getCropName() + " (Plot " + c.getPlotId() + ")";
             cropCombo.getItems().add(label);
             cropNameToId.put(label, c.getCropId());
@@ -276,6 +280,34 @@ public class HarvestController {
             return null;
         });
         return dialog;
+    }
+
+    private void populateGradeChart() {
+        gradeBarChart.getData().clear();
+        gradeBarChart.setBarGap(4);
+        gradeBarChart.setCategoryGap(20);
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+
+        String[] colors = {"#22c55e", "#3b82f6", "#f59e0b", "#ef4444"};
+        HarvestRecord.Grade[] grades = HarvestRecord.Grade.values();
+
+        for (int i = 0; i < grades.length; i++) {
+            HarvestRecord.Grade g = grades[i];
+            long count = allRecords.stream().filter(r -> r.getGrade() == g).count();
+            XYChart.Data<String, Number> data = new XYChart.Data<>(g.name(), count);
+            series.getData().add(data);
+        }
+
+        gradeBarChart.getData().add(series);
+
+        javafx.application.Platform.runLater(() -> {
+            for (int i = 0; i < series.getData().size(); i++) {
+                if (series.getData().get(i).getNode() != null) {
+                    String color = colors[i % colors.length];
+                    series.getData().get(i).getNode().setStyle("-fx-bar-fill: " + color + ";");
+                }
+            }
+        });
     }
 
     private void showAlert(String title, String msg) {

@@ -70,14 +70,14 @@
             <Button fx:id="btnReports"    onAction="#onNavReports"   styleClass="nav-btn" maxWidth="Infinity" text="Reports"    graphicTextGap="12">
                 <graphic><FontIcon iconLiteral="fth-bar-chart-2" iconSize="16"/></graphic>
             </Button>
-            <Button fx:id="btnSettings"   onAction="#onNavSettings"  styleClass="nav-btn" maxWidth="Infinity" text="Settings"   graphicTextGap="12">
-                <graphic><FontIcon iconLiteral="fth-settings" iconSize="16"/></graphic>
-            </Button>
             <Button fx:id="btnUsers"      onAction="#onNavUsers"     styleClass="nav-btn" maxWidth="Infinity" text="Users"      graphicTextGap="12">
                 <graphic><FontIcon iconLiteral="fth-user" iconSize="16"/></graphic>
             </Button>
             <Button fx:id="btnLogs"       onAction="#onNavLogs"      styleClass="nav-btn" maxWidth="Infinity" text="Logs"       graphicTextGap="12">
                 <graphic><FontIcon iconLiteral="fth-file-text" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnSettings"   onAction="#onNavSettings"  styleClass="nav-btn" maxWidth="Infinity" text="Settings"   graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-settings" iconSize="16"/></graphic>
             </Button>
 
             <Region VBox.vgrow="ALWAYS"/>
@@ -351,9 +351,7 @@
                             <TableColumn fx:id="colHarvestPlot"     text="Plot"           prefWidth="110" reorderable="false" resizable="false"/>
                             <TableColumn fx:id="colHarvestDate"     text="Harvest Date"   prefWidth="100" reorderable="false" resizable="false"/>
                             <TableColumn fx:id="colHarvestQty"      text="Quantity (kg)"  prefWidth="100" reorderable="false" resizable="false"/>
-                            <TableColumn fx:id="colHarvestGrade"    text="Quality Grade"  prefWidth="100" reorderable="false" resizable="false"/>
-                            <TableColumn fx:id="colHarvestExpected" text="Expected (kg)"  prefWidth="100" reorderable="false" resizable="false"/>
-                            <TableColumn fx:id="colHarvestPerf"     text="Performance"    prefWidth="100" reorderable="false" resizable="false"/>
+                            <TableColumn fx:id="colHarvestGrade"    text="Grade"          prefWidth="100" reorderable="false" resizable="false"/>
                         </columns>
                     </TableView>
                 </VBox>
