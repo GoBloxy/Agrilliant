@@ -580,7 +580,60 @@ remaining server-on-Android issue — see §H9 in this file.
   plan §M9 "Known follow-ups".
 
 ### H8. CSVExporter — Gluon Storage + desktop fallback
-> Status: **pending**.
+> Status: **done**, 2026-05-13.
+
+`util/CSVExporter.java` keeps the two pure-string functions
+3bdelbary's controllers already call:
+- `String exportSensorData(List<SensorReading>)`
+- `String exportHarvestData(List<HarvestRecord>)`
+
+…and adds **one** new method:
+```
+File saveCsv(String content, String suggestedName)  // throws IOException
+```
+
+`saveCsv` picks a target directory based on the platform:
+
+| Platform | Target directory | Mechanism |
+|----------|------------------|-----------|
+| Android  | `<public>/Documents/` | `Services.get(StorageService.class).flatMap(s -> s.getPublicStorage("Documents"))` |
+| Android (no public dir, rare SD-card case) | app-private storage | `StorageService.getPrivateStorage()` |
+| Desktop  | `~/Downloads/` | direct file write |
+
+The platform check is `com.gluonhq.attach.util.Platform.isAndroid()`,
+wrapped in a `try { ... } catch (Throwable t) { return false; }` so
+the desktop build keeps compiling even if Attach is missing.
+
+`saveCsv` logs `I/CSVExporter: Wrote <N> bytes → <path>` via H5's
+Logger and returns the resulting `File` so call sites can show a
+"Saved to ..." toast.
+
+The constructor is private (the class is utility-only).
+
+#### Verification (run 2026-05-13)
+| Gate                                                          | Result |
+|---------------------------------------------------------------|--------|
+| `mvn -Pdesktop compile`                                       | BUILD SUCCESS |
+| `mvn -Pandroid compile`                                       | BUILD SUCCESS |
+| `target/h8-smoke/H8Smoke.java`:                               |        |
+| &nbsp;&nbsp;`exportSensorData` header + row well-formed       | OK     |
+| &nbsp;&nbsp;`exportHarvestData` header + row well-formed      | OK     |
+| &nbsp;&nbsp;`saveCsv` wrote 69 bytes to `~/Downloads/`        | OK     |
+| &nbsp;&nbsp;Logger output `I/CSVExporter: Wrote 69 bytes → ...` | OK   |
+| &nbsp;&nbsp;`Platform.isAndroid()` returns false on host      | OK     |
+
+**Deferred:** "manual Android test writes a real `.csv` users can
+find" requires an emulator/device — same gate as the rest of the
+Android runtime checks.
+
+#### TODOs for the merge phase
+- `// TODO(phase-2)`: B4 wires `LogsController` and
+  `ReportsController` (and DashboardController's CSV export) to
+  call `CSVExporter.saveCsv(content, name)` instead of
+  `javafx.stage.FileChooser` so the same code path works on Android.
+- `// TODO(phase-2)`: optional polish — show a Share intent on
+  Android after `saveCsv` so the user can email / drive-upload the
+  file directly (Gluon Attach `ShareService.share(...)`).
 
 ### H9. FarmServer — desktop-only profile guard
 > Status: **pending**.
