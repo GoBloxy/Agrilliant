@@ -12,13 +12,20 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
+import smartfarm.dao.PlotDAO;
+import smartfarm.model.Plot;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MonitoringController {
 
@@ -58,13 +65,12 @@ public class MonitoringController {
     private PieChart.Data pieNormal, pieWarning, pieCritical, pieOffline;
     private Timeline autoRefreshTimeline;
 
+    private Map<Integer, Plot> plotCache = new HashMap<>();
+    private Map<String, List<Integer>> fieldToDeviceIds = new HashMap<>();
+
     @FXML
     public void initialize() {
-        cmbFields.setItems(FXCollections.observableArrayList("All Fields", "North Field", "East Field", "South Field"));
-        cmbFields.getSelectionModel().selectFirst();
-
-        cmbPlots.setItems(FXCollections.observableArrayList("All Plots", "Plot 1", "Plot 2", "Plot 3"));
-        cmbPlots.getSelectionModel().selectFirst();
+        loadPlotData();
 
         cmbChartPeriod.setItems(FXCollections.observableArrayList("24 Hours", "7 Days", "30 Days"));
         cmbChartPeriod.getSelectionModel().selectFirst();
@@ -72,12 +78,65 @@ public class MonitoringController {
         cmbMapSensors.setItems(FXCollections.observableArrayList("All Sensors", "Temperature", "Humidity", "Soil Moisture"));
         cmbMapSensors.getSelectionModel().selectFirst();
 
+        // Filter change listeners
+        cmbFields.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
+            updatePlotsComboForField(n);
+            loadSensorReadings();
+        });
+        cmbPlots.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> loadSensorReadings());
+        datePicker.valueProperty().addListener((obs, o, n) -> loadSensorReadings());
+        cmbChartPeriod.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> reloadChart());
+
         setupTrendChart();
         setupStatusChart();
         setupTable();
         setupAutoRefresh();
         subscribeLiveSensor();
         loadHistoricalChart();
+    }
+
+    private void loadPlotData() {
+        PlotDAO plotDAO = new PlotDAO();
+        ObservableList<String> plotNames = FXCollections.observableArrayList("All Plots");
+
+        try {
+            List<Plot> plots = plotDAO.getAll();
+            for (Plot p : plots) {
+                plotCache.put(p.getPlotId(), p);
+                plotNames.add(p.getName());
+                String loc = p.getLocation() != null ? p.getLocation() : "Unknown";
+                fieldToDeviceIds.computeIfAbsent(loc, k -> new java.util.ArrayList<>()).add(p.getPlotId());
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to load plots: " + e.getMessage());
+        }
+
+        // Build fields list: "All Fields" + unique locations from DB
+        ObservableList<String> fieldNames = FXCollections.observableArrayList("All Fields");
+        for (String loc : fieldToDeviceIds.keySet()) {
+            if (!fieldNames.contains(loc)) fieldNames.add(loc);
+        }
+
+        cmbFields.setItems(fieldNames);
+        cmbFields.getSelectionModel().selectFirst();
+        cmbPlots.setItems(plotNames);
+        cmbPlots.getSelectionModel().selectFirst();
+        datePicker.setValue(null); // No date filter by default — show all readings
+    }
+
+    private void updatePlotsComboForField(String field) {
+        ObservableList<String> plotNames = FXCollections.observableArrayList("All Plots");
+        if (field == null || field.equals("All Fields")) {
+            for (Plot p : plotCache.values()) plotNames.add(p.getName());
+        } else {
+            List<Integer> ids = fieldToDeviceIds.getOrDefault(field, List.of());
+            for (int id : ids) {
+                Plot p = plotCache.get(id);
+                if (p != null) plotNames.add(p.getName());
+            }
+        }
+        cmbPlots.setItems(plotNames);
+        cmbPlots.getSelectionModel().selectFirst();
     }
 
     // ═══════════════ LIVE SENSOR SUBSCRIPTION ═══════════════
@@ -135,20 +194,55 @@ public class MonitoringController {
     }
 
     private void loadHistoricalChart() {
-        SensorService svc = new SensorService();
-        List<SensorReading> readings = svc.getRecentReadings(MAX_CHART_POINTS);
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm:ss");
+        tempSeries.getData().clear();
+        humSeries.getData().clear();
+        soilSeries.getData().clear();
 
-        // Readings come newest-first, reverse to plot chronologically
+        SensorService svc = new SensorService();
+        // Determine how many readings to fetch based on period
+        String period = cmbChartPeriod.getValue();
+        int limit = MAX_CHART_POINTS;
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+        if ("7 Days".equals(period)) { limit = 200; cutoff = LocalDateTime.now().minusDays(7); }
+        else if ("30 Days".equals(period)) { limit = 500; cutoff = LocalDateTime.now().minusDays(30); }
+
+        List<SensorReading> readings = svc.getRecentReadings(limit);
+        DateTimeFormatter fmt = "24 Hours".equals(period)
+                ? DateTimeFormatter.ofPattern("HH:mm")
+                : DateTimeFormatter.ofPattern("MM/dd HH:mm");
+
+        // Filter by cutoff and plot/field selection
+        String selectedField = cmbFields.getValue();
+        String selectedPlot = cmbPlots.getValue();
+
+        int count = 0;
         for (int i = readings.size() - 1; i >= 0; i--) {
             SensorReading r = readings.get(i);
+            if (r.getTimestamp() != null && r.getTimestamp().isBefore(cutoff)) continue;
+
+            // Apply field/plot filter
+            if (selectedField != null && !selectedField.equals("All Fields")) {
+                List<Integer> allowedIds = fieldToDeviceIds.getOrDefault(selectedField, List.of());
+                if (!allowedIds.contains(r.getDeviceId())) continue;
+            }
+            if (selectedPlot != null && !selectedPlot.equals("All Plots")) {
+                Plot p = plotCache.get(r.getDeviceId());
+                if (p == null || !p.getName().equals(selectedPlot)) continue;
+            }
+
             String label = r.getTimestamp() != null ? r.getTimestamp().format(fmt) : String.valueOf(i);
             tempSeries.getData().add(new XYChart.Data<>(label, r.getTemperature()));
             humSeries.getData().add(new XYChart.Data<>(label, r.getHumidity()));
             if (!Float.isNaN(r.getSoilMoisture())) {
                 soilSeries.getData().add(new XYChart.Data<>(label, r.getSoilMoisture()));
             }
+            count++;
+            if (count >= MAX_CHART_POINTS) break;
         }
+    }
+
+    private void reloadChart() {
+        loadHistoricalChart();
     }
 
     private void addChartPoint(XYChart.Series<String, Number> series, float value) {
@@ -221,14 +315,38 @@ public class MonitoringController {
 
     private void loadSensorReadings() {
         SensorService sensorService = new SensorService();
-        List<SensorReading> readings = sensorService.getRecentReadings(50);
-        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm:ss a");
+        List<SensorReading> readings = sensorService.getRecentReadings(200);
 
+        // Apply filters
+        String selectedField = cmbFields.getValue();
+        String selectedPlot = cmbPlots.getValue();
+        LocalDate selectedDate = datePicker.getValue();
+
+        List<SensorReading> filtered = readings.stream().filter(r -> {
+            // Filter by field (location)
+            if (selectedField != null && !selectedField.equals("All Fields")) {
+                List<Integer> allowedIds = fieldToDeviceIds.getOrDefault(selectedField, List.of());
+                if (!allowedIds.contains(r.getDeviceId())) return false;
+            }
+            // Filter by plot name
+            if (selectedPlot != null && !selectedPlot.equals("All Plots")) {
+                Plot p = plotCache.get(r.getDeviceId());
+                if (p == null || !p.getName().equals(selectedPlot)) return false;
+            }
+            // Filter by date
+            if (selectedDate != null && r.getTimestamp() != null) {
+                if (!r.getTimestamp().toLocalDate().equals(selectedDate)) return false;
+            }
+            return true;
+        }).collect(Collectors.toList());
+
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm:ss a");
         ObservableList<SensorRow> rows = FXCollections.observableArrayList();
         int normal = 0, warning = 0, critical = 0;
 
-        for (SensorReading r : readings) {
-            String plotName = "Plot " + (r.getDeviceId() > 0 ? r.getDeviceId() : "?");
+        for (SensorReading r : filtered) {
+            Plot p = plotCache.get(r.getDeviceId());
+            String plotName = (p != null) ? p.getName() : "Device " + r.getDeviceId();
             String time = r.getTimestamp() != null ? r.getTimestamp().format(timeFmt) : "—";
 
             // Temperature row
@@ -269,44 +387,11 @@ public class MonitoringController {
 
     @FXML
     private void onViewAllReadings() {
-        SensorService sensorService = new SensorService();
-        List<SensorReading> readings = sensorService.getRecentReadings(500);
-        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm:ss a");
-
-        ObservableList<SensorRow> rows = FXCollections.observableArrayList();
-        int normal = 0, warning = 0, critical = 0;
-
-        for (SensorReading r : readings) {
-            String plotName = "Plot " + (r.getDeviceId() > 0 ? r.getDeviceId() : "?");
-            String time = r.getTimestamp() != null ? r.getTimestamp().format(timeFmt) : "—";
-
-            float t = r.getTemperature();
-            String tStatus;
-            if (t > 40 || t < 5) { tStatus = "Critical"; critical++; }
-            else if (t > 35 || t < 10) { tStatus = "Warning"; warning++; }
-            else { tStatus = "Normal"; normal++; }
-            rows.add(new SensorRow(plotName, "Temperature", String.format("%.1f °C", t), tStatus, time));
-
-            float h = r.getHumidity();
-            String hStatus;
-            if (h > 90 || h < 20) { hStatus = "Critical"; critical++; }
-            else if (h > 80 || h < 30) { hStatus = "Warning"; warning++; }
-            else { hStatus = "Normal"; normal++; }
-            rows.add(new SensorRow(plotName, "Humidity", String.format("%.0f %%", h), hStatus, time));
-
-            float s = r.getSoilMoisture();
-            if (!Float.isNaN(s)) {
-                String sStatus;
-                if (s < 15 || s > 95) { sStatus = "Critical"; critical++; }
-                else if (s < 30 || s > 85) { sStatus = "Warning"; warning++; }
-                else { sStatus = "Normal"; normal++; }
-                rows.add(new SensorRow(plotName, "Soil Moisture", String.format("%.0f %%", s), sStatus, time));
-            }
-        }
-
-        sensorTable.setItems(rows);
-        lblReadingsCount.setText(rows.size() + " readings (all)");
-        updateStatusChart(normal, warning, critical, 0);
+        // Clear date filter and show all
+        datePicker.setValue(null);
+        cmbFields.getSelectionModel().selectFirst();
+        cmbPlots.getSelectionModel().selectFirst();
+        loadSensorReadings();
     }
 
     @FXML
