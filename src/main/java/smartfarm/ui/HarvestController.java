@@ -122,11 +122,7 @@ public class HarvestController {
     }
 
     private void setupFilters() {
-<<<<<<< HEAD
-        cmbQuality.getItems().addAll("All", "A", "B", "C", "Reject");
-=======
         cmbQuality.getItems().addAll("All", "A", "B", "C");
->>>>>>> cf03db5e4f17663957b10527e9841683613e992a
         cmbQuality.setValue("All");
         cmbQuality.setOnAction(e -> applyFilters());
         txtSearch.textProperty().addListener((obs, old, val) -> applyFilters());
@@ -301,7 +297,7 @@ public class HarvestController {
         gradeBarChart.setCategoryGap(20);
         XYChart.Series<String, Number> series = new XYChart.Series<>();
 
-        String[] colors = {"#22c55e", "#3b82f6", "#f59e0b", "#ef4444"};
+        String[] colors = {"#22c55e", "#3b82f6", "#f59e0b"};
         HarvestRecord.Grade[] grades = HarvestRecord.Grade.values();
 
         for (int i = 0; i < grades.length; i++) {
