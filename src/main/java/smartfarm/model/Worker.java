@@ -7,6 +7,8 @@ public class Worker {
     private int workerId;
     private String fullName;
     private String phone;
+    private String email;
+    private String passwordHash;
     private String jobTitle;
     private String skills;
     private boolean onDuty;
@@ -15,11 +17,13 @@ public class Worker {
     private LocalDateTime updatedAt;
 
     // Full constructor (loading from DB)
-    public Worker(int workerId, String fullName, String phone, String jobTitle, String skills,
+    public Worker(int workerId, String fullName, String phone, String email, String passwordHash, String jobTitle, String skills,
                   boolean onDuty, int managerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.workerId  = workerId;
         this.fullName  = fullName;
         this.phone     = phone;
+        this.email     = email;
+        this.passwordHash = passwordHash;
         this.jobTitle  = jobTitle;
         this.skills    = skills;
         this.onDuty    = onDuty;
@@ -29,10 +33,12 @@ public class Worker {
     }
 
     // Without workerId (creating new)
-    public Worker(String fullName, String phone, String jobTitle, String skills, int managerId) {
+    public Worker(String fullName, String phone, String email, String passwordHash, String jobTitle, String skills, int managerId) {
         this.workerId  = -1;
         this.fullName  = fullName;
         this.phone     = phone;
+        this.email     = email;
+        this.passwordHash = passwordHash;
         this.jobTitle  = jobTitle;
         this.skills    = skills;
         this.onDuty    = false;
@@ -47,6 +53,10 @@ public class Worker {
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public String getJobTitle() { return jobTitle; }
     public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
     public String getSkills() { return skills; }

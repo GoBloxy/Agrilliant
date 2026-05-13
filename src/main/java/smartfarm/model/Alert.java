@@ -36,6 +36,18 @@ public class Alert {
         this.timestamp = LocalDateTime.now();
         this.plotId    = plotId;
     }
+    
+    // Constructor with timestamp for NotificationService
+    public Alert(String alertType, Severity severity, String message, boolean resolved, LocalDateTime timestamp, int plotId) 
+    {
+        this.alertId   = -1;
+        this.alertType = alertType;
+        this.severity  = severity;
+        this.message   = message;
+        this.resolved  = resolved;
+        this.timestamp = timestamp;
+        this.plotId    = plotId;
+    }
 
 
     public void resolve() { this.resolved = true; }
