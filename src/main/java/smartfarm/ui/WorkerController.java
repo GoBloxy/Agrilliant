@@ -201,6 +201,8 @@ public class WorkerController {
         nameField.setPromptText("Full Name");
         TextField phoneField = new TextField(existing != null ? existing.getPhone() : "");
         phoneField.setPromptText("Phone");
+        TextField emailField = new TextField(existing != null ? existing.getEmail() : "");
+        emailField.setPromptText("Email");
         TextField jobField = new TextField(existing != null ? existing.getJobTitle() : "");
         jobField.setPromptText("Job Title");
         TextField skillsField = new TextField(existing != null ? existing.getSkills() : "");
@@ -211,7 +213,11 @@ public class WorkerController {
         CheckBox onDutyCb = new CheckBox("On Duty");
         onDutyCb.setSelected(existing != null && existing.isOnDuty());
 
+<<<<<<< HEAD
         VBox form = new VBox(10, nameField, phoneField, jobField, skillsField, fpField, onDutyCb);
+=======
+        VBox form = new VBox(10, nameField, phoneField, emailField, jobField, skillsField, onDutyCb);
+>>>>>>> 83dc482b39cd9e222d5bd246f0547b770d8abfd2
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
@@ -223,6 +229,7 @@ public class WorkerController {
                     return null;
                 }
                 Worker worker = new Worker(name, phoneField.getText().trim(),
+                        emailField.getText().trim(), "", // email and empty password hash
                         jobField.getText().trim(), skillsField.getText().trim(),
                         existing != null ? existing.getManagerId() : currentManagerId);
                 worker.setOnDuty(onDutyCb.isSelected());

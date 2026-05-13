@@ -6,7 +6,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import smartfarm.model.SensorReading;
 
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -24,8 +24,9 @@ public class LiveSensorData {
     private final SimpleStringProperty deviceId = new SimpleStringProperty("--");
     private final SimpleIntegerProperty activeSensors = new SimpleIntegerProperty(0);
 
-    // Track unique connected device IDs
+    // Track unique connected device IDs and their latest readings
     private final Set<String> connectedDevices = ConcurrentHashMap.newKeySet();
+    private final Map<String, SensorReading> latestReadings = new ConcurrentHashMap<>();
 
     private LiveSensorData() {}
 
@@ -35,7 +36,11 @@ public class LiveSensorData {
 
     // Called from any thread (TCP handler)
     public void update(SensorReading reading, String deviceCode) {
-        if (deviceCode != null) connectedDevices.add(deviceCode);
+        if (deviceCode != null) {
+            connectedDevices.add(deviceCode);
+            latestReadings.put(deviceCode, reading);
+        }
+        
         Platform.runLater(() -> {
             temperature.set(reading.getTemperature());
             humidity.set(reading.getHumidity());
@@ -45,11 +50,33 @@ public class LiveSensorData {
             activeSensors.set(connectedDevices.size());
         });
     }
+    
+    // New method for notification service
+    public void updateSensorData(String deviceId, double temperature, double humidity, double soilMoisture) {
+        SensorReading reading = new SensorReading(0, 0, (float)temperature, (float)humidity, (float)soilMoisture, java.time.LocalDateTime.now());
+        update(reading, deviceId);
+    }
 
     // Called when a device disconnects
     public void removeDevice(String devId) {
         connectedDevices.remove(devId);
+        latestReadings.remove(devId);
         Platform.runLater(() -> activeSensors.set(connectedDevices.size()));
+    }
+    
+    // Get all latest readings for monitoring
+    public Map<String, SensorReading> getAllLatestReadings() {
+        return new HashMap<>(latestReadings);
+    }
+    
+    // Get latest reading for specific device
+    public SensorReading getLatestReading(String deviceId) {
+        return latestReadings.get(deviceId);
+    }
+    
+    // Get all connected device IDs
+    public Set<String> getConnectedDevices() {
+        return new HashSet<>(connectedDevices);
     }
 
     // JavaFX properties for binding/listening

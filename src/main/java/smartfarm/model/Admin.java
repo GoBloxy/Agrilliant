@@ -38,6 +38,19 @@ public class Admin {
         this.updatedAt = LocalDateTime.now();
     }
 
+    // Without adminId (creating new)
+    public Admin(String email, String passwordHash, String fullName, LocalDateTime createdAt) {
+        this.adminId = -1;
+        this.fullName = fullName;
+        this.username = email.split("@")[0]; // Generate username from email
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.phone = "";
+        this.active = true;
+        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public int getAdminId() { return adminId; }
     public void setAdminId(int adminId) { this.adminId = adminId; }
     public String getFullName() { return fullName; }
