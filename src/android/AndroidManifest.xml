@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Agrilliant — Android manifest. Overrides the GluonFX-generated default
+    at `target/gluonfx/aarch64-android/gensrc/android/AndroidManifest.xml`.
+
+    Permissions follow §H3 of ANDROID_MIGRATION.md:
+      - INTERNET           : MySQL JDBC traffic (the data path the team picked)
+      - ACCESS_NETWORK_STATE : detect "is the phone offline?" before queries
+      - READ_MEDIA_IMAGES  : disease-detection picker (Android 13+)
+      - READ_EXTERNAL_STORAGE : same, on Android 12 and below
+      - CAMERA             : optional, for taking a fresh photo of a leaf
+
+    `WRITE_EXTERNAL_STORAGE` is intentionally OMITTED — CSVExporter (H8)
+    will use Storage Access Framework via Gluon Attach Storage, which
+    does not require the write permission on any modern Android.
+
+    `android:usesCleartextTraffic="true"` is enabled because dev/staging
+    MySQL hosts are typically plain-text. Flip to "false" before any
+    Play Store release; document any production host that needs cleartext
+    via a network_security_config.xml override.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.smartfarm.agrilliant"
+          android:versionCode="1"
+          android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="26"
+              android:targetSdkVersion="35"/>
+
+    <!-- Network — MySQL JDBC traffic + connectivity checks. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- Disease-detection image picker.
+         Android 13+ uses fine-grained media permissions;
+         Android 12 and below fall back to the legacy storage perm. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
+                     tools:targetApi="33"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+                     android:maxSdkVersion="32"/>
+
+    <!-- Camera is optional. Devices without a camera can still use the app. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera"
+                  android:required="false"/>
+
+    <application
+        android:label="Agrilliant"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="true"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        tools:replace="android:appComponentFactory"
+        android:appComponentFactory="any.value">
+
+        <!-- Gluon-provided bridge activity that boots the GraalVM-built
+             native binary and hands off to our JavaFX `Main` class. -->
+        <activity
+            android:name="com.gluonhq.helloandroid.MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize"
+            android:launchMode="singleTask">
+            <meta-data android:name="main.class"
+                       android:value="smartfarm.Main"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Gluon's helper activity for runtime permission prompts
+             (camera, photo picker, etc.). -->
+        <activity
+            android:name="com.gluonhq.helloandroid.PermissionRequestActivity"
+            android:exported="false"/>
+    </application>
+</manifest>

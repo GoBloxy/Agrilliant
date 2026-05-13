@@ -282,7 +282,53 @@ against the committed file and add anything new.
   the version we ship — current regex assumes `META-INF/resources/feather/<ver>/Feather.ttf`.
 
 ### H3. AndroidManifest.xml + permissions
-> Status: **pending**.
+> Status: **done**, 2026-05-13.
+
+Created `src/android/AndroidManifest.xml`. GluonFX picks this up
+verbatim instead of its generated default at
+`target/gluonfx/aarch64-android/gensrc/android/AndroidManifest.xml`.
+
+Key decisions:
+| Setting | Value | Why |
+|---------|-------|-----|
+| `package` | `com.smartfarm.agrilliant` | App store identity. Independent of Java packages. |
+| `versionCode` / `versionName` | `1` / `1.0` | Incremented per Play Store upload (release config in pom). |
+| `minSdkVersion` | `26` | Per plan §5. |
+| `targetSdkVersion` | `35` | GluonFX 1.0.28 default. |
+| `INTERNET` | required | MySQL JDBC traffic. |
+| `ACCESS_NETWORK_STATE` | required | Detect offline before query. |
+| `READ_MEDIA_IMAGES` | required, `targetApi=33` | Disease-detection picker on Android 13+. |
+| `READ_EXTERNAL_STORAGE` | `maxSdkVersion=32` | Same picker on Android 12 and below. |
+| `CAMERA` | optional | Fresh leaf photo capture. `uses-feature ... required=false` so non-camera tablets still install. |
+| `WRITE_EXTERNAL_STORAGE` | **omitted** | CSVExporter (H8) uses SAF via Gluon Attach Storage; no write perm needed. |
+| `usesCleartextTraffic` | `true` | Dev MySQL hosts often plain-text. **Must flip to false** for any release build (see TODOs). |
+
+Activities:
+- `com.gluonhq.helloandroid.MainActivity` — Gluon's bridge activity
+  that boots the GraalVM-built native binary. `meta-data main.class
+  = smartfarm.Main` tells it which JavaFX entry to instantiate.
+- `com.gluonhq.helloandroid.PermissionRequestActivity` — Gluon's
+  runtime-permission helper (camera, photo picker).
+
+Icons (`@mipmap/ic_launcher`, `@mipmap/ic_launcher_round`) are
+**referenced but not added** — drawables are in 3bdelbary's lane
+(B7 generates them at all the Android density buckets).
+
+**Deferred:** verification "manifest merger emits no warnings during
+APK packaging" runs only inside the GluonFX plugin's packaging step
+(needs Android SDK + GraalVM). XML parses cleanly via Python here as
+a baseline.
+
+#### TODOs for the merge phase / release
+
+- `// TODO(phase-2)`: before Play Store upload, flip
+  `android:usesCleartextTraffic="false"` and ship a
+  `network_security_config.xml` if a production MySQL host needs
+  cleartext.
+- `// TODO(phase-2)`: bump `versionCode` per upload to Play Console.
+- `// TODO(phase-2)`: depends on B7 — confirm `@mipmap/ic_launcher`
+  + `@mipmap/ic_launcher_round` exist in `src/android/res/` once
+  3bdelbary lands the launcher icons.
 
 ### H4. DBConnection rewrite (lazy, layered creds, async helper)
 > Status: **pending**.
