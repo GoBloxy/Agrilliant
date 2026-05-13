@@ -5,6 +5,7 @@ import smartfarm.model.Alert;
 import smartfarm.model.Alert.Severity;
 import smartfarm.model.SensorReading;
 import smartfarm.model.Task;
+import smartfarm.util.Logger;
 import smartfarm.util.ThresholdConfig;
 
 import java.sql.SQLException;
@@ -13,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AlertService {
+
+    private static final String TAG = "AlertService";
+
     private final AlertDAO alertDAO;
     private final TaskService taskService;
 
@@ -99,9 +103,9 @@ public class AlertService {
         Alert alert = new Alert(alertType, severity, message, plotId);
         try {
             alertDAO.save(alert);
-            System.out.println("[ALERT] " + alert);
+            Logger.i(TAG, "[ALERT] " + alert);
         } catch (SQLException e) {
-            System.err.println("Failed to save alert: " + e.getMessage());
+            Logger.e(TAG, "Failed to save alert", e);
             return;
         }
 
@@ -117,9 +121,9 @@ public class AlertService {
                     alertType
                 );
                 taskService.autoCreateTask(task);
-                System.out.println("[TASK] Auto-created task for alert: " + alertType);
+                Logger.i(TAG, "[TASK] Auto-created task for alert: " + alertType);
             } catch (RuntimeException e) {
-                System.err.println("Auto-task creation failed: " + e.getMessage());
+                Logger.e(TAG, "Auto-task creation failed", e);
             }
         }
     }
@@ -129,9 +133,9 @@ public class AlertService {
         Alert alert = new Alert(alertType, severity, message, plotId);
         try {
             alertDAO.save(alert);
-            System.out.println("[ALERT] " + alert);
+            Logger.i(TAG, "[ALERT] " + alert);
         } catch (SQLException e) {
-            System.err.println("Failed to save alert: " + e.getMessage());
+            Logger.e(TAG, "Failed to save alert", e);
         }
     }
 

@@ -74,6 +74,45 @@
   },
 
   {
+    "_comment": "Programmatic (no-FXML) UI pages — likely instantiated by 3bdelbary's B1 ViewManager / AppManager by class name. Listed defensively so the AOT compile keeps them.",
+    "name": "smartfarm.ui.DiseaseDetectionPage",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "smartfarm.ui.AttendancePage",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "smartfarm.ui.SettingsPage",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "smartfarm.ui.AboutPage",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "smartfarm.ui.CropsPage",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+
+  {
+    "_comment": "FingerprintService desktop backend resolved at runtime via Class.forName from FingerprintService.resolveDesktopCtor. Only present in the desktop AOT build; the android profile's compiler exclude drops it before AOT runs.",
+    "name": "smartfarm.service.desktop.FingerprintServiceDesktop",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+
+  {
     "_comment": "Model POJOs — listed defensively in case Gson / table-view introspection picks them up at runtime",
     "name": "smartfarm.model.Admin",
     "allDeclaredConstructors": true,

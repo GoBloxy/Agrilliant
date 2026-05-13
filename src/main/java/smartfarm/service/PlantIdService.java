@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import smartfarm.model.DiseaseDetection;
+import smartfarm.util.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +35,9 @@ import java.util.Properties;
  */
 public class PlantIdService {
 
+    private static final String TAG = "PlantIdService";
+
+
     // ─── Configuration ─────────────────────────────────────────────────
     private static final String API_BASE_URL = "https://crop.kindwise.com/api/v1";
     private static final String PROPS_FILE   = "crop-health.properties";
@@ -61,10 +65,9 @@ public class PlantIdService {
         this.apiKey = loadApiKey();
 
         if (apiKey == null || apiKey.isBlank()) {
-            System.err.println("[CropHealth] API key not found! " +
-                    "Set it in src/main/resources/" + PROPS_FILE);
+            Logger.w(TAG, "API key not found! Set it in src/main/resources/" + PROPS_FILE);
         } else {
-            System.out.println("[CropHealth] API key loaded. Service ready.");
+            Logger.i(TAG, "API key loaded. Service ready.");
         }
     }
 
@@ -102,7 +105,7 @@ public class PlantIdService {
             String base64Image = "data:" + mimeType + ";base64,"
                     + Base64.getEncoder().encodeToString(imageBytes);
 
-            System.out.println("[CropHealth] Analyzing image: " + imagePath
+            Logger.i(TAG, "Analyzing image: " + imagePath
                     + " (" + (imageBytes.length / 1024) + " KB)");
 
             // ── Step 2: Build the JSON request body ─────────────────
@@ -127,10 +130,10 @@ public class PlantIdService {
             HttpResponse<String> response = httpClient.send(request,
                     HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("[CropHealth] Response status: " + response.statusCode());
+            Logger.i(TAG, "Response status: " + response.statusCode());
 
             if (response.statusCode() != 201 && response.statusCode() != 200) {
-                System.err.println("[CropHealth] API error: " + response.body());
+                Logger.e(TAG, "API error: " + response.body());
                 return null;
             }
 
@@ -138,7 +141,7 @@ public class PlantIdService {
             return parseResponse(response.body());
 
         } catch (IOException | InterruptedException e) {
-            System.err.println("[CropHealth] Request failed: " + e.getMessage());
+            Logger.e(TAG, "Request failed", e);
             return null;
         }
     }
@@ -166,12 +169,12 @@ public class PlantIdService {
                     .get("value").getAsBoolean();
             JsonObject used = json.getAsJsonObject("used");
 
-            System.out.println("[CropHealth] API Key active: " + active);
-            System.out.println("[CropHealth] Can use credits: " + canUse);
-            System.out.println("[CropHealth] Used today: " + used.get("day"));
-            System.out.println("[CropHealth] Used total: " + used.get("total"));
+            Logger.i(TAG, "API Key active: " + active);
+            Logger.i(TAG, "Can use credits: " + canUse);
+            Logger.i(TAG, "Used today: " + used.get("day"));
+            Logger.i(TAG, "Used total: " + used.get("total"));
         } catch (Exception e) {
-            System.err.println("[CropHealth] Failed to get usage info: " + e.getMessage());
+            Logger.e(TAG, "Failed to get usage info", e);
         }
     }
 
@@ -243,13 +246,12 @@ public class PlantIdService {
                 result.isHealthy = top.name.equalsIgnoreCase("healthy");
             }
 
-            System.out.println("[CropHealth] Result — Crop: " + result.cropName
+            Logger.i(TAG, "Result — Crop: " + result.cropName
                     + " | Disease: " + (result.diseases.isEmpty() ? "none" : result.diseases.get(0))
                     + " | Healthy: " + result.isHealthy);
 
         } catch (Exception e) {
-            System.err.println("[CropHealth] Error parsing response: " + e.getMessage());
-            e.printStackTrace();
+            Logger.e(TAG, "Error parsing response", e);
         }
 
         return result;
@@ -294,7 +296,7 @@ public class PlantIdService {
                 if (!key.isBlank()) return key;
             }
         } catch (IOException e) {
-            System.err.println("[CropHealth] Error reading " + PROPS_FILE + ": " + e.getMessage());
+            Logger.e(TAG, "Error reading " + PROPS_FILE + "", e);
         }
 
         // Fallback: environment variable
@@ -401,7 +403,7 @@ public class PlantIdService {
         } else {
             CropHealthResult result = service.analyzeImage(args[0]);
             if (result != null) {
-                System.out.println(result);
+                Logger.i(TAG, String.valueOf(result));
             }
         }
     }

@@ -2,11 +2,15 @@ package smartfarm.service;
 
 import smartfarm.dao.SensorDAO;
 import smartfarm.model.SensorReading;
+import smartfarm.util.Logger;
 
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SensorService {
+
+    private static final String TAG = "SensorService";
+
     private final SensorDAO sensorDAO = new SensorDAO();
     private final AlertService alertService = new AlertService();
 
@@ -32,9 +36,9 @@ public class SensorService {
             int plotId = resolvePlotId(deviceCode);
             alertService.checkAndAlert(reading, plotId);
 
-            System.out.println("Saved: " + reading);
+            Logger.i(TAG, "Saved: " + reading);
         } catch (Exception e) {
-            System.err.println("DB/alert error (UI still updated): " + e.getMessage());
+            Logger.e(TAG, "DB/alert error (UI still updated)", e);
         }
     }
 
@@ -49,7 +53,7 @@ public class SensorService {
         try {
             return sensorDAO.getRecent(limit);
         } catch (SQLException e) {
-            System.err.println("[SensorService] Error fetching recent readings: " + e.getMessage());
+            Logger.e(TAG, "Error fetching recent readings", e);
             return new java.util.ArrayList<>();
         }
     }

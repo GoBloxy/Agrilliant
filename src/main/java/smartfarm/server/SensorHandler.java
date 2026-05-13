@@ -1,4 +1,3 @@
-// Desktop build only — paired with FarmServer (see its header comment).
 package smartfarm.server;
 
 import smartfarm.dao.DeviceDAO;
@@ -7,6 +6,7 @@ import smartfarm.model.SensorReading;
 import smartfarm.service.AttendanceService;
 import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
+import smartfarm.util.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +15,11 @@ import java.net.Socket;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
+// Desktop build only — paired with FarmServer (see its header comment).
 public class SensorHandler implements Runnable {
+
+    private static final String TAG = "SensorHandler";
+
     private final Socket socket;
     private final SensorService sensorService = new SensorService();
     private final AttendanceService attendanceService = new AttendanceService();
@@ -47,7 +51,7 @@ public class SensorHandler implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Device disconnected: " + socket.getInetAddress());
+            Logger.i(TAG, "Device disconnected: " + socket.getInetAddress());
         } finally {
             if (lastDeviceCode != null) {
                 LiveSensorData.getInstance().removeDevice(lastDeviceCode);
@@ -73,9 +77,9 @@ public class SensorHandler implements Runnable {
             int fingerprintId = Integer.parseInt(parts[1].split(":")[1]);
             lastDeviceCode = deviceCode;
             String result = attendanceService.handleFingerprintScan(fingerprintId, deviceCode);
-            System.out.println("Fingerprint scan on " + deviceCode + " → " + result);
+            Logger.i(TAG, "Fingerprint scan on " + deviceCode + " → " + result);
         } catch (Exception e) {
-            System.err.println("Bad fingerprint data: " + raw);
+            Logger.w(TAG, "Bad fingerprint data: " + raw);
         }
     }
 
@@ -89,7 +93,7 @@ public class SensorHandler implements Runnable {
             float soil = parts.length > 3 ? Float.parseFloat(parts[3].split(":")[1]) : Float.NaN;
             return new Parsed(deviceCode, temp, hum, soil);
         } catch (Exception e) {
-            System.err.println("Bad data format: " + raw);
+            Logger.w(TAG, "Bad data format: " + raw);
             return null;
         }
     }

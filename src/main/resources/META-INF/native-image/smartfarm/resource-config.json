@@ -9,8 +9,10 @@
       { "pattern": "thresholds\\.properties" },
       { "pattern": "crop-health\\.properties" },
 
-      { "pattern": "META-INF/services/.*" },
-      { "pattern": "META-INF/.*/module-info.properties" },
+      {
+        "_comment": "ServiceLoader SPI — JDBC driver, Ikonli IkonHandler, Gluon Attach service factories.",
+        "pattern": "META-INF/services/.*"
+      },
 
       {
         "_comment": "AtlantaFX theme CSS (PrimerLight + variables) lives inside its JAR.",
@@ -18,12 +20,8 @@
       },
 
       {
-        "_comment": "Ikonli Feather pack TTF font file. Exact path varies by version; regex catches all.",
-        "pattern": "META-INF/resources/feather/.*/[fF]eather\\.ttf"
-      },
-      {
-        "_comment": "Ikonli Feather pack metadata json (icon codepoints).",
-        "pattern": "META-INF/resources/feather/.*/[fF]eather\\.json"
+        "_comment": "Ikonli Feather pack font file (verified path in v12.3.1: META-INF/resources/feather/4.28/fonts/feather.ttf). Regex tolerates future version dir bumps.",
+        "pattern": "META-INF/resources/feather/.*/fonts/feather\\.ttf"
       }
     ],
     "excludes": []

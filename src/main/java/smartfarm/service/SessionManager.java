@@ -26,18 +26,27 @@ import com.gluonhq.attach.util.Services;
  *
  * <h2>Storage layering (H6)</h2>
  * <ol>
- *   <li>Gluon Attach {@link SettingsService} — Android
- *       {@code SharedPreferences} or desktop user-config. This is the
- *       primary backend on both targets if Attach is wired in.</li>
+ *   <li>Gluon Attach {@link SettingsService} — on Android this is
+ *       {@code SharedPreferences}; on a Gluon desktop run this is
+ *       Gluon's per-user config file. The primary backend on both
+ *       targets <b>if</b> Attach has a runtime impl on the classpath.</li>
  *   <li>Local properties file at
  *       {@code ~/.agrilliant/session.properties} — original desktop
- *       behaviour, kept as a fallback so a development laptop without
- *       Attach configured keeps working unchanged.</li>
+ *       behaviour. Used when Attach has no impl available (e.g. a
+ *       bare {@code mvn javafx:run} dev session where only the
+ *       Settings API jar is on the classpath, no impl) — and as the
+ *       legacy migration source for installs that pre-date H6.</li>
  * </ol>
  *
  * The HMAC-SHA256 tamper check is identical to the pre-H6 implementation —
  * only the storage layer changed. The values written to either backend
  * are {@code session.email} and {@code session.token}.
+ *
+ * <h2>Threading</h2>
+ * All public methods are static and have no internal locking. The
+ * intended caller is the JavaFX UI thread (sign-in / sign-up / sign-out
+ * flows). Concurrent calls from multiple threads are technically racy —
+ * fine in practice for our app.
  *
  * Public API (unchanged):
  * <pre>
@@ -46,7 +55,9 @@ import com.gluonhq.attach.util.Services;
  *   SessionManager.clearSession();
  * </pre>
  */
-public class SessionManager {
+public final class SessionManager {
+
+    private SessionManager() {}
 
     private static final String TAG = "SessionManager";
 
@@ -58,6 +69,21 @@ public class SessionManager {
 
     private static final Path SESSION_DIR  = Paths.get(System.getProperty("user.home"), ".agrilliant");
     private static final Path SESSION_FILE = SESSION_DIR.resolve("session.properties");
+
+    /** Cached Settings backend lookup. {@code Services.get(...)} is
+     *  cheap-but-not-free (it instantiates the platform impl on first
+     *  call and warns on every miss); resolving once at class load
+     *  means the warning fires at most once per process. */
+    private static final Optional<SettingsService> SETTINGS = lookupSettings();
+
+    private static Optional<SettingsService> lookupSettings() {
+        try {
+            return Services.get(SettingsService.class);
+        } catch (Throwable t) {
+            // Attach isn't on the classpath at runtime — fine, fall back.
+            return Optional.empty();
+        }
+    }
 
     // ---------------------------------------------------------------------
     // Public API — same shape as before, behaviour just dispatches
@@ -71,10 +97,9 @@ public class SessionManager {
         }
         String token = sign(email);
 
-        Optional<SettingsService> settings = lookup();
-        if (settings.isPresent()) {
+        if (SETTINGS.isPresent()) {
             try {
-                SettingsService s = settings.get();
+                SettingsService s = SETTINGS.get();
                 s.store(KEY_EMAIL, email);
                 s.store(KEY_TOKEN, token);
                 return;
@@ -86,10 +111,9 @@ public class SessionManager {
     }
 
     public static String loadSession() {
-        Optional<SettingsService> settings = lookup();
-        if (settings.isPresent()) {
+        if (SETTINGS.isPresent()) {
             try {
-                SettingsService s = settings.get();
+                SettingsService s = SETTINGS.get();
                 String email = s.retrieve(KEY_EMAIL);
                 String token = s.retrieve(KEY_TOKEN);
                 if (email != null && token != null) {
@@ -116,7 +140,7 @@ public class SessionManager {
     }
 
     public static void clearSession() {
-        lookup().ifPresent(s -> {
+        SETTINGS.ifPresent(s -> {
             try {
                 s.remove(KEY_EMAIL);
                 s.remove(KEY_TOKEN);
@@ -176,15 +200,6 @@ public class SessionManager {
     // ---------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------
-
-    private static Optional<SettingsService> lookup() {
-        try {
-            return Services.get(SettingsService.class);
-        } catch (Throwable t) {
-            // Attach isn't on the classpath at runtime — fine, fall back.
-            return Optional.empty();
-        }
-    }
 
     private static String sign(String data) {
         try {

@@ -5,6 +5,7 @@ import smartfarm.dao.ManagerDAO;
 import smartfarm.model.Admin;
 import smartfarm.model.Manager;
 import smartfarm.model.User;
+import smartfarm.util.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.SQLException;
@@ -15,6 +16,9 @@ import java.sql.SQLException;
  * Login uses email; both tables have unique email constraints.
  */
 public class AuthService {
+
+    private static final String TAG = "AuthService";
+
     private final AdminDAO adminDAO;
     private final ManagerDAO managerDAO;
 
@@ -90,7 +94,7 @@ public class AuthService {
                                 manager.getFullName(), User.Role.MANAGER);
             }
         } catch (SQLException e) {
-            System.err.println("Session restore failed: " + e.getMessage());
+            Logger.e(TAG, "Session restore failed", e);
         }
         return null;
     }

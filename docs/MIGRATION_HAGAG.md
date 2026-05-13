@@ -10,10 +10,11 @@
 
 ---
 
-## Status snapshot (2026-05-13)
+## Status snapshot
 
 Phase 1 — Hagag track is **done** on `android/hagag`. Every H-task
-landed as its own commit with a verification gate logged below.
+landed as its own commit, then a self-review pass produced a batch of
+fix commits on top. Final state (2026-05-13):
 
 | §     | Task                                                            | Commit      | Status |
 |-------|-----------------------------------------------------------------|-------------|--------|
@@ -28,7 +29,12 @@ landed as its own commit with a verification gate logged below.
 | H8    | `util/CSVExporter.saveCsv` via Gluon Storage / `~/Downloads`   | `01aa8af`   | ✅ done |
 | H9    | `util/Constants.IS_ANDROID` + "desktop only" headers on server | `0932ab1`   | ✅ done (final gate gated on B1) |
 | H10   | Logger → `android.util.Log` + `ThresholdConfig` from properties| `b2f511a`   | ✅ done |
-| H11   | This file                                                       | _this commit_ | ✅ done |
+| H11   | This file                                                       | `8fb9ed0`   | ✅ done |
+| review | Pre-merge review pass (53 findings catalogued)                 | (chat) | ✅ done |
+| fixes | Post-review fixes (see "Post-review fixes" section below)        | _this commit_ | ✅ done |
+
+Source counts at HEAD: `mvn -Pdesktop compile` ⇒ **72** sources,
+`mvn -Pandroid compile` ⇒ **68** sources, both `BUILD SUCCESS`.
 
 Three Phase-1 verifications can only be run after 3bdelbary's tree
 lands and a real Android SDK + GraalVM are on the build host:
@@ -38,6 +44,101 @@ lands and a real Android SDK + GraalVM are on the build host:
 
 The rest of the gates ran here on the desktop profile and are
 logged in the per-task tables below.
+
+## Post-review fixes
+
+A self-review pass after H11 catalogued 53 findings. Of those, the
+3 real bugs + 1 underdelivered task + the doc inaccuracies + the
+two judgment calls are all fixed in this commit:
+
+**🔴 Real bugs**
+- **DBConnection race in `getInstance()`** — `compareAndSet`
+  publishes the fresh connection; the loser closes its own.
+- **`creds == null` re-walked all layers per call** — switched to
+  `Optional<Creds>` so the "nothing configured" decision is cached.
+- **Wrong lifecycle event in javadoc + TODOs** — `PAUSE` →
+  `LifecycleEvent.DESTROY`, with a loud do-not-do-this note about
+  PAUSE.
+
+**🟠 H5 underdelivered**
+- Swept the remaining `System.out.println` / `System.err.println` /
+  `printStackTrace` calls across `service/{Alert,PlantId,Sensor,
+  Worker,Attendance,Auth}Service.java` and `server/{SensorHandler,
+  FarmServer}.java` to `Logger.{i,w,e}`. `util/DBConnection` also
+  swept (was the lone H5 holdout). All 28 in-lane log call sites
+  now go through the Logger; only the `Logger.java` writer itself
+  uses `System.out` / `System.err` directly.
+
+**🟡 Performance**
+- `Logger.routeToAndroid` caches the 6 `android.util.Log` Methods at
+  class load (no per-call `getMethod`).
+- `FingerprintService` caches the desktop backend's no-arg
+  `Constructor` once + emits the "running in stub mode" warning
+  once at class load (was firing per `new FingerprintService()`).
+- `SessionManager` caches `Optional<SettingsService>` once at class
+  load (was calling `Services.get(...)` 1× per public method —
+  smoke confirmed warning count went 5 → 1).
+- `CSVExporter` caches `Optional<StorageService>` once at class load
+  (Android branch was calling `Services.get(...)` twice).
+
+**🟡 Doc + comment fixes**
+- §4 cheat sheet: `mvn -Pdesktop -Dagent=true javafx:run` →
+  `mvn -Pdesktop -Dagent gluonfx:run`. (`-Dagent` is a GluonFX
+  plugin flag, not javafx-maven-plugin.)
+- `Constants.java` javadoc no longer claims H9 alone keeps
+  `server/*.class` out of the APK; now states the truth (B1 closes
+  it).
+- `pom.xml` android-profile comment now distinguishes the
+  fully-effective `service/desktop/**` exclude from the gated-on-B1
+  `server/**` exclude.
+- `SessionManager` javadoc doesn't claim Settings is the desktop
+  storage backend on a bare `mvn javafx:run` (it's not — falls back
+  to file).
+- `FingerprintService` javadoc dropped the "deliberately disabled"
+  phrasing (no such switch exists).
+
+**🟡 Lane / layout cleanups**
+- `pom.xml`: removed the redundant `<gluonfx.target>host</gluonfx.target>`
+  inside the desktop profile (matches the project default).
+- Three `server/*.java` files: moved the "Desktop build only" comment
+  to *below* the `package` declaration (was above, which is legal but
+  unusual).
+- `SessionManager` made `final` with a private constructor.
+
+**🟡 Build config**
+- `reflect-config.json`: added the 5 programmatic UI pages
+  (`DiseaseDetectionPage`, `AttendancePage`, `SettingsPage`,
+  `AboutPage`, `CropsPage`) and `FingerprintServiceDesktop`
+  defensively, so a desktop AOT or a B1 view-by-class-name registry
+  doesn't strip them.
+- `resource-config.json`: dropped the dead `Feather.json` and
+  `module-info.properties` patterns (verified `Feather.json` doesn't
+  exist in ikonli-feather-pack v12.3.1; the actual TTF lives at
+  `META-INF/resources/feather/4.28/fonts/feather.ttf`).
+- `AndroidManifest.xml`: dropped the misleading lint-only
+  `tools:targetApi="33"` from `READ_MEDIA_IMAGES`; added an explicit
+  `android:hardwareAccelerated="true"` on the application; documented
+  the `appComponentFactory="any.value"` Gluon hack with a comment.
+
+**🟢 Judgment calls**
+- **DB threading** — picked "do as the desktop": shrunk `DB_POOL`
+  from 2 → 1 thread (`Executors.newSingleThreadExecutor`). All DB
+  work now serializes on the cached `Connection`, like the desktop
+  pre-migration's UI-thread-only pattern, just moved off the UI
+  thread. The H5 javadoc claim "safe to call from a background
+  thread" now matches reality without a 90-touch DAO refactor.
+  `closeQuietly()` also got a 2 s `awaitTermination` grace before
+  forcing `shutdownNow()`.
+- **CSVExporter hardening** — picked "all three": fields are
+  RFC-4180 quoted when they contain `,`, `"`, `\n`, or `\r`;
+  filename is sanitized via `new File(name).getName()` so path
+  components are stripped; on conflict a `_yyyyMMdd-HHmmss` suffix
+  is inserted before the extension instead of overwriting silently.
+  Smoke-tested all three paths.
+
+Other minor stuff (logging tone, verbose tables, missing JUnit) was
+either too style-y to be worth churn or genuinely out of Phase-1
+scope; those notes are in the original review log only.
 
 ---
 
@@ -419,7 +520,10 @@ is reachable.
 
 - `// TODO(phase-2)`: wire `DBConnection.closeQuietly()` into
   `Main#stop()` once 3bdelbary's B1 settles the `Main.java`
-  rewrite, and into a Gluon `LifecycleService.PAUSE` listener.
+  rewrite, and into a Gluon `LifecycleEvent.DESTROY` listener.
+  Do **not** use `PAUSE` — it's reversible (user backgrounds the
+  app and may return), and shutting the executor there breaks any
+  subsequent `runAsync(...)` with `RejectedExecutionException`.
 - `// TODO(phase-2)`: add a "Settings" admin screen where the user
   can enter `db.url`/`db.user`/`db.password` once at first run; the
   values go through `SettingsService.store(...)` and layer 2 above
@@ -895,8 +999,10 @@ mvn -Pandroid gluonfx:install
 # Android: launch on device with adb logcat streamed
 mvn -Pandroid gluonfx:nativerun
 
-# Capture GraalVM reflection config from a desktop run
-mvn -Pdesktop -Dagent=true javafx:run
+# Capture GraalVM reflection config from a desktop run.
+# `-Dagent` is a GluonFX plugin flag; it works with `gluonfx:run`,
+# NOT `javafx:run` (the javafx-maven-plugin doesn't know it).
+mvn -Pdesktop -Dagent gluonfx:run
 # (then copy native-image-agent output into
 #  src/main/resources/META-INF/native-image/smartfarm/)
 ```

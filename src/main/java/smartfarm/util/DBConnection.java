@@ -5,10 +5,12 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -49,13 +51,23 @@ import java.util.concurrent.atomic.AtomicReference;
  * sockets; this lazy / re-creatable pattern makes that survivable.
  *
  * <h2>Threading</h2>
- * JDBC calls block. On Android (and to be honest on desktop too) DB
- * calls must never run on the JavaFX UI thread. Use
- * {@link #runAsync(java.util.concurrent.Callable)} to schedule a DB
- * task on the background executor; chain {@code thenAcceptAsync(...,
- * Platform::runLater)} on the returned future to update UI.
+ * JDBC calls block, and {@link Connection} is not thread-safe per the
+ * spec. {@link #runAsync(java.util.concurrent.Callable)} schedules
+ * tasks on a <b>single</b> background thread so all DB work stays
+ * serialized on the cached connection — same effective semantics the
+ * desktop build had pre-migration when DB calls ran on the FX thread,
+ * just moved off the UI thread so the UI can keep ticking.
+ *
+ * <p>Wire {@link #closeQuietly()} from {@code Main#stop()} on desktop
+ * and from a Gluon {@code LifecycleEvent.DESTROY} listener on Android.
+ * Do <b>not</b> wire it from {@code PAUSE} — that event is reversible
+ * (the user backgrounds the app and may return), and shutting the
+ * executor there breaks any subsequent {@code runAsync(...)} with
+ * {@link java.util.concurrent.RejectedExecutionException}.
  */
 public final class DBConnection {
+
+    private static final String TAG = "DBConnection";
 
     /** Classpath resource that holds the fallback credentials. */
     private static final String PROPERTIES_FILE = "db.properties";
@@ -65,11 +77,13 @@ public final class DBConnection {
     private static final String SETTINGS_KEY_USER     = "db.user";
     private static final String SETTINGS_KEY_PASSWORD = "db.password";
 
-    /** Background pool for blocking DB work. Two threads is plenty
-     *  for the workload here and stays cheap on Android. Daemon
-     *  threads so JVM shutdown isn't blocked. */
+    /** Background pool for blocking DB work. <b>Single thread</b> so
+     *  all DB activity is serialized on the (not-thread-safe) cached
+     *  {@link Connection} — matches the desktop's pre-migration
+     *  one-thread-at-a-time pattern. Daemon thread so JVM shutdown
+     *  isn't blocked. */
     private static final ExecutorService DB_POOL =
-            Executors.newFixedThreadPool(2, r -> {
+            Executors.newSingleThreadExecutor(r -> {
                 Thread t = new Thread(r, "agrilliant-db");
                 t.setDaemon(true);
                 return t;
@@ -78,8 +92,10 @@ public final class DBConnection {
     /** Cached connection; set lazily, cleared on {@link #reset()}. */
     private static final AtomicReference<Connection> CACHE = new AtomicReference<>();
 
-    /** Loaded credentials. Resolved on first {@link #getInstance()} call. */
-    private static volatile Creds creds;
+    /** Loaded credentials, wrapped in an Optional so the "no creds at
+     *  any layer" decision is cached too — every previous design ran
+     *  the env / Settings / properties lookups on every call. */
+    private static volatile Optional<Creds> creds;
 
     private DBConnection() {}
 
@@ -99,23 +115,34 @@ public final class DBConnection {
      * {@link #runAsync(java.util.concurrent.Callable)}.
      */
     public static Connection getInstance() {
-        Creds c = resolveCreds();
-        if (c == null) {
+        Optional<Creds> c = resolveCreds();
+        if (c.isEmpty()) {
             return null;
         }
         Connection cached = CACHE.get();
         try {
-            if (cached == null || cached.isClosed()) {
-                Connection fresh = DriverManager.getConnection(c.url, c.user, c.password);
-                CACHE.set(fresh);
-                System.out.println("[DBConnection] Connected to " + c.url);
+            if (cached != null && !cached.isClosed()) {
+                return cached;
+            }
+
+            // Open + try to publish. A losing thread closes its
+            // own (now-orphan) Connection so we don't leak.
+            Creds creds = c.get();
+            Connection fresh = DriverManager.getConnection(creds.url, creds.user, creds.password);
+            if (CACHE.compareAndSet(cached, fresh)) {
+                Logger.i(TAG, "Connected to " + creds.url);
                 return fresh;
             }
-            return cached;
+            // Another thread already published a Connection; use it,
+            // ditch ours.
+            closeSilently(fresh);
+            Connection winner = CACHE.get();
+            return winner != null ? winner : fresh;
         } catch (SQLException e) {
             // Drop any half-dead handle so the next call retries.
-            CACHE.set(null);
-            System.err.println("[DBConnection] Connection failed: " + e.getMessage());
+            CACHE.compareAndSet(cached, null);
+            closeSilently(cached);
+            Logger.e(TAG, "Connection failed: " + e.getMessage());
             return null;
         }
     }
@@ -152,22 +179,32 @@ public final class DBConnection {
 
     /**
      * Close the cached connection and shut down the background pool.
-     * Call once on app shutdown — for example from {@code Main#stop()}
-     * on desktop and from a Gluon {@code LifecycleService.PAUSE}
-     * listener on Android.
+     * Call once on app shutdown — see the Lifecycle note in the class
+     * javadoc for which Gluon event to wire this from.
      */
     public static void closeQuietly() {
         reset();
-        DB_POOL.shutdownNow();
+        DB_POOL.shutdown();
+        try {
+            if (!DB_POOL.awaitTermination(2, TimeUnit.SECONDS)) {
+                DB_POOL.shutdownNow();
+            }
+        } catch (InterruptedException ie) {
+            DB_POOL.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     // ---------------------------------------------------------------------
     // Internals
     // ---------------------------------------------------------------------
 
-    /** Resolves credentials lazily, once. */
-    private static Creds resolveCreds() {
-        Creds local = creds;
+    /** Resolves credentials lazily, once. The {@link Optional} wrapper
+     *  caches even the "nothing configured" decision, so repeated
+     *  {@link #getInstance()} calls on a misconfigured machine don't
+     *  re-walk the env / Settings / properties layers each time. */
+    private static Optional<Creds> resolveCreds() {
+        Optional<Creds> local = creds;
         if (local != null) return local;
         synchronized (DBConnection.class) {
             if (creds != null) return creds;
@@ -176,40 +213,39 @@ public final class DBConnection {
         }
     }
 
-    private static Creds loadCreds() {
+    private static Optional<Creds> loadCreds() {
         // 1) Environment variables (CI / desktop dev).
-        String envUrl  = System.getenv("DB_URL");
-        String envUser = System.getenv("DB_USER");
+        String envUrl  = trimOrNull(System.getenv("DB_URL"));
+        String envUser = trimOrNull(System.getenv("DB_USER"));
         String envPass = System.getenv("DB_PASSWORD");
         if (envUrl != null && envUser != null) {
-            System.out.println("[DBConnection] Loaded credentials from environment.");
-            return new Creds(envUrl, envUser, envPass != null ? envPass : "");
+            Logger.i(TAG, "Loaded credentials from environment.");
+            return Optional.of(new Creds(envUrl, envUser, envPass != null ? envPass : ""));
         }
 
         // 2) Gluon Attach SettingsService (Android SharedPreferences /
-        //    desktop user-config). Looked up reflectively-via-Services
-        //    so we don't crash if Attach is missing on a non-Gluon run.
-        Creds fromSettings = tryLoadFromSettings();
-        if (fromSettings != null) {
-            System.out.println("[DBConnection] Loaded credentials from Gluon Settings.");
+        //    desktop user-config). The lookup is wrapped so a missing
+        //    Attach runtime just returns Optional.empty().
+        Optional<Creds> fromSettings = tryLoadFromSettings();
+        if (fromSettings.isPresent()) {
+            Logger.i(TAG, "Loaded credentials from Gluon Settings.");
             return fromSettings;
         }
 
         // 3) db.properties on the classpath (Android asset).
-        Creds fromProps = tryLoadFromProperties();
-        if (fromProps != null) {
-            System.out.println("[DBConnection] Loaded credentials from " + PROPERTIES_FILE + ".");
+        Optional<Creds> fromProps = tryLoadFromProperties();
+        if (fromProps.isPresent()) {
+            Logger.i(TAG, "Loaded credentials from " + PROPERTIES_FILE + ".");
             return fromProps;
         }
 
-        System.err.println("[DBConnection] No DB credentials on env/Settings/properties — "
+        Logger.w(TAG, "No DB credentials on env/Settings/properties — "
                 + "DB features disabled until configured.");
-        return null;
+        return Optional.empty();
     }
 
-    private static Creds tryLoadFromSettings() {
+    private static Optional<Creds> tryLoadFromSettings() {
         try {
-            // com.gluonhq.attach.util.Services.get(SettingsService.class)
             return com.gluonhq.attach.util.Services
                     .get(com.gluonhq.attach.settings.SettingsService.class)
                     .flatMap(svc -> {
@@ -218,31 +254,36 @@ public final class DBConnection {
                         String pwd  = svc.retrieve(SETTINGS_KEY_PASSWORD);
                         if (url != null && !url.isBlank()
                                 && user != null && !user.isBlank()) {
-                            return java.util.Optional.of(new Creds(url, user, pwd != null ? pwd : ""));
+                            return Optional.of(new Creds(url, user, pwd != null ? pwd : ""));
                         }
-                        return java.util.Optional.empty();
-                    })
-                    .orElse(null);
+                        return Optional.empty();
+                    });
         } catch (Throwable t) {
             // Service unavailable on this platform — fine, try next layer.
-            return null;
+            return Optional.empty();
         }
     }
 
-    private static Creds tryLoadFromProperties() {
+    private static Optional<Creds> tryLoadFromProperties() {
         try (InputStream in = DBConnection.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
-            if (in == null) return null;
+            if (in == null) return Optional.empty();
             Properties p = new Properties();
             p.load(in);
-            String url  = p.getProperty("db.url");
-            String user = p.getProperty("db.user");
+            String url  = trimOrNull(p.getProperty("db.url"));
+            String user = trimOrNull(p.getProperty("db.user"));
             String pwd  = p.getProperty("db.password");
-            if (url == null || user == null) return null;
-            return new Creds(url, user, pwd != null ? pwd : "");
+            if (url == null || user == null) return Optional.empty();
+            return Optional.of(new Creds(url, user, pwd != null ? pwd : ""));
         } catch (IOException e) {
-            System.err.println("[DBConnection] Failed to read " + PROPERTIES_FILE + ": " + e.getMessage());
-            return null;
+            Logger.e(TAG, "Failed to read " + PROPERTIES_FILE, e);
+            return Optional.empty();
         }
+    }
+
+    private static String trimOrNull(String s) {
+        if (s == null) return null;
+        String trimmed = s.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private static void closeSilently(Connection c) {

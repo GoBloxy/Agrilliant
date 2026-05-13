@@ -1,4 +1,3 @@
-// Desktop build only — paired with FarmServer (see its header comment).
 package smartfarm.server.notification;
 
 import smartfarm.service.LiveSensorData;
@@ -16,6 +15,7 @@ import java.util.logging.Logger;
  * Notification service for real-time alerts and updates
  * Provides push notifications for critical farm events
  */
+// Desktop build only — paired with FarmServer (see its header comment).
 public class NotificationService {
     private static final Logger logger = Logger.getLogger(NotificationService.class.getName());
     

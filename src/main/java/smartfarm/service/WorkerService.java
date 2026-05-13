@@ -3,12 +3,16 @@ import smartfarm.model.Task;
 import smartfarm.model.Worker;
 import smartfarm.dao.TaskDAO;
 import smartfarm.dao.WorkerDAO;
+import smartfarm.util.Logger;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WorkerService {
+
+    private static final String TAG = "WorkerService";
+
     private final WorkerDAO workerProcess;
     private final TaskDAO taskDAO;
 
@@ -30,7 +34,7 @@ public class WorkerService {
             workerProcess.save(worker);
         }
         catch (SQLException err){
-            err.printStackTrace();
+            Logger.e(TAG, "Failed to save worker", err);
             throw new RuntimeException("Server Error: " + err.getMessage());
         }
     }

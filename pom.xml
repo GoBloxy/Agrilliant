@@ -198,9 +198,8 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
 
-            <properties>
-                <gluonfx.target>host</gluonfx.target>
-            </properties>
+            <!-- gluonfx.target stays at the project-level default of
+                 `host` — no need to override it here. -->
 
             <dependencies>
                 <!-- jSerialComm — R307 fingerprint over USB serial.
@@ -282,13 +281,20 @@
                - service/desktop/**        (H7: jSerialComm fingerprint)
                - server/**                 (H9: FarmServer + SensorHandler)
 
-             Both packages are referenced only at runtime via
-             reflection / a profile guard, so a clean exclude here
-             leaves the rest of the source compileable on Android.
+             The `service/desktop/**` exclude is fully effective —
+             the package is reached only at runtime via reflection
+             (`Class.forName` in `FingerprintService`), so javac has
+             nothing to implicit-compile from sourcepath.
 
-             Full `mvn -Pandroid compile` still depends on 3bdelbary's
-             B1 (Main.java → MobileApplication so it stops importing
-             smartfarm.server.FarmServer). See docs/MIGRATION_HAGAG.md.
+             The `server/**` exclude only takes full effect once
+             3bdelbary's B1 lands: `Main.java` still has
+             `import smartfarm.server.FarmServer;`, so javac walks the
+             sourcepath and implicit-compiles `FarmServer.java` /
+             `SensorHandler.java` even though we exclude them
+             explicitly. Until then, runtime is gated by
+             `Constants.IS_ANDROID` (H9).
+
+             See docs/MIGRATION_HAGAG.md §H7 + §H9 for the full notes.
              =========================================================== -->
         <profile>
             <id>android</id>

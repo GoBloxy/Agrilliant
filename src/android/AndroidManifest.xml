@@ -33,10 +33,11 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- Disease-detection image picker.
-         Android 13+ uses fine-grained media permissions;
-         Android 12 and below fall back to the legacy storage perm. -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
-                     tools:targetApi="33"/>
+         Android 13+ uses fine-grained media permissions; older
+         devices use the legacy READ_EXTERNAL_STORAGE perm bounded by
+         android:maxSdkVersion="32". (Android silently ignores unknown
+         permission names on API levels that don't recognize them.) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
                      android:maxSdkVersion="32"/>
 
@@ -45,11 +46,22 @@
     <uses-feature android:name="android.hardware.camera"
                   android:required="false"/>
 
+    <!--
+        appComponentFactory: Gluon's HelloAndroid bridge sets up its own
+        app component factory at runtime; Android Gradle Plugin's manifest
+        merger occasionally produces a conflicting attribute from a
+        bundled support library, so we ship a placeholder value AND
+        a tools:replace directive to force ours to win.  The "any.value"
+        is intentional — Gluon's bridge ignores the attribute's value, it
+        just needs the conflict resolved.  This is the canonical pattern
+        from the GluonHQ HelloFX sample manifest.
+    -->
     <application
         android:label="Agrilliant"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         tools:replace="android:appComponentFactory"

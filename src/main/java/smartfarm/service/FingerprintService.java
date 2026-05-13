@@ -2,6 +2,8 @@ package smartfarm.service;
 
 import smartfarm.util.Logger;
 
+import java.lang.reflect.Constructor;
+
 /**
  * Thin facade over the fingerprint reader.
  *
@@ -11,13 +13,20 @@ import smartfarm.util.Logger;
  * which does not link on Android — the Maven {@code android} profile
  * excludes that package from compile, so the class isn't on the device.
  *
- * <p>This facade resolves the backend lazily via {@link Class#forName}.
- * If the desktop class is missing (Android, or a desktop build with
- * the hardware deliberately disabled), every method falls through to a
- * no-op stub that returns {@code false} / {@code -1} / {@code "N/A"}
- * and logs a single startup warning. Callers get the exact same public
- * surface they had before the Android migration — see {@link Backend}
- * for the per-method contract.
+ * <p>The desktop backend's no-arg constructor is resolved <em>once</em>
+ * at class load via {@link Class#forName} + {@link Class#getDeclaredConstructor}
+ * and cached in {@link #DESKTOP_BACKEND_CTOR}. Each {@code new
+ * FingerprintService()} just instantiates from the cached constructor
+ * (or returns the no-op stub if the desktop class is absent), so
+ * Android startup doesn't re-emit the "running in stub mode" warning
+ * once per controller.
+ *
+ * <p>If the desktop class is missing (Android, or a desktop build
+ * where the desktop sub-package failed to load), every method falls
+ * through to a no-op stub that returns {@code false} / {@code -1} /
+ * {@code "N/A"}. Callers get the exact same public surface they had
+ * before the Android migration — see {@link Backend} for the
+ * per-method contract.
  *
  * <p>Public API is unchanged from the pre-H7 implementation:
  * <pre>
@@ -75,30 +84,52 @@ public final class FingerprintService {
     public boolean deleteTemplate(int slotId)      { return backend.deleteTemplate(slotId); }
     public boolean enroll(int slotId, EnrollCallback cb) { return backend.enroll(slotId, cb); }
 
-    /** Listing serial ports is a static convenience; spins up a
-     *  temporary backend just to ask. */
+    /** Listing serial ports is a static convenience; uses the cached
+     *  backend constructor so we don't pay reflection cost per call. */
     public static String[] getAvailablePorts() {
         return createBackend().listAvailablePorts();
     }
 
     // ---------------------------------------------------------------------
-    // Backend selection
+    // Backend selection — Constructor handle cached at class load,
+    // stub-mode warning logged once.
     // ---------------------------------------------------------------------
 
-    private static Backend createBackend() {
+    /** Cached no-arg constructor of the desktop backend. {@code null}
+     *  on Android or wherever the desktop class is absent. */
+    private static final Constructor<? extends Backend> DESKTOP_BACKEND_CTOR =
+            resolveDesktopCtor();
+
+    @SuppressWarnings("unchecked")
+    private static Constructor<? extends Backend> resolveDesktopCtor() {
         try {
             Class<?> cls = Class.forName(DESKTOP_IMPL);
-            return (Backend) cls.getDeclaredConstructor().newInstance();
+            if (!Backend.class.isAssignableFrom(cls)) {
+                Logger.w(TAG, DESKTOP_IMPL + " is on the classpath but doesn't implement Backend — using stub");
+                return null;
+            }
+            return (Constructor<? extends Backend>) cls.getDeclaredConstructor();
         } catch (ClassNotFoundException notHere) {
             // Expected on Android (where the desktop package is excluded
-            // from compile). Single-line warning, not a stack trace.
+            // from compile). Single-line warning at class load — not
+            // once per `new FingerprintService()`.
             Logger.w(TAG, "Fingerprint hardware not available — running in stub mode");
-            return NULL_BACKEND;
+            return null;
         } catch (Throwable t) {
-            // Class is on the classpath but couldn't be instantiated
-            // (e.g. jSerialComm native lib missing on this OS). Treat
-            // as "not available" so the rest of the app keeps working.
             Logger.w(TAG, "Fingerprint backend failed to start — running in stub mode", t);
+            return null;
+        }
+    }
+
+    private static Backend createBackend() {
+        if (DESKTOP_BACKEND_CTOR == null) return NULL_BACKEND;
+        try {
+            return DESKTOP_BACKEND_CTOR.newInstance();
+        } catch (Throwable t) {
+            // Constructor failed at runtime (rare — would have to be a
+            // post-class-load error like a DLL not loadable). Log per
+            // call here; this is genuinely unexpected.
+            Logger.w(TAG, "Fingerprint backend instance failed — using stub for this call", t);
             return NULL_BACKEND;
         }
     }

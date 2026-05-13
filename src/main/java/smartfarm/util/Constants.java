@@ -30,12 +30,14 @@ public final class Constants {
      *   }
      * </pre>
      *
-     * <p>This is what unblocks Main.java for the Android build: H9
-     * profile-guards {@code smartfarm.server.**} out of the AOT
-     * compile so the .class files aren't in the APK, and at runtime
-     * the {@code !IS_ANDROID} check stops Main from ever trying to
-     * instantiate {@code FarmServer} (whose class won't exist on
-     * Android anyway).
+     * <p>Once 3bdelbary's B1 drops the {@code import
+     * smartfarm.server.FarmServer;} from {@code Main.java}, the
+     * matching {@code maven-compiler-plugin} exclude in {@code pom.xml}'s
+     * {@code android} profile fully takes effect and the AOT compile
+     * stops emitting {@code FarmServer.class}. Until then, javac's
+     * implicit-compile (driven by Main's import) keeps the class on
+     * the Android classpath even though the exclude is configured —
+     * this runtime gate is what stops it from actually running.
      */
     public static final boolean IS_ANDROID = detectAndroid();
 
