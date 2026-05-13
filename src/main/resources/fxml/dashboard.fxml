@@ -36,6 +36,9 @@
             <Button fx:id="btnMonitoring" onAction="#onNavMonitoring" styleClass="nav-btn" maxWidth="Infinity" text="Monitoring" graphicTextGap="12">
                 <graphic><FontIcon iconLiteral="fth-activity" iconSize="16"/></graphic>
             </Button>
+            <Button fx:id="btnDisease"    onAction="#onNavDisease"    styleClass="nav-btn" maxWidth="Infinity" text="Disease Detection" graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-search" iconSize="16"/></graphic>
+            </Button>
             <Button fx:id="btnAlerts"     onAction="#onNavAlerts"     styleClass="nav-btn" maxWidth="Infinity" text="Alerts"     graphicTextGap="12">
                 <graphic><FontIcon iconLiteral="fth-bell" iconSize="16"/></graphic>
             </Button>

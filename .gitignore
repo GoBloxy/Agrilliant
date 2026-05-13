@@ -1,5 +1,6 @@
 # === Secrets ===
 src/main/resources/db.properties
+src/main/resources/crop-health.properties
 
 # === Build output ===
 target/
