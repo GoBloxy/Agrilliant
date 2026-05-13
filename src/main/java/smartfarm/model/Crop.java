@@ -37,11 +37,7 @@ public class Crop {
      * Check if crop is overdue for harvest
      */
     public boolean isOverdue() {
-<<<<<<< HEAD
-        return growthStage == GrowthStage.READY && LocalDate.now().isAfter(harvestDate);
-=======
         return growthStage == GrowthStage.READY && harvestDate != null && LocalDate.now().isAfter(harvestDate);
->>>>>>> 4ff0dc5c6580e2ce0a05e5fe050938f3f285d2a4
     }
 
     // ── Getters ──
