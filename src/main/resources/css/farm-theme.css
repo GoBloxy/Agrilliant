@@ -244,7 +244,6 @@
 .sensor-icon-temp  { -fx-icon-color: #ef4444; }
 .sensor-icon-hum   { -fx-icon-color: #3b82f6; }
 .sensor-icon-soil  { -fx-icon-color: #f59e0b; }
-.sensor-icon-light { -fx-icon-color: #eab308; }
 
 /* ═══════════════ BADGES ═══════════════ */
 .badge {

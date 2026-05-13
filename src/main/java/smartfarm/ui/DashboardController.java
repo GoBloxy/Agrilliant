@@ -31,9 +31,9 @@ import java.time.format.DateTimeFormatter;
 public class DashboardController {
 
     // ── Sensor Cards ──
-    @FXML private Label lblTemperature, lblHumidity, lblSoilMoisture, lblLight;
-    @FXML private Label lblTempPlot, lblHumPlot, lblSoilPlot, lblLightPlot;
-    @FXML private Label lblTempStatus, lblHumStatus, lblSoilStatus, lblLightStatus;
+    @FXML private Label lblTemperature, lblHumidity, lblSoilMoisture;
+    @FXML private Label lblTempPlot, lblHumPlot, lblSoilPlot;
+    @FXML private Label lblTempStatus, lblHumStatus, lblSoilStatus;
 
     // ── Chart (placeholder - data filled by SensorService) ──
     @FXML private LineChart<String, Number> sensorChart;
