@@ -6,15 +6,10 @@ import smartfarm.model.Worker;
 import smartfarm.dao.AdminDAO;
 import smartfarm.dao.ManagerDAO;
 import smartfarm.dao.WorkerDAO;
-import smartfarm.util.DBConnection;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;

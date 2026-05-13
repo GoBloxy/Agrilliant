@@ -30,22 +30,33 @@ public class DBConnection {
     // Private constructor — prevents instantiation
     private DBConnection() {}
 
-    // Load credentials from properties file once. Failures are logged, not thrown,
-    // so the JavaFX UI can still launch even if the DB is unconfigured.
+    // Load credentials: environment variables first (CI / GitHub Actions),
+    // then fall back to db.properties for local development.
     static {
-        try (InputStream input = DBConnection.class
-                .getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
-            if (input == null) {
-                System.err.println("[DBConnection] db.properties not found — DB features disabled.");
-            } else {
-                Properties props = new Properties();
-                props.load(input);
-                url      = props.getProperty("db.url");
-                user     = props.getProperty("db.user");
-                password = props.getProperty("db.password");
+        // 1. Try environment variables (set by GitHub Actions secrets)
+        url      = System.getenv("DB_URL");
+        user     = System.getenv("DB_USER");
+        password = System.getenv("DB_PASSWORD");
+
+        if (url != null && user != null) {
+            System.out.println("[DBConnection] Using environment variables for DB config.");
+        } else {
+            // 2. Fall back to db.properties file
+            try (InputStream input = DBConnection.class
+                    .getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+                if (input == null) {
+                    System.err.println("[DBConnection] db.properties not found and no env vars set — DB features disabled.");
+                } else {
+                    Properties props = new Properties();
+                    props.load(input);
+                    url      = props.getProperty("db.url");
+                    user     = props.getProperty("db.user");
+                    password = props.getProperty("db.password");
+                    System.out.println("[DBConnection] Using db.properties for DB config.");
+                }
+            } catch (IOException e) {
+                System.err.println("[DBConnection] Failed to load db.properties: " + e.getMessage());
             }
-        } catch (IOException e) {
-            System.err.println("[DBConnection] Failed to load db.properties: " + e.getMessage());
         }
     }
 
