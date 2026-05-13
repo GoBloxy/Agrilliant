@@ -386,6 +386,13 @@
   },
 
   {
+    "_comment": "android.util.Log is invoked reflectively by util/Logger so the desktop build doesn't have to import android.*",
+    "name": "android.util.Log",
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+
+  {
     "_comment": "MySQL JDBC driver registers via java.sql.Driver SPI. Common reflection seeds; expand with the GraalVM agent for first real run.",
     "name": "com.mysql.cj.jdbc.Driver",
     "allDeclaredConstructors": true,

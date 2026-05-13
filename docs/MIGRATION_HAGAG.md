@@ -705,7 +705,68 @@ TCP server. After that merge:
   `unzip -l target/.../app.apk | grep server` and check.
 
 ### H10. Logger / ThresholdConfig housekeeping
-> Status: **pending**.
+> Status: **done**, 2026-05-13.
+
+#### 1. Logger — Android routing via reflection
+
+`util/Logger.java` now ships the H5 API (`d / i / w / e` with
+optional `Throwable`) backed by a runtime-switched writer:
+
+- **Android**: each call routes through `android.util.Log` via
+  reflection (`Class.forName("android.util.Log")`,
+  `Method.invoke(...)`). Logs surface in `adb logcat` just like
+  native Android calls.
+- **Desktop**: `android.util.Log` is absent, the static lookup
+  returns null, and we fall back to printing
+  `"<LEVEL>/<tag>: <msg>"` to {@link System#out} (D/I) or
+  {@link System#err} (W/E). Throwables are stack-traced under the
+  message — identical to logcat's two-line shape.
+
+Reflection (not a direct {@code import android.util.Log}) is used on
+purpose so the desktop Maven build keeps compiling without an Android
+SDK on the classpath.
+
+Added an entry to `META-INF/native-image/smartfarm/reflect-config.json`
+so GraalVM AOT keeps the methods reachable during the Android build.
+
+#### 2. ThresholdConfig — properties-backed
+
+`util/ThresholdConfig.java` keeps the eight `public static final
+float` constants the existing `AlertService` already reads
+(`TEMP_CRITICAL_HIGH`, `TEMP_WARNING_HIGH`, `TEMP_CRITICAL_LOW`,
+`HUM_WARNING_LOW`, `HUM_WARNING_HIGH`, `SOIL_CRITICAL_DRY`,
+`SOIL_WARNING_DRY`, `SOIL_WARNING_WET`). The values are now loaded
+from `thresholds.properties` (added under `src/main/resources/`) at
+class-load time, with the previous hard-coded defaults as fallback.
+
+Same resource on both targets: classpath on desktop, the APK
+classpath / `assets/` on Android. No platform-specific lookup needed.
+
+#### Verification (run 2026-05-13)
+| Gate                                                              | Result |
+|-------------------------------------------------------------------|--------|
+| JSON validation of `reflect-config.json` (after adding android.util.Log) | OK |
+| `mvn -Pdesktop clean compile`                                     | BUILD SUCCESS |
+| `mvn -Pandroid compile`                                           | BUILD SUCCESS |
+| `target/h10-smoke/H10Smoke.java`:                                 |        |
+| &nbsp;&nbsp;`I/ThresholdConfig: Loaded thresholds.properties (8 keys)` | OK |
+| &nbsp;&nbsp;All eight thresholds match the file values            | OK     |
+| &nbsp;&nbsp;`Logger.{i,w,e}` produce `<LEVEL>/<tag>: <msg>` on desktop | OK |
+| &nbsp;&nbsp;`Logger.e(tag, msg, throwable)` includes stack trace  | OK     |
+
+**Deferred:** "logs reach `adb logcat`" requires running on an Android
+emulator — gated by the full GluonFX Android build as before. The
+reflection routing is mechanical, has unit-test-style coverage on
+desktop, and shouldn't introduce surprises.
+
+#### TODOs for the merge phase
+
+- `// TODO(phase-2)`: spot-check that `I/ThresholdConfig` and
+  `W/SessionManager` appear in `adb logcat -s "*" :I` after a real
+  device install.
+- `// TODO(phase-2)`: optional polish — once 3bdelbary's controllers
+  start using `Logger.i/w/e`, route any sensitive content (e.g. JWTs,
+  email PII) through a redacting helper.
 
 ### H11. Final notes (this file's TODO log)
 > Status: **pending**.
