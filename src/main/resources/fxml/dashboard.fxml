@@ -2,7 +2,6 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.chart.*?>
 <?import javafx.scene.shape.*?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -213,10 +212,7 @@
                     <VBox styleClass="card">
                         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                         <Label text="Temperature &amp; Humidity Trend" styleClass="card-title"/>
-                        <LineChart fx:id="sensorChart" prefHeight="220" maxHeight="220" legendVisible="true" animated="false" createSymbols="false">
-                            <xAxis><CategoryAxis fx:id="chartXAxis"/></xAxis>
-                            <yAxis><NumberAxis fx:id="chartYAxis"/></yAxis>
-                        </LineChart>
+                        <StackPane fx:id="chartContainer" prefHeight="220" maxHeight="220"/>
                     </VBox>
                 </VBox>
 
@@ -272,11 +268,11 @@
                         <Hyperlink fx:id="linkShowAllAlerts" text="Show all alerts →" styleClass="link-end"/>
                     </VBox>
 
-                    <!-- My Tasks -->
+                    <!-- Tasks -->
                     <VBox styleClass="card" spacing="8">
                         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                         <HBox alignment="CENTER_LEFT">
-                            <Label text="My Tasks" styleClass="card-title"/>
+                            <Label fx:id="lblTasksTitle" text="Tasks" styleClass="card-title"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Hyperlink fx:id="linkViewTasks" text="View All"/>
                         </HBox>
@@ -336,16 +332,16 @@
                             <ColumnConstraints percentWidth="50"/>
                             <ColumnConstraints percentWidth="50"/>
                         </columnConstraints>
-                        <Button fx:id="btnAddCrop"      text="Add Crop"      styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" graphicTextGap="6">
+                        <Button fx:id="btnAddCrop"      onAction="#onAddCrop"      text="Add Crop"      styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" graphicTextGap="6">
                             <graphic><FontIcon iconLiteral="fth-plus-circle" iconSize="16"/></graphic>
                         </Button>
-                        <Button fx:id="btnAddTask"      text="Add Task"      styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" graphicTextGap="6">
+                        <Button fx:id="btnAddTask"      onAction="#onAddTask"      text="Add Task"      styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" graphicTextGap="6">
                             <graphic><FontIcon iconLiteral="fth-clipboard" iconSize="16"/></graphic>
                         </Button>
-                        <Button fx:id="btnLogHarvest"   text="Log Harvest"   styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1" graphicTextGap="6">
+                        <Button fx:id="btnLogHarvest"   onAction="#onLogHarvest"   text="Log Harvest"   styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1" graphicTextGap="6">
                             <graphic><FontIcon iconLiteral="fth-package" iconSize="16"/></graphic>
                         </Button>
-                        <Button fx:id="btnExportReport" text="Export Report" styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" graphicTextGap="6">
+                        <Button fx:id="btnExportReport" onAction="#onExportReport" text="Export Report" styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" graphicTextGap="6">
                             <graphic><FontIcon iconLiteral="fth-file-text" iconSize="16"/></graphic>
                         </Button>
                     </GridPane>
@@ -380,13 +376,13 @@
                 <VBox styleClass="card" prefWidth="320" minWidth="300" spacing="6">
                     <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                     <Label text="Reports Export" styleClass="card-title"/>
-                    <Button fx:id="btnExportSensorCSV"  text="Sensor Logs (CSV)"     maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                    <Button fx:id="btnExportSensorCSV"  onAction="#onExportSensorCSV"  text="Sensor Logs (CSV)"     maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
                         <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
                     </Button>
-                    <Button fx:id="btnExportHarvestCSV" text="Harvest Summary (CSV)" maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                    <Button fx:id="btnExportHarvestCSV" onAction="#onExportHarvestCSV" text="Harvest Summary (CSV)" maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
                         <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
                     </Button>
-                    <Button fx:id="btnExportAlertCSV"   text="Alert History (CSV)"   maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                    <Button fx:id="btnExportAlertCSV"   onAction="#onExportAlertCSV"   text="Alert History (CSV)"   maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
                         <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
                     </Button>
                 </VBox>
