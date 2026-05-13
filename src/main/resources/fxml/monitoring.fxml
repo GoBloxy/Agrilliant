@@ -45,10 +45,10 @@
                 <VBox spacing="2">
                     <Label text="Temperature" styleClass="summary-card-title"/>
                     <HBox alignment="BASELINE_LEFT" spacing="4">
-                        <Label fx:id="lblTemp" text="28.6" styleClass="summary-card-value"/>
+                        <Label fx:id="lblTemp" text="--" styleClass="summary-card-value"/>
                         <Label text="°C" styleClass="summary-card-title"/>
                     </HBox>
-                    <Label fx:id="lblTempSub" text="↑ 2.4° vs yesterday" styleClass="text-critical"/>
+                    <Label fx:id="lblTempSub" text="Waiting for data..." styleClass="text-muted"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -61,10 +61,10 @@
                 <VBox spacing="2">
                     <Label text="Humidity" styleClass="summary-card-title"/>
                     <HBox alignment="BASELINE_LEFT" spacing="4">
-                        <Label fx:id="lblHum" text="65" styleClass="summary-card-value"/>
+                        <Label fx:id="lblHum" text="--" styleClass="summary-card-value"/>
                         <Label text="\%" styleClass="summary-card-title"/>
                     </HBox>
-                    <Label fx:id="lblHumSub" text="↓ 5% vs yesterday" styleClass="text-success"/>
+                    <Label fx:id="lblHumSub" text="Waiting for data..." styleClass="text-muted"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -77,45 +77,14 @@
                 <VBox spacing="2">
                     <Label text="Soil Moisture" styleClass="summary-card-title"/>
                     <HBox alignment="BASELINE_LEFT" spacing="4">
-                        <Label fx:id="lblSoil" text="32" styleClass="summary-card-value"/>
+                        <Label fx:id="lblSoil" text="--" styleClass="summary-card-value"/>
                         <Label text="\%" styleClass="summary-card-title"/>
                     </HBox>
-                    <Label fx:id="lblSoilSub" text="↓ 3% vs yesterday" styleClass="text-success"/>
+                    <Label fx:id="lblSoilSub" text="Waiting for data..." styleClass="text-muted"/>
                 </VBox>
             </HBox>
         </VBox>
 
-        <!-- Light Intensity -->
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
-            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-            <HBox alignment="CENTER_LEFT" spacing="14">
-                <FontIcon iconLiteral="fth-sun" iconSize="32" styleClass="icon-warning"/>
-                <VBox spacing="2">
-                    <Label text="Light Intensity" styleClass="summary-card-title"/>
-                    <HBox alignment="BASELINE_LEFT" spacing="4">
-                        <Label fx:id="lblLight" text="750" styleClass="summary-card-value"/>
-                        <Label text="lux" styleClass="summary-card-title"/>
-                    </HBox>
-                    <Label fx:id="lblLightSub" text="↑ 120 lux vs yesterday" styleClass="text-critical"/>
-                </VBox>
-            </HBox>
-        </VBox>
-
-        <!-- Wind Speed -->
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
-            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-            <HBox alignment="CENTER_LEFT" spacing="14">
-                <FontIcon iconLiteral="fth-wind" iconSize="32" styleClass="icon-info"/>
-                <VBox spacing="2">
-                    <Label text="Wind Speed" styleClass="summary-card-title"/>
-                    <HBox alignment="BASELINE_LEFT" spacing="4">
-                        <Label fx:id="lblWind" text="12" styleClass="summary-card-value"/>
-                        <Label text="km/h" styleClass="summary-card-title"/>
-                    </HBox>
-                    <Label fx:id="lblWindSub" text="→ No change" styleClass="text-muted"/>
-                </VBox>
-            </HBox>
-        </VBox>
     </HBox>
 
     <!-- Middle Section: Trend Chart & Sensor Map -->
@@ -124,7 +93,7 @@
         <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="600">
             <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
             <HBox alignment="CENTER_LEFT">
-                <Label text="Temperature &amp; Humidity Trend" styleClass="card-title"/>
+                <Label text="Sensor Trend (Temp / Humidity / Soil)" styleClass="card-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <ComboBox fx:id="cmbChartPeriod" promptText="24 Hours" styleClass="filter-combo"/>
             </HBox>
@@ -190,7 +159,7 @@
                 <padding><Insets top="8"/></padding>
                 <Label fx:id="lblReadingsCount" text="Showing 1 to 6 of 10 readings" styleClass="pagination-text"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Hyperlink text="View All Readings →" styleClass="link-end"/>
+                <Hyperlink text="View All Readings →" styleClass="link-end" onAction="#onViewAllReadings"/>
             </HBox>
         </VBox>
 
@@ -203,7 +172,7 @@
                 <StackPane>
                     <PieChart fx:id="statusChart" prefWidth="180" prefHeight="180" legendVisible="false" labelsVisible="false"/>
                     <VBox alignment="CENTER" spacing="0">
-                        <Label text="5" styleClass="donut-value"/>
+                        <Label fx:id="lblTotalSensors" text="0" styleClass="donut-value"/>
                         <Label text="Total" styleClass="donut-label"/>
                     </VBox>
                 </StackPane>
@@ -232,7 +201,7 @@
                 </VBox>
             </HBox>
             <HBox alignment="BOTTOM_RIGHT">
-                <Hyperlink text="View All Sensors →" styleClass="link-end"/>
+                <Hyperlink text="View All Sensors →" styleClass="link-end" onAction="#onViewAllSensors"/>
             </HBox>
         </VBox>
     </HBox>
