@@ -27,7 +27,7 @@
             </HBox>
             
             <Region HBox.hgrow="ALWAYS"/>
-            <Button fx:id="btnMarkAllRead" text="Mark All as Read" styleClass="btn-secondary" graphicTextGap="6">
+            <Button fx:id="btnMarkAllRead" text="Mark All as Read" styleClass="btn-secondary" graphicTextGap="6" onAction="#onMarkAllRead">
                 <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
             </Button>
         </HBox>
@@ -63,7 +63,7 @@
             <!-- Resolved Today -->
             <VBox styleClass="card,summary-card-resolved" HBox.hgrow="ALWAYS" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-                <Label text="Resolved Today" styleClass="summary-card-title"/>
+                <Label text="Resolved" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <FontIcon iconLiteral="fth-check-circle" iconSize="32" styleClass="summary-icon-resolved"/>
                     <VBox>
@@ -108,12 +108,7 @@
             <HBox alignment="CENTER_LEFT">
                 <Label fx:id="lblPagination" text="Showing 1 to 7 of 24 alerts" styleClass="pagination-text"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <HBox styleClass="pagination-controls" spacing="4">
-                    <Button text="&lt;" styleClass="page-btn"/>
-                    <Button text="1" styleClass="page-btn,page-btn-active"/>
-                    <Button text="2" styleClass="page-btn"/>
-                    <Button text="3" styleClass="page-btn"/>
-                    <Button text="&gt;" styleClass="page-btn"/>
+                <HBox fx:id="paginationBox" styleClass="pagination-controls" spacing="4">
                 </HBox>
             </HBox>
         </VBox>
@@ -204,7 +199,7 @@
                     <Label text="Recent Readings" styleClass="detail-section-title"/>
                     <LineChart fx:id="detailChart" prefHeight="140" maxHeight="140" legendVisible="false" animated="false" createSymbols="true">
                         <xAxis><CategoryAxis fx:id="detailChartX" tickLabelsVisible="true"/></xAxis>
-                        <yAxis><NumberAxis fx:id="detailChartY" autoRanging="false" lowerBound="30" upperBound="45" tickUnit="5"/></yAxis>
+                        <yAxis><NumberAxis fx:id="detailChartY" autoRanging="true"/></yAxis>
                     </LineChart>
                 </VBox>
 
@@ -215,7 +210,7 @@
                         <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                         <HBox alignment="TOP_LEFT" spacing="8">
                             <FontIcon iconLiteral="fth-activity" iconSize="16" styleClass="action-icon-green"/>
-                            <Label text="Increase irrigation or activate cooling system" wrapText="true" styleClass="action-text"/>
+                            <Label fx:id="lblSuggestedAction" text="Increase irrigation or activate cooling system" wrapText="true" styleClass="action-text"/>
                         </HBox>
                         <HBox alignment="CENTER_LEFT">
                             <Region prefWidth="24"/>
@@ -227,17 +222,17 @@
                 <!-- Related Task -->
                 <VBox spacing="6">
                     <Label text="Related Task" styleClass="detail-section-title"/>
-                    <HBox styleClass="related-task-box" spacing="12" alignment="CENTER_LEFT">
+                    <HBox fx:id="relatedTaskBox" styleClass="related-task-box" spacing="12" alignment="CENTER_LEFT">
                         <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                         <StackPane styleClass="task-icon-bg" prefWidth="36" prefHeight="36">
                             <FontIcon iconLiteral="fth-calendar" iconSize="16" styleClass="task-icon"/>
                         </StackPane>
                         <VBox spacing="2" HBox.hgrow="ALWAYS">
-                            <Label text="Task #124" styleClass="task-id"/>
-                            <Label text="Irrigate Plot 3" styleClass="task-title"/>
+                            <Label fx:id="lblRelatedTaskId" text="No task" styleClass="task-id"/>
+                            <Label fx:id="lblRelatedTaskTitle" text="—" styleClass="task-title"/>
                         </VBox>
                         <HBox alignment="CENTER" spacing="4">
-                            <Label text="In Progress" styleClass="task-link"/>
+                            <Label fx:id="lblRelatedTaskStatus" text="" styleClass="task-link"/>
                             <FontIcon iconLiteral="fth-arrow-right" iconSize="14" styleClass="task-link"/>
                         </HBox>
                     </HBox>
@@ -250,7 +245,7 @@
             <Button fx:id="btnDetailResolve" text="Mark as Resolved" styleClass="btn-secondary" graphicTextGap="6" onAction="#onDetailResolve">
                 <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
             </Button>
-            <Button fx:id="btnDetailCreateTask" text="+ Create Task" styleClass="btn-primary"/>
+            <Button fx:id="btnDetailCreateTask" text="+ Create Task" styleClass="btn-primary" onAction="#onCreateTask"/>
         </HBox>
 
     </VBox>

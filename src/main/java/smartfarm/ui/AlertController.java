@@ -11,20 +11,25 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import smartfarm.dao.SensorDAO;
+import smartfarm.dao.TaskDAO;
 import smartfarm.model.Alert;
+import smartfarm.model.SensorReading;
+import smartfarm.model.Task;
 import smartfarm.service.AlertService;
+import smartfarm.util.ThresholdConfig;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/**
- * Controller for the Alerts page.
- * Displays all alerts in a colour-coded TableView with a details pane.
- */
 public class AlertController {
 
     // ── Filters ──
@@ -45,31 +50,38 @@ public class AlertController {
     @FXML private TableColumn<Alert, String> colTimestamp;
     @FXML private TableColumn<Alert, String> colStatus;
     @FXML private TableColumn<Alert, Void>   colAction;
-    
+
     @FXML private Label lblPagination;
+    @FXML private HBox paginationBox;
 
     // ── Detail Pane ──
     @FXML private VBox detailPane;
     @FXML private Button btnCloseDetails;
-    
+
     @FXML private Label lblDetailSeverity;
     @FXML private Label lblDetailStatus;
     @FXML private FontIcon detailIcon;
-    
+
     @FXML private Label lblDetailTitle;
     @FXML private Label lblDetailPlot;
     @FXML private Label lblDetailMessage;
-    
+
     @FXML private Label lblGridSensorType;
     @FXML private Label lblGridCurrentVal;
     @FXML private Label lblGridThreshold;
     @FXML private Label lblGridTriggered;
     @FXML private Label lblGridSensorId;
-    
+
     @FXML private LineChart<String, Number> detailChart;
     @FXML private CategoryAxis detailChartX;
     @FXML private NumberAxis detailChartY;
-    
+
+    @FXML private Label lblSuggestedAction;
+    @FXML private HBox relatedTaskBox;
+    @FXML private Label lblRelatedTaskId;
+    @FXML private Label lblRelatedTaskTitle;
+    @FXML private Label lblRelatedTaskStatus;
+
     @FXML private Button btnDetailResolve;
     @FXML private Button btnDetailCreateTask;
 
@@ -78,6 +90,9 @@ public class AlertController {
     private FilteredList<Alert> filteredList;
     private Alert currentSelectedAlert = null;
 
+    private static final int PAGE_SIZE = 20;
+    private int currentPage = 0;
+
     private static final DateTimeFormatter TIME_FMT =
             DateTimeFormatter.ofPattern("MMM d, yyyy  hh:mm a");
 
@@ -85,7 +100,6 @@ public class AlertController {
 
     @FXML
     public void initialize() {
-        // Hide details pane initially
         detailPane.setVisible(false);
         detailPane.setManaged(false);
 
@@ -93,7 +107,6 @@ public class AlertController {
         setupColumns();
         loadAlerts();
 
-        // Listen for table selection changes
         alertTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
                 showAlertDetails(newSel);
@@ -104,62 +117,112 @@ public class AlertController {
     private void setupFilters() {
         cmbSeverity.setItems(FXCollections.observableArrayList("All Severity", "CRITICAL", "WARNING", "INFO"));
         cmbSeverity.getSelectionModel().selectFirst();
-        cmbSeverity.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter());
+        cmbSeverity.valueProperty().addListener((obs, o, n) -> { currentPage = 0; applyFilterAndPaginate(); });
 
         cmbStatus.setItems(FXCollections.observableArrayList("All Status", "Active", "Resolved"));
         cmbStatus.getSelectionModel().selectFirst();
-        cmbStatus.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter());
+        cmbStatus.valueProperty().addListener((obs, o, n) -> { currentPage = 0; applyFilterAndPaginate(); });
 
-        txtSearch.textProperty().addListener((obs, oldText, newText) -> updateFilter());
+        txtSearch.textProperty().addListener((obs, o, n) -> { currentPage = 0; applyFilterAndPaginate(); });
     }
 
-    private void updateFilter() {
+    private void applyFilterAndPaginate() {
         if (filteredList == null) return;
-        
+
         String sevFilter = cmbSeverity.getValue();
         String statusFilter = cmbStatus.getValue();
-        String searchFilter = txtSearch.getText().toLowerCase();
+        String search = txtSearch.getText() != null ? txtSearch.getText().toLowerCase().trim() : "";
 
         filteredList.setPredicate(alert -> {
-            boolean sevMatch = sevFilter.equals("All Severity") || alert.getSeverity().name().equals(sevFilter);
-            
-            boolean statusMatch = statusFilter.equals("All Status");
+            boolean sevMatch = "All Severity".equals(sevFilter) || alert.getSeverity().name().equals(sevFilter);
+
+            boolean statusMatch = "All Status".equals(statusFilter);
             if (!statusMatch) {
-                if (statusFilter.equals("Resolved")) statusMatch = alert.isResolved();
-                if (statusFilter.equals("Active")) statusMatch = !alert.isResolved();
+                if ("Resolved".equals(statusFilter)) statusMatch = alert.isResolved();
+                else if ("Active".equals(statusFilter)) statusMatch = !alert.isResolved();
             }
 
-            boolean searchMatch = searchFilter.isEmpty() || 
-                                  alert.getMessage().toLowerCase().contains(searchFilter) ||
-                                  formatType(alert.getAlertType()).toLowerCase().contains(searchFilter) ||
-                                  String.valueOf(alert.getPlotId()).contains(searchFilter);
+            boolean searchMatch = search.isEmpty()
+                    || alert.getMessage().toLowerCase().contains(search)
+                    || formatType(alert.getAlertType()).toLowerCase().contains(search)
+                    || alert.getSeverity().name().toLowerCase().contains(search)
+                    || String.valueOf(alert.getPlotId()).contains(search);
 
             return sevMatch && statusMatch && searchMatch;
         });
-        
-        lblPagination.setText("Showing 1 to " + filteredList.size() + " of " + masterList.size() + " alerts");
+
+        applyPagination();
     }
+
+    // ═══════════════ PAGINATION ═══════════════
+
+    private void applyPagination() {
+        int total = filteredList.size();
+        int maxPage = Math.max(0, (total - 1) / PAGE_SIZE);
+        if (currentPage > maxPage) currentPage = maxPage;
+
+        int from = currentPage * PAGE_SIZE;
+        int to = Math.min(from + PAGE_SIZE, total);
+
+        ObservableList<Alert> pageItems = FXCollections.observableArrayList(
+                filteredList.subList(from, to)
+        );
+        alertTable.setItems(pageItems);
+
+        lblPagination.setText(total > 0
+                ? "Showing " + (from + 1) + " to " + to + " of " + total + " alerts"
+                : "No alerts found");
+
+        buildPaginationButtons(maxPage);
+    }
+
+    private void buildPaginationButtons(int maxPage) {
+        paginationBox.getChildren().clear();
+
+        if (maxPage <= 0) return;
+
+        Button prev = new Button("<");
+        prev.getStyleClass().add("page-btn");
+        prev.setDisable(currentPage == 0);
+        prev.setOnAction(e -> { currentPage--; applyPagination(); });
+        paginationBox.getChildren().add(prev);
+
+        for (int i = 0; i <= maxPage; i++) {
+            final int page = i;
+            Button btn = new Button(String.valueOf(i + 1));
+            btn.getStyleClass().add("page-btn");
+            if (i == currentPage) btn.getStyleClass().add("page-btn-active");
+            btn.setOnAction(e -> { currentPage = page; applyPagination(); });
+            paginationBox.getChildren().add(btn);
+            if (paginationBox.getChildren().size() > 8) break;
+        }
+
+        Button next = new Button(">");
+        next.getStyleClass().add("page-btn");
+        next.setDisable(currentPage >= maxPage);
+        next.setOnAction(e -> { currentPage++; applyPagination(); });
+        paginationBox.getChildren().add(next);
+    }
+
+    // ═══════════════ TABLE COLUMNS ═══════════════
 
     private void setupColumns() {
         alertTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colSeverity.setResizable(false);
         colType.setResizable(false);
         colPlot.setResizable(false);
-        colMessage.setResizable(false);
+        // colMessage left resizable so it stretches to fill remaining width
         colTimestamp.setResizable(false);
         colStatus.setResizable(false);
         colAction.setResizable(false);
 
-        // ── Severity — colour-coded badge ──
         colSeverity.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getSeverity().name()));
         colSeverity.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String severity, boolean empty) {
                 super.updateItem(severity, empty);
-                if (empty || severity == null) {
-                    setGraphic(null);
-                } else {
+                if (empty || severity == null) { setGraphic(null); } else {
                     Label badge = new Label(severity);
                     badge.getStyleClass().addAll("badge", getBadgeClass(severity));
                     setGraphic(badge);
@@ -167,31 +230,24 @@ public class AlertController {
             }
         });
 
-        // ── Alert Type ──
         colType.setCellValueFactory(cell ->
                 new SimpleStringProperty(formatType(cell.getValue().getAlertType())));
 
-        // ── Plot ID ──
         colPlot.setCellValueFactory(new PropertyValueFactory<>("plotId"));
 
-        // ── Message ──
         colMessage.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getMessage()));
 
-        // ── Timestamp — formatted ──
         colTimestamp.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getTimestamp().format(TIME_FMT)));
 
-        // ── Status — Resolved / Active badge ──
         colStatus.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().isResolved() ? "Resolved" : "Active"));
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
-                if (empty || status == null) {
-                    setGraphic(null);
-                } else {
+                if (empty || status == null) { setGraphic(null); } else {
                     Label badge = new Label(status);
                     badge.getStyleClass().addAll("badge",
                             status.equals("Resolved") ? "badge-normal" : "badge-active");
@@ -200,7 +256,6 @@ public class AlertController {
             }
         });
 
-        // ── Action — Resolve button ──
         colAction.setCellFactory(col -> new TableCell<>() {
             private final Button resolveBtn = new Button("Resolve");
             {
@@ -218,9 +273,7 @@ public class AlertController {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
+                if (empty) { setGraphic(null); } else {
                     Alert alert = getTableView().getItems().get(getIndex());
                     if (alert.isResolved()) {
                         Label done = new Label("✓ Done");
@@ -241,24 +294,22 @@ public class AlertController {
             List<Alert> alerts = alertService.getAllAlerts();
             masterList = FXCollections.observableArrayList(alerts);
             filteredList = new FilteredList<>(masterList, p -> true);
-            alertTable.setItems(filteredList);
             updateSummaryCards();
-            updateFilter();
+            applyFilterAndPaginate();
         } catch (RuntimeException e) {
             masterList = FXCollections.observableArrayList();
             filteredList = new FilteredList<>(masterList, p -> true);
-            alertTable.setItems(filteredList);
+            alertTable.setItems(FXCollections.observableArrayList());
             alertTable.setPlaceholder(new Label("No database connection — alerts unavailable"));
             updateSummaryCards();
         }
     }
 
     private void updateSummaryCards() {
-        int total      = masterList.size();
         int unresolved = (int) masterList.stream().filter(a -> !a.isResolved()).count();
-        int critical   = (int) masterList.stream().filter(Alert::isCritical).count();
-        int warnings   = (int) masterList.stream().filter(a -> a.getSeverity().name().equals("WARNING")).count();
-        int resolved   = total - unresolved;
+        int resolved   = (int) masterList.stream().filter(Alert::isResolved).count();
+        int critical   = (int) masterList.stream().filter(a -> !a.isResolved() && a.isCritical()).count();
+        int warnings   = (int) masterList.stream().filter(a -> !a.isResolved() && a.getSeverity().name().equals("WARNING")).count();
 
         lblCritical.setText(String.valueOf(critical));
         lblWarnings.setText(String.valueOf(warnings));
@@ -266,14 +317,14 @@ public class AlertController {
         lblResolved.setText(String.valueOf(resolved));
     }
 
-    // ═══════════════ DETAIL PANE LOGIC ═══════════════
+    // ═══════════════ DETAIL PANE ═══════════════
 
     private void showAlertDetails(Alert alert) {
         currentSelectedAlert = alert;
         detailPane.setVisible(true);
         detailPane.setManaged(true);
 
-        // Header
+        // Header badges
         lblDetailSeverity.setText(alert.getSeverity().name());
         lblDetailSeverity.getStyleClass().removeAll("badge-high", "badge-low", "badge-info", "badge-normal");
         lblDetailSeverity.getStyleClass().add(getBadgeClass(alert.getSeverity().name()));
@@ -283,23 +334,32 @@ public class AlertController {
         lblDetailPlot.setText("Plot " + alert.getPlotId());
         lblDetailMessage.setText(alert.getMessage());
 
-        // Grid
-        lblGridSensorType.setText(getSensorType(alert.getAlertType()));
-        lblGridCurrentVal.setText("N/A"); // Ideally from alert payload
-        lblGridThreshold.setText("N/A");
+        // Details grid — extract actual value from message
+        String alertType = alert.getAlertType() != null ? alert.getAlertType() : "";
+        lblGridSensorType.setText(getSensorType(alertType));
+        lblGridCurrentVal.setText(extractValueFromMessage(alert.getMessage()));
+        lblGridThreshold.setText(getThresholdForType(alertType));
         lblGridTriggered.setText(alert.getTimestamp().format(TIME_FMT));
         lblGridSensorId.setText("SENSOR-P" + alert.getPlotId());
 
-        // Setup Chart with dummy historical data
-        populateDummyChart();
+        // Detail icon
+        if (alertType.contains("TEMP")) detailIcon.setIconLiteral("fth-thermometer");
+        else if (alertType.contains("HUMIDITY")) detailIcon.setIconLiteral("fth-droplet");
+        else if (alertType.contains("SOIL")) detailIcon.setIconLiteral("fth-droplet");
+        else detailIcon.setIconLiteral("fth-alert-triangle");
+
+        // Chart — real sensor data
+        populateRealChart(alert.getPlotId(), alertType);
+
+        // Suggested action
+        lblSuggestedAction.setText(getSuggestedAction(alertType));
+
+        // Related task
+        loadRelatedTask(alert.getAlertId());
 
         // Buttons
         btnDetailResolve.setDisable(alert.isResolved());
-        if(alert.isResolved()) {
-            btnDetailResolve.setText("Resolved");
-        } else {
-            btnDetailResolve.setText("Mark as Resolved");
-        }
+        btnDetailResolve.setText(alert.isResolved() ? "Resolved" : "Mark as Resolved");
     }
 
     @FXML
@@ -314,25 +374,79 @@ public class AlertController {
     private void onDetailResolve() {
         if (currentSelectedAlert != null && !currentSelectedAlert.isResolved()) {
             onResolveAlert(currentSelectedAlert);
-            showAlertDetails(currentSelectedAlert); // refresh details pane
+            showAlertDetails(currentSelectedAlert);
         }
     }
 
-    private void populateDummyChart() {
+    // ═══════════════ REAL CHART DATA ═══════════════
+
+    private void populateRealChart(int plotId, String alertType) {
         detailChart.getData().clear();
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName("Sensor Reading");
-        
-        Random r = new Random();
-        int base = 35;
-        for (int i = 5; i > 0; i--) {
-            series.getData().add(new XYChart.Data<>("-" + i + "m", base + r.nextInt(10)));
+
+        try {
+            SensorDAO sensorDAO = new SensorDAO();
+            List<SensorReading> readings = sensorDAO.getRecentForDevice(plotId, 6);
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
+
+            for (int i = readings.size() - 1; i >= 0; i--) {
+                SensorReading r = readings.get(i);
+                String label = r.getTimestamp() != null ? r.getTimestamp().format(fmt) : "-" + i + "m";
+                float value;
+                if (alertType.contains("TEMP")) value = r.getTemperature();
+                else if (alertType.contains("HUMIDITY")) value = r.getHumidity();
+                else if (alertType.contains("SOIL")) value = r.getSoilMoisture();
+                else value = r.getTemperature();
+
+                if (!Float.isNaN(value)) {
+                    series.getData().add(new XYChart.Data<>(label, value));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to load chart data: " + e.getMessage());
         }
-        series.getData().add(new XYChart.Data<>("Now", base + r.nextInt(10)));
+
+        if (series.getData().isEmpty()) {
+            series.getData().add(new XYChart.Data<>("No data", 0));
+        }
         detailChart.getData().add(series);
     }
 
-    // ═══════════════ RESOLVE ACTION ═══════════════
+    // ═══════════════ RELATED TASK ═══════════════
+
+    private void loadRelatedTask(int alertId) {
+        try {
+            TaskDAO taskDAO = new TaskDAO();
+            List<Task> all = taskDAO.getAll();
+            Task related = null;
+            for (Task t : all) {
+                if (t.getAlertId() != null && t.getAlertId() == alertId) {
+                    related = t;
+                    break;
+                }
+            }
+            if (related != null) {
+                lblRelatedTaskId.setText("Task #" + related.getTaskId());
+                lblRelatedTaskTitle.setText(related.getDescription());
+                lblRelatedTaskStatus.setText(related.getStatus().name().replace("_", " "));
+                relatedTaskBox.setVisible(true);
+                relatedTaskBox.setManaged(true);
+            } else {
+                lblRelatedTaskId.setText("No related task");
+                lblRelatedTaskTitle.setText("—");
+                lblRelatedTaskStatus.setText("");
+                relatedTaskBox.setVisible(true);
+                relatedTaskBox.setManaged(true);
+            }
+        } catch (SQLException e) {
+            lblRelatedTaskId.setText("No related task");
+            lblRelatedTaskTitle.setText("—");
+            lblRelatedTaskStatus.setText("");
+        }
+    }
+
+    // ═══════════════ ACTIONS ═══════════════
 
     private void onResolveAlert(Alert alert) {
         try {
@@ -340,13 +454,118 @@ public class AlertController {
             alert.resolve();
             alertTable.refresh();
             updateSummaryCards();
-            updateFilter();
+            applyFilterAndPaginate();
+            if (currentSelectedAlert != null && currentSelectedAlert.getAlertId() == alert.getAlertId()) {
+                showAlertDetails(alert);
+            }
         } catch (RuntimeException e) {
             System.err.println("Failed to resolve alert: " + e.getMessage());
         }
     }
 
+    @FXML
+    private void onMarkAllRead() {
+        for (Alert a : masterList) {
+            if (!a.isResolved()) {
+                try {
+                    alertService.resolveAlert(a.getAlertId());
+                    a.resolve();
+                } catch (RuntimeException e) {
+                    System.err.println("Failed to resolve alert " + a.getAlertId() + ": " + e.getMessage());
+                }
+            }
+        }
+        alertTable.refresh();
+        updateSummaryCards();
+        applyFilterAndPaginate();
+        if (currentSelectedAlert != null) showAlertDetails(currentSelectedAlert);
+    }
+
+    @FXML
+    private void onCreateTask() {
+        if (currentSelectedAlert == null) return;
+        Alert alert = currentSelectedAlert;
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Create Task from Alert");
+        dialog.setHeaderText("Create a task for: " + formatType(alert.getAlertType()));
+
+        DialogPane dp = dialog.getDialogPane();
+        dp.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(10));
+
+        TextField descField = new TextField("Resolve: " + alert.getMessage());
+        descField.setPrefWidth(350);
+        DatePicker duePicker = new DatePicker(LocalDate.now().plusDays(1));
+
+        grid.add(new Label("Description:"), 0, 0);
+        grid.add(descField, 1, 0);
+        grid.add(new Label("Due Date:"), 0, 1);
+        grid.add(duePicker, 1, 1);
+        grid.add(new Label("Plot:"), 0, 2);
+        grid.add(new Label(String.valueOf(alert.getPlotId())), 1, 2);
+        dp.setContent(grid);
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK && !descField.getText().trim().isEmpty()) {
+                try {
+                    TaskDAO taskDAO = new TaskDAO();
+                    Task task = new Task(
+                            descField.getText().trim(),
+                            duePicker.getValue(),
+                            alert.getPlotId(),
+                            alert.getAlertId() > 0 ? alert.getAlertId() : null,
+                            0,
+                            alert.getAlertType()
+                    );
+                    taskDAO.save(task);
+                    loadRelatedTask(alert.getAlertId());
+                } catch (SQLException e) {
+                    System.err.println("Failed to create task: " + e.getMessage());
+                }
+            }
+        });
+    }
+
     // ═══════════════ UTILITY METHODS ═══════════════
+
+    private String extractValueFromMessage(String message) {
+        if (message == null) return "N/A";
+        Matcher m = Pattern.compile("([\\d.]+)\\s*[°%]").matcher(message);
+        if (m.find()) {
+            String val = m.group(1);
+            if (message.contains("°C") || message.toLowerCase().contains("temp")) return val + " °C";
+            if (message.contains("%")) return val + " %";
+            return val;
+        }
+        return "N/A";
+    }
+
+    private String getThresholdForType(String alertType) {
+        if (alertType == null) return "N/A";
+        if (alertType.contains("HIGH_TEMP")) return "> " + ThresholdConfig.TEMP_CRITICAL_HIGH + " °C";
+        if (alertType.contains("LOW_TEMP")) return "< " + ThresholdConfig.TEMP_CRITICAL_LOW + " °C";
+        if (alertType.contains("HIGH_HUMIDITY")) return "> " + ThresholdConfig.HUM_WARNING_HIGH + " %";
+        if (alertType.contains("LOW_HUMIDITY")) return "< " + ThresholdConfig.HUM_WARNING_LOW + " %";
+        if (alertType.contains("DRY_SOIL")) return "< " + ThresholdConfig.SOIL_WARNING_DRY + " %";
+        if (alertType.contains("WET_SOIL")) return "> " + ThresholdConfig.SOIL_WARNING_WET + " %";
+        return "N/A";
+    }
+
+    private String getSuggestedAction(String alertType) {
+        if (alertType == null) return "Monitor the situation and take action if needed.";
+        if (alertType.contains("HIGH_TEMP")) return "Activate cooling/ventilation systems. Increase irrigation to reduce soil temperature.";
+        if (alertType.contains("LOW_TEMP")) return "Enable greenhouse heating. Cover crops with protective frost blankets.";
+        if (alertType.contains("HIGH_HUMIDITY")) return "Improve ventilation and air circulation. Reduce irrigation frequency.";
+        if (alertType.contains("LOW_HUMIDITY")) return "Increase misting or irrigation. Check for leaks in irrigation system.";
+        if (alertType.contains("DRY_SOIL")) return "Start irrigation immediately. Check for blocked drip lines or pump failures.";
+        if (alertType.contains("WET_SOIL")) return "Reduce watering schedule. Ensure proper drainage. Check for overwatering.";
+        return "Monitor the situation and take corrective action as needed.";
+    }
 
     private String getBadgeClass(String severity) {
         return switch (severity) {
@@ -370,11 +589,11 @@ public class AlertController {
         }
         return sb.toString().trim();
     }
-    
+
     private String getSensorType(String alertType) {
         if (alertType == null) return "Unknown Sensor";
         if (alertType.contains("TEMP")) return "Temperature Sensor";
-        if (alertType.contains("MOISTURE")) return "Moisture Sensor";
+        if (alertType.contains("SOIL") || alertType.contains("MOISTURE")) return "Soil Moisture Sensor";
         if (alertType.contains("HUMIDITY")) return "Humidity Sensor";
         return "Environmental Sensor";
     }
