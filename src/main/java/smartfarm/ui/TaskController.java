@@ -167,6 +167,11 @@ public class TaskController {
                 })
                 .collect(Collectors.toList());
         taskTable.setItems(FXCollections.observableArrayList(filtered));
+        if (filtered.isEmpty() && !search.isEmpty()) {
+            taskTable.setPlaceholder(new Label("No tasks matching \"" + search + "\""));
+        } else if (filtered.isEmpty()) {
+            taskTable.setPlaceholder(new Label("No tasks found"));
+        }
     }
 
     private void updateSummaryCards() {
@@ -278,20 +283,22 @@ public class TaskController {
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
+        Button saveBtnNode = (Button) dialog.getDialogPane().lookupButton(saveBtn);
+        saveBtnNode.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            if (descField.getText().trim().isEmpty()) {
+                showAlert("Validation", "Description is required"); event.consume(); return;
+            }
+            try {
+                Integer.parseInt(plotField.getText().trim());
+            } catch (NumberFormatException e) {
+                showAlert("Validation", "Invalid Plot ID"); event.consume();
+            }
+        });
+
         dialog.setResultConverter(btn -> {
             if (btn == saveBtn) {
                 String desc = descField.getText().trim();
-                if (desc.isEmpty()) {
-                    showAlert("Validation", "Description is required");
-                    return null;
-                }
-                int plotId;
-                try {
-                    plotId = Integer.parseInt(plotField.getText().trim());
-                } catch (NumberFormatException e) {
-                    showAlert("Validation", "Invalid Plot ID");
-                    return null;
-                }
+                int plotId = Integer.parseInt(plotField.getText().trim());
                 Task task = new Task(desc, duePicker.getValue(), plotId, null, 1, null);
                 String selectedWorker = workerCombo.getValue();
                 if (selectedWorker != null && workerNameToId.containsKey(selectedWorker)) {

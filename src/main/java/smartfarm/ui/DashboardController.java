@@ -350,7 +350,7 @@ public class DashboardController {
 
         ComboBox<Crop.GrowthStage> stageCombo = new ComboBox<>();
         stageCombo.getItems().addAll(Crop.GrowthStage.values());
-        stageCombo.setValue(Crop.GrowthStage.SEED);
+        stageCombo.setValue(Crop.GrowthStage.PLANTED);
         stageCombo.setMaxWidth(Double.MAX_VALUE);
 
         VBox form = new VBox(10,
@@ -363,12 +363,21 @@ public class DashboardController {
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
+        Button saveBtnNode = (Button) dialog.getDialogPane().lookupButton(saveBtn);
+        saveBtnNode.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            if (nameField.getText().trim().isEmpty()) {
+                showQuickAlert("Crop name is required"); event.consume(); return;
+            }
+            String selPlot = plotCombo.getValue();
+            if (selPlot == null || !plotNameToId.containsKey(selPlot)) {
+                showQuickAlert("Please select a plot"); event.consume();
+            }
+        });
+
         dialog.setResultConverter(btn -> {
             if (btn == saveBtn) {
                 String name = nameField.getText().trim();
-                if (name.isEmpty()) { showQuickAlert("Crop name is required"); return null; }
                 String selPlot = plotCombo.getValue();
-                if (selPlot == null || !plotNameToId.containsKey(selPlot)) { showQuickAlert("Please select a plot"); return null; }
                 double yield = 0;
                 try { yield = Double.parseDouble(yieldField.getText().trim()); } catch (NumberFormatException ignored) {}
                 Crop crop = new Crop(name, plantedPicker.getValue(), harvestPicker.getValue(), plotNameToId.get(selPlot), yield);
@@ -436,12 +445,21 @@ public class DashboardController {
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
+        Button saveBtnNode2 = (Button) dialog.getDialogPane().lookupButton(saveBtn);
+        saveBtnNode2.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            if (descField.getText().trim().isEmpty()) {
+                showQuickAlert("Description is required"); event.consume(); return;
+            }
+            String selPlot = plotCombo.getValue();
+            if (selPlot == null || !plotNameToId.containsKey(selPlot)) {
+                showQuickAlert("Please select a plot"); event.consume();
+            }
+        });
+
         dialog.setResultConverter(btn -> {
             if (btn == saveBtn) {
                 String desc = descField.getText().trim();
-                if (desc.isEmpty()) { showQuickAlert("Description is required"); return null; }
                 String selPlot = plotCombo.getValue();
-                if (selPlot == null || !plotNameToId.containsKey(selPlot)) { showQuickAlert("Please select a plot"); return null; }
                 int mgrId = (currentUser != null) ? currentUser.getId() : 1;
                 Task task = new Task(desc, duePicker.getValue(), plotNameToId.get(selPlot), null, mgrId, null);
                 String selectedWorker = workerCombo.getValue();
@@ -503,22 +521,26 @@ public class DashboardController {
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
+        Button saveBtnNode3 = (Button) dialog.getDialogPane().lookupButton(saveBtn);
+        saveBtnNode3.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            String selected = cropCombo.getValue();
+            if (selected == null || !cropNameToId.containsKey(selected)) {
+                showQuickAlert("Please select a crop"); event.consume(); return;
+            }
+            try {
+                double qty = Double.parseDouble(qtyField.getText().trim());
+                if (qty <= 0) { showQuickAlert("Quantity must be > 0"); event.consume(); }
+            } catch (NumberFormatException e) {
+                showQuickAlert("Invalid quantity"); event.consume();
+            }
+        });
+
         dialog.setResultConverter(btn -> {
             if (btn == saveBtn) {
                 String selected = cropCombo.getValue();
-                if (selected == null || !cropNameToId.containsKey(selected)) {
-                    showQuickAlert("Please select a crop");
-                    return null;
-                }
-                try {
-                    double qty = Double.parseDouble(qtyField.getText().trim());
-                    if (qty <= 0) { showQuickAlert("Quantity must be > 0"); return null; }
-                    return new HarvestRecord(datePicker.getValue(), qty,
-                            gradeCombo.getValue(), cropNameToId.get(selected));
-                } catch (NumberFormatException e) {
-                    showQuickAlert("Invalid quantity");
-                    return null;
-                }
+                double qty = Double.parseDouble(qtyField.getText().trim());
+                return new HarvestRecord(datePicker.getValue(), qty,
+                        gradeCombo.getValue(), cropNameToId.get(selected));
             }
             return null;
         });

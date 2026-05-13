@@ -143,6 +143,11 @@ public class HarvestController {
                 .filter(r -> "All".equals(quality) || r.getGrade().name().equals(quality))
                 .collect(Collectors.toList());
         harvestTable.setItems(FXCollections.observableArrayList(filtered));
+        if (filtered.isEmpty() && !search.isEmpty()) {
+            harvestTable.setPlaceholder(new Label("No harvest records matching \"" + search + "\""));
+        } else if (filtered.isEmpty()) {
+            harvestTable.setPlaceholder(new Label("No harvest records found"));
+        }
     }
 
     private void updateSummaryCards() {
@@ -247,25 +252,26 @@ public class HarvestController {
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
+        Button saveBtnNode = (Button) dialog.getDialogPane().lookupButton(saveBtn);
+        saveBtnNode.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            String selected = cropCombo.getValue();
+            if (selected == null || !cropNameToId.containsKey(selected)) {
+                showAlert("Validation", "Please select a crop"); event.consume(); return;
+            }
+            try {
+                double qty = Double.parseDouble(qtyField.getText().trim());
+                if (qty <= 0) { showAlert("Validation", "Quantity must be greater than zero"); event.consume(); }
+            } catch (NumberFormatException e) {
+                showAlert("Validation", "Invalid quantity"); event.consume();
+            }
+        });
+
         dialog.setResultConverter(btn -> {
             if (btn == saveBtn) {
                 String selected = cropCombo.getValue();
-                if (selected == null || !cropNameToId.containsKey(selected)) {
-                    showAlert("Validation", "Please select a crop");
-                    return null;
-                }
-                try {
-                    double qty = Double.parseDouble(qtyField.getText().trim());
-                    if (qty <= 0) {
-                        showAlert("Validation", "Quantity must be greater than zero");
-                        return null;
-                    }
-                    return new HarvestRecord(datePicker.getValue(), qty,
-                            gradeCombo.getValue(), cropNameToId.get(selected));
-                } catch (NumberFormatException e) {
-                    showAlert("Validation", "Invalid quantity");
-                    return null;
-                }
+                double qty = Double.parseDouble(qtyField.getText().trim());
+                return new HarvestRecord(datePicker.getValue(), qty,
+                        gradeCombo.getValue(), cropNameToId.get(selected));
             }
             return null;
         });

@@ -81,7 +81,7 @@ CREATE TABLE crops (
     crop_name      VARCHAR(100) NOT NULL,
     planting_date  DATE,
     harvest_date   DATE,
-    growth_stage   ENUM('SEED','SEEDLING','VEGETATIVE','FLOWERING','FRUITING','HARVESTED') NOT NULL DEFAULT 'SEED',
+    growth_stage   ENUM('PLANTED','GROWING','READY','HARVESTED') NOT NULL DEFAULT 'PLANTED',
     plot_id        INT          NOT NULL,
     expected_yield DOUBLE       NOT NULL DEFAULT 0,
     created_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,

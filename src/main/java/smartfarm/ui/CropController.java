@@ -5,7 +5,11 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -26,6 +30,10 @@ import smartfarm.service.LiveSensorData;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -43,7 +51,8 @@ public class CropController {
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbPlot, cmbStage;
     @FXML private TableView<Crop> cropTable;
-    @FXML private TableColumn<Crop, String> colCropName, colPlot, colVariety, colPlantedDate, colHarvestDate, colStatus, colActions;
+    @FXML private TableColumn<Crop, String> colCropName, colPlot, colPlantedDate, colHarvestDate, colStatus, colActions;
+    @FXML private HBox cropPaginationBox;
     @FXML private Button btnAddCrop, btnExport;
 
     // ── Detail View ──
@@ -57,6 +66,9 @@ public class CropController {
     @FXML private VBox overviewPane, timelinePane, historyPane, photosPane, notesPane;
     @FXML private VBox timelineEntries, careEntries;
     @FXML private TextArea txtNotes;
+    @FXML private FlowPane photoGrid;
+    @FXML private Label lblNoPhotos;
+    @FXML private Button btnUploadPhoto;
 
     // Detail labels
     @FXML private Label lblDetailName, lblDetailPlot, lblDetailStatus, lblDetailPlanted;
@@ -75,6 +87,12 @@ public class CropController {
     @FXML private Label lblElapsedDays, lblRemainingDays, lblTotalLifecycle;
     @FXML private ProgressBar lifecycleBar;
 
+    // Pie Charts (list view)
+    @FXML private PieChart stagePieChart;
+    @FXML private PieChart statusPieChart;
+    @FXML private VBox stageLegendBox;
+    @FXML private VBox statusLegendBox;
+
     // Environmental Conditions
     @FXML private Label lblConditionsSource;
     @FXML private Label lblEnvTemp, lblEnvTempStatus;
@@ -87,15 +105,19 @@ public class CropController {
     private final Map<Integer, Plot> plotCache = new HashMap<>();
     private Crop selectedCrop;
 
+    private static final int PAGE_SIZE = 15;
+    private int currentPage = 0;
+
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("MMM d, yyyy");
 
     @FXML
     public void initialize() {
+        loadPlotCache();
         setupTableColumns();
         loadCrops();
         setupFilters();
         updateSummaryCards();
-        loadPlotCache();
+        populatePieCharts();
     }
 
     private void loadPlotCache() {
@@ -108,9 +130,8 @@ public class CropController {
 
     private void setupTableColumns() {
         cropTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colCropName.setResizable(false);
+        // colCropName left resizable so it stretches to fill remaining width
         colPlot.setResizable(false);
-        colVariety.setResizable(false);
         colPlantedDate.setResizable(false);
         colHarvestDate.setResizable(false);
         colStatus.setResizable(false);
@@ -120,8 +141,6 @@ public class CropController {
                 new javafx.beans.property.SimpleStringProperty(data.getValue().getCropName()));
         colPlot.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(getPlotLabel(data.getValue().getPlotId())));
-        colVariety.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty("—"));
         colPlantedDate.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getPlantingDate() != null ? data.getValue().getPlantingDate().format(DATE_FMT) : "—"));
@@ -207,12 +226,14 @@ public class CropController {
 
     @FXML
     private void onBackToCrops() {
+        if (selectedCrop != null) saveNotes(selectedCrop);
         detailView.setVisible(false);
         detailView.setManaged(false);
         listView.setVisible(true);
         listView.setManaged(true);
         loadCrops();
         updateSummaryCards();
+        populatePieCharts();
     }
 
     // ═══════════ DETAIL POPULATION ═══════════
@@ -306,6 +327,12 @@ public class CropController {
         // ── Care History tab content ──
         buildCareHistoryTab(crop);
 
+        // ── Photos tab content ──
+        loadPhotos(crop);
+
+        // ── Notes tab content ──
+        loadNotes(crop);
+
         // ── Advance stage button visibility ──
         btnAdvanceStage.setVisible(crop.getGrowthStage() != Crop.GrowthStage.HARVESTED);
         btnAdvanceStage.setManaged(crop.getGrowthStage() != Crop.GrowthStage.HARVESTED);
@@ -342,12 +369,10 @@ public class CropController {
 
     private Crop.GrowthStage getNextStage(Crop.GrowthStage current) {
         return switch (current) {
-            case SEED       -> Crop.GrowthStage.SEEDLING;
-            case SEEDLING   -> Crop.GrowthStage.VEGETATIVE;
-            case VEGETATIVE -> Crop.GrowthStage.FLOWERING;
-            case FLOWERING  -> Crop.GrowthStage.FRUITING;
-            case FRUITING   -> Crop.GrowthStage.HARVESTED;
-            case HARVESTED  -> null;
+            case PLANTED   -> Crop.GrowthStage.GROWING;
+            case GROWING   -> Crop.GrowthStage.READY;
+            case READY     -> Crop.GrowthStage.HARVESTED;
+            case HARVESTED -> null;
         };
     }
 
@@ -512,6 +537,90 @@ public class CropController {
         }
     }
 
+    // ═══════════ PIE CHARTS ═══════════
+
+    private void populatePieCharts() {
+        int total = allCrops.size();
+
+        // ── Growth Stage Distribution ──
+        stagePieChart.getData().clear();
+        stageLegendBox.getChildren().clear();
+
+        String[] stageColors = {"#4ade80", "#22c55e", "#f59e0b", "#6366f1"};
+        Crop.GrowthStage[] stages = Crop.GrowthStage.values();
+
+        if (total == 0) {
+            stagePieChart.getData().add(new PieChart.Data("No Crops", 1));
+            stagePieChart.getData().get(0).getNode().setStyle("-fx-pie-color: #e5e7eb;");
+            for (int i = 0; i < stages.length; i++) {
+                stageLegendBox.getChildren().add(
+                        buildLegendRow(stageColors[i % stageColors.length], formatStageName(stages[i]), 0, 0));
+            }
+        } else {
+            Map<String, Long> stageCounts = allCrops.stream()
+                    .collect(Collectors.groupingBy(
+                            c -> formatStageName(c.getGrowthStage()), Collectors.counting()));
+            int colorIdx = 0;
+            for (Crop.GrowthStage stage : stages) {
+                String name = formatStageName(stage);
+                long count = stageCounts.getOrDefault(name, 0L);
+                String color = stageColors[colorIdx % stageColors.length];
+                if (count > 0) {
+                    PieChart.Data slice = new PieChart.Data(name, count);
+                    stagePieChart.getData().add(slice);
+                    slice.getNode().setStyle("-fx-pie-color: " + color + ";");
+                }
+                int pct = total > 0 ? (int) Math.round(count * 100.0 / total) : 0;
+                stageLegendBox.getChildren().add(buildLegendRow(color, name, count, pct));
+                colorIdx++;
+            }
+        }
+
+        // ── Crops by Plot ──
+        statusPieChart.getData().clear();
+        statusLegendBox.getChildren().clear();
+
+        String[] plotColors = {"#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#14b8a6", "#eab308", "#6366f1", "#10b981"};
+
+        if (total == 0) {
+            statusPieChart.getData().add(new PieChart.Data("No Crops", 1));
+            statusPieChart.getData().get(0).getNode().setStyle("-fx-pie-color: #e5e7eb;");
+            statusLegendBox.getChildren().add(buildLegendRow("#e5e7eb", "No plots", 0, 0));
+        } else {
+            Map<Integer, Long> plotCounts = allCrops.stream()
+                    .collect(Collectors.groupingBy(Crop::getPlotId, Collectors.counting()));
+            int colorIdx = 0;
+            for (Map.Entry<Integer, Long> entry : plotCounts.entrySet()) {
+                String plotName = getPlotLabel(entry.getKey());
+                long count = entry.getValue();
+                int pct = (int) Math.round(count * 100.0 / total);
+                String color = plotColors[colorIdx % plotColors.length];
+
+                PieChart.Data slice = new PieChart.Data(plotName, count);
+                statusPieChart.getData().add(slice);
+                slice.getNode().setStyle("-fx-pie-color: " + color + ";");
+
+                statusLegendBox.getChildren().add(buildLegendRow(color, plotName, count, pct));
+                colorIdx++;
+            }
+        }
+    }
+
+    private HBox buildLegendRow(String color, String label, long count, int pct) {
+        Circle dot = new Circle(5);
+        dot.setFill(Color.web(color));
+        Label nameLbl = new Label(label);
+        nameLbl.setStyle("-fx-font-size:12;-fx-text-fill:#374151;");
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Label valueLbl = new Label(count + " (" + pct + "%)");
+        valueLbl.setStyle("-fx-font-size:12;-fx-font-weight:bold;-fx-text-fill:#111827;");
+        HBox row = new HBox(8, dot, nameLbl, spacer, valueLbl);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setMinWidth(140);
+        return row;
+    }
+
     // ═══════════ TIMELINE TAB CONTENT ═══════════
 
     private void buildTimelineTab(Crop crop, long daysSincePlanted, long totalDays) {
@@ -646,6 +755,112 @@ public class CropController {
         }
     }
 
+    // ═══════════ PHOTOS TAB ═══════════
+
+    private Path getPhotoDir(Crop crop) {
+        Path dir = Paths.get(System.getProperty("user.home"), ".agrilliant", "crop_photos", String.valueOf(crop.getCropId()));
+        try { Files.createDirectories(dir); } catch (IOException ignored) {}
+        return dir;
+    }
+
+    private void loadPhotos(Crop crop) {
+        photoGrid.getChildren().clear();
+        Path dir = getPhotoDir(crop);
+        File[] files = dir.toFile().listFiles((d, name) ->
+                name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".gif") || name.endsWith(".bmp"));
+
+        if (files == null || files.length == 0) {
+            lblNoPhotos.setVisible(true);
+            lblNoPhotos.setManaged(true);
+            return;
+        }
+        lblNoPhotos.setVisible(false);
+        lblNoPhotos.setManaged(false);
+
+        for (File f : files) {
+            Image img = new Image(f.toURI().toString(), 140, 140, true, true);
+            ImageView iv = new ImageView(img);
+            iv.setFitWidth(140);
+            iv.setFitHeight(140);
+            iv.setPreserveRatio(true);
+            iv.setStyle("-fx-cursor:hand;");
+
+            VBox card = new VBox(4);
+            card.setAlignment(Pos.CENTER);
+            card.setStyle("-fx-background-color:#f9fafb;-fx-border-color:#e5e7eb;-fx-border-radius:8;-fx-background-radius:8;-fx-padding:6;");
+            Label nameLabel = new Label(f.getName());
+            nameLabel.setStyle("-fx-font-size:10;-fx-text-fill:#6b7280;");
+            nameLabel.setMaxWidth(140);
+
+            Button delBtn = new Button("Remove");
+            delBtn.setStyle("-fx-font-size:10;-fx-text-fill:#dc2626;-fx-background-color:transparent;-fx-cursor:hand;-fx-underline:true;");
+            delBtn.setOnAction(e -> {
+                f.delete();
+                loadPhotos(crop);
+            });
+
+            card.getChildren().addAll(iv, nameLabel, delBtn);
+            photoGrid.getChildren().add(card);
+        }
+    }
+
+    @FXML
+    private void onUploadPhoto() {
+        if (selectedCrop == null) return;
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Upload Crop Photo");
+        chooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"));
+        List<File> files = chooser.showOpenMultipleDialog(btnUploadPhoto.getScene().getWindow());
+        if (files == null || files.isEmpty()) return;
+
+        Path dir = getPhotoDir(selectedCrop);
+        for (File src : files) {
+            try {
+                Path dest = dir.resolve(src.getName());
+                int counter = 1;
+                while (Files.exists(dest)) {
+                    String name = src.getName();
+                    int dot = name.lastIndexOf('.');
+                    dest = dir.resolve(name.substring(0, dot) + "_" + counter + name.substring(dot));
+                    counter++;
+                }
+                Files.copy(src.toPath(), dest, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                showAlert("Error", "Failed to copy " + src.getName() + ": " + e.getMessage());
+            }
+        }
+        loadPhotos(selectedCrop);
+    }
+
+    // ═══════════ NOTES TAB ═══════════
+
+    private Path getNotesFile(Crop crop) {
+        Path dir = Paths.get(System.getProperty("user.home"), ".agrilliant", "crop_notes");
+        try { Files.createDirectories(dir); } catch (IOException ignored) {}
+        return dir.resolve(crop.getCropId() + ".txt");
+    }
+
+    private void loadNotes(Crop crop) {
+        Path file = getNotesFile(crop);
+        if (Files.exists(file)) {
+            try {
+                txtNotes.setText(Files.readString(file));
+            } catch (IOException e) {
+                txtNotes.setText("");
+            }
+        } else {
+            txtNotes.setText("");
+        }
+    }
+
+    private void saveNotes(Crop crop) {
+        Path file = getNotesFile(crop);
+        try {
+            Files.writeString(file, txtNotes.getText() != null ? txtNotes.getText() : "");
+        } catch (IOException ignored) {}
+    }
+
     // ═══════════ FILTERS & DATA ═══════════
 
     private void loadCrops() {
@@ -658,10 +873,7 @@ public class CropController {
     }
 
     private void setupFilters() {
-        cmbPlot.getItems().add("All Plots");
-        allCrops.stream().map(c -> getPlotLabel(c.getPlotId())).distinct().sorted()
-                .forEach(p -> cmbPlot.getItems().add(p));
-        cmbPlot.setValue("All Plots");
+        refreshPlotFilter();
         cmbPlot.setOnAction(e -> applyFilters());
 
         cmbStage.getItems().addAll("All Stages", "Growing", "Ready", "At Risk", "Harvested");
@@ -671,22 +883,77 @@ public class CropController {
         txtSearch.textProperty().addListener((obs, old, val) -> applyFilters());
     }
 
+    private void refreshPlotFilter() {
+        cmbPlot.getItems().clear();
+        cmbPlot.getItems().add("All Plots");
+        allCrops.stream().map(c -> getPlotLabel(c.getPlotId())).distinct().sorted()
+                .forEach(p -> cmbPlot.getItems().add(p));
+        cmbPlot.setValue("All Plots");
+    }
+
     private void applyFilters() {
+        currentPage = 0;
+        applyFilterAndPaginate();
+    }
+
+    private void applyFilterAndPaginate() {
         String search = txtSearch.getText() != null ? txtSearch.getText().toLowerCase().trim() : "";
         String plot = cmbPlot.getValue();
         String stage = cmbStage.getValue();
 
         List<Crop> filtered = allCrops.stream()
                 .filter(c -> search.isEmpty() || c.getCropName().toLowerCase().contains(search))
-                .filter(c -> "All Plots".equals(plot) || getPlotLabel(c.getPlotId()).equals(plot))
+                .filter(c -> plot == null || "All Plots".equals(plot) || getPlotLabel(c.getPlotId()).equals(plot))
                 .filter(c -> {
-                    if ("All Stages".equals(stage)) return true;
+                    if (stage == null || "All Stages".equals(stage)) return true;
                     return getStatusLabel(c).equals(stage);
                 })
                 .collect(Collectors.toList());
 
-        cropTable.setItems(FXCollections.observableArrayList(filtered));
-        lblPagination.setText("Showing 1 to " + filtered.size() + " of " + allCrops.size() + " crops");
+        int total = filtered.size();
+        int maxPage = Math.max(0, (total - 1) / PAGE_SIZE);
+        if (currentPage > maxPage) currentPage = maxPage;
+        int from = currentPage * PAGE_SIZE;
+        int to = Math.min(from + PAGE_SIZE, total);
+
+        cropTable.setItems(FXCollections.observableArrayList(filtered.subList(from, to)));
+        if (total == 0 && !search.isEmpty()) {
+            cropTable.setPlaceholder(new Label("No crops matching \"" + search + "\""));
+        } else if (total == 0) {
+            cropTable.setPlaceholder(new Label("No crops found"));
+        }
+        lblPagination.setText(total > 0
+                ? "Showing " + (from + 1) + " to " + to + " of " + total + " crops"
+                : "No crops found");
+
+        buildPaginationButtons(maxPage);
+    }
+
+    private void buildPaginationButtons(int maxPage) {
+        cropPaginationBox.getChildren().clear();
+        if (maxPage <= 0) return;
+
+        Button prev = new Button("<");
+        prev.getStyleClass().add("page-btn");
+        prev.setDisable(currentPage == 0);
+        prev.setOnAction(e -> { currentPage--; applyFilterAndPaginate(); });
+        cropPaginationBox.getChildren().add(prev);
+
+        for (int i = 0; i <= maxPage; i++) {
+            final int page = i;
+            Button btn = new Button(String.valueOf(i + 1));
+            btn.getStyleClass().add("page-btn");
+            if (i == currentPage) btn.getStyleClass().add("page-btn-active");
+            btn.setOnAction(e -> { currentPage = page; applyFilterAndPaginate(); });
+            cropPaginationBox.getChildren().add(btn);
+            if (cropPaginationBox.getChildren().size() > 8) break;
+        }
+
+        Button next = new Button(">");
+        next.getStyleClass().add("page-btn");
+        next.setDisable(currentPage >= maxPage);
+        next.setOnAction(e -> { currentPage++; applyFilterAndPaginate(); });
+        cropPaginationBox.getChildren().add(next);
     }
 
     private String getPlotLabel(int plotId) {
@@ -696,7 +963,7 @@ public class CropController {
 
     private String getStatusLabel(Crop c) {
         if (c.getGrowthStage() == Crop.GrowthStage.HARVESTED) return "Harvested";
-        if (c.getGrowthStage() == Crop.GrowthStage.FRUITING) return "Ready";
+        if (c.getGrowthStage() == Crop.GrowthStage.READY) return "Ready";
         if (c.isOverdue()) return "At Risk";
         return "Growing";
     }
@@ -723,7 +990,8 @@ public class CropController {
                 cropDAO.save(crop);
                 loadCrops();
                 updateSummaryCards();
-                setupFilters();
+                populatePieCharts();
+                refreshPlotFilter();
             } catch (SQLException e) {
                 showAlert("Error", "Failed to save: " + e.getMessage());
             }
@@ -739,6 +1007,8 @@ public class CropController {
                 cropDAO.update(updated);
                 loadCrops();
                 updateSummaryCards();
+                populatePieCharts();
+                refreshPlotFilter();
             } catch (SQLException e) {
                 showAlert("Error", "Failed to update: " + e.getMessage());
             }
@@ -756,6 +1026,8 @@ public class CropController {
                     cropDAO.delete(crop.getCropId());
                     loadCrops();
                     updateSummaryCards();
+                    populatePieCharts();
+                    refreshPlotFilter();
                 } catch (SQLException e) {
                     showAlert("Error", "Failed to delete: " + e.getMessage());
                 }
@@ -797,8 +1069,17 @@ public class CropController {
         TextField nameField = new TextField(existing != null ? existing.getCropName() : "");
         nameField.setPromptText("Crop Name");
 
-        TextField plotField = new TextField(existing != null ? String.valueOf(existing.getPlotId()) : "");
-        plotField.setPromptText("Plot ID");
+        // Plot selector ComboBox with plot names
+        ComboBox<String> plotCombo = new ComboBox<>();
+        plotCombo.setMaxWidth(Double.MAX_VALUE);
+        plotCombo.setPromptText("Select a plot");
+        for (Map.Entry<Integer, Plot> entry : plotCache.entrySet()) {
+            plotCombo.getItems().add(entry.getKey() + " — " + entry.getValue().getName());
+        }
+        if (existing != null) {
+            Plot p = plotCache.get(existing.getPlotId());
+            plotCombo.setValue(existing.getPlotId() + " — " + (p != null ? p.getName() : "Plot " + existing.getPlotId()));
+        }
 
         DatePicker plantedPicker = new DatePicker(existing != null ? existing.getPlantingDate() : LocalDate.now());
         DatePicker harvestPicker = new DatePicker(existing != null ? existing.getHarvestDate() : LocalDate.now().plusMonths(3));
@@ -808,12 +1089,12 @@ public class CropController {
 
         ComboBox<Crop.GrowthStage> stageCombo = new ComboBox<>();
         stageCombo.getItems().addAll(Crop.GrowthStage.values());
-        stageCombo.setValue(existing != null ? existing.getGrowthStage() : Crop.GrowthStage.SEED);
+        stageCombo.setValue(existing != null ? existing.getGrowthStage() : Crop.GrowthStage.PLANTED);
         stageCombo.setMaxWidth(Double.MAX_VALUE);
 
         VBox form = new VBox(10,
                 new Label("Crop Name:"), nameField,
-                new Label("Plot ID:"), plotField,
+                new Label("Plot:"), plotCombo,
                 new Label("Planted Date:"), plantedPicker,
                 new Label("Harvest Date:"), harvestPicker,
                 new Label("Expected Yield (kg):"), yieldField,
@@ -821,13 +1102,25 @@ public class CropController {
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
+        // Prevent dialog from closing on validation failure
+        Button saveBtnNode = (Button) dialog.getDialogPane().lookupButton(saveBtn);
+        saveBtnNode.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            if (nameField.getText().trim().isEmpty()) {
+                showAlert("Validation", "Crop name is required"); event.consume(); return;
+            }
+            String sel = plotCombo.getValue();
+            if (sel == null || sel.isEmpty()) {
+                showAlert("Validation", "Please select a plot"); event.consume(); return;
+            }
+            try { Integer.parseInt(sel.split(" —")[0].trim()); }
+            catch (NumberFormatException e) { showAlert("Validation", "Invalid plot selection"); event.consume(); }
+        });
+
         dialog.setResultConverter(btn -> {
             if (btn == saveBtn) {
                 String name = nameField.getText().trim();
-                if (name.isEmpty()) { showAlert("Validation", "Crop name is required"); return null; }
-                int plotId;
-                try { plotId = Integer.parseInt(plotField.getText().trim()); }
-                catch (NumberFormatException e) { showAlert("Validation", "Invalid Plot ID"); return null; }
+                String plotSelection = plotCombo.getValue();
+                int plotId = Integer.parseInt(plotSelection.split(" —")[0].trim());
                 double yield;
                 try { yield = Double.parseDouble(yieldField.getText().trim()); }
                 catch (NumberFormatException e) { yield = 0; }

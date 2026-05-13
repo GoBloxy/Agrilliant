@@ -143,6 +143,11 @@ public class WorkerController {
                 .collect(Collectors.toList());
         filteredWorkers.setAll(filtered);
         workerTable.setItems(filteredWorkers);
+        if (filtered.isEmpty() && !search.isEmpty()) {
+            workerTable.setPlaceholder(new Label("No workers matching \"" + search + "\""));
+        } else if (filtered.isEmpty()) {
+            workerTable.setPlaceholder(new Label("No workers found"));
+        }
     }
 
     private void updateSummaryCards() {
@@ -302,13 +307,16 @@ public class WorkerController {
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
+        Button saveBtnNode = (Button) dialog.getDialogPane().lookupButton(saveBtn);
+        saveBtnNode.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            if (nameField.getText().trim().isEmpty()) {
+                showAlert("Validation", "Name is required"); event.consume();
+            }
+        });
+
         dialog.setResultConverter(btn -> {
             if (btn == saveBtn) {
                 String name = nameField.getText().trim();
-                if (name.isEmpty()) {
-                    showAlert("Validation", "Name is required");
-                    return null;
-                }
                 Worker worker = new Worker(name, phoneField.getText().trim(),
                         emailField.getText().trim(), "",
                         jobField.getText().trim(), skillsField.getText().trim(),

@@ -116,7 +116,7 @@ public class CropDAO implements GenericDAO<Crop> {
         List<Crop> list = new ArrayList<>();
         String sql = "SELECT * FROM crops WHERE growth_stage = ? AND harvest_date < CURRENT_DATE ORDER BY harvest_date ASC";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, Crop.GrowthStage.FRUITING.name());
+            stmt.setString(1, Crop.GrowthStage.READY.name());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 list.add(extractCrop(rs));
