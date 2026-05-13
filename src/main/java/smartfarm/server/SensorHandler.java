@@ -6,6 +6,7 @@ import smartfarm.model.SensorReading;
 import smartfarm.service.AttendanceService;
 import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
+import smartfarm.service.SystemLogManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,7 +47,8 @@ public class SensorHandler implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Device disconnected: " + socket.getInetAddress());
+            SystemLogManager.getInstance().info("SensorHandler",
+                    "Device disconnected: " + (lastDeviceCode != null ? lastDeviceCode : socket.getInetAddress()), "system");
         } finally {
             if (lastDeviceCode != null) {
                 LiveSensorData.getInstance().removeDevice(lastDeviceCode);
@@ -72,7 +74,8 @@ public class SensorHandler implements Runnable {
             int fingerprintId = Integer.parseInt(parts[1].split(":")[1]);
             lastDeviceCode = deviceCode;
             String result = attendanceService.handleFingerprintScan(fingerprintId, deviceCode);
-            System.out.println("Fingerprint scan on " + deviceCode + " → " + result);
+            SystemLogManager.getInstance().info("SensorHandler",
+                    "Fingerprint scan on " + deviceCode + " → " + result, "system");
         } catch (Exception e) {
             System.err.println("Bad fingerprint data: " + raw);
         }

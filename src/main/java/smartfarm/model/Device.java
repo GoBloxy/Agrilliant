@@ -3,8 +3,8 @@ package smartfarm.model;
 import java.time.LocalDateTime;
 
 public class Device {
-    public enum Type { TEMP_HUM, SOIL_MOISTURE, LIGHT, WEATHER_STATION }
-    public enum Status { ONLINE, OFFLINE, MAINTENANCE }
+    public enum Type { TEMP_HUM, SOIL }
+    public enum Status { ONLINE, OFFLINE, MAINT }
 
     private int deviceId;
     private String deviceCode;

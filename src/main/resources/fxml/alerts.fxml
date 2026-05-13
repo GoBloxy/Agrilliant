@@ -98,7 +98,7 @@
                     <TableColumn fx:id="colType"      text="Type"       prefWidth="120" reorderable="false" resizable="false"/>
                     <TableColumn fx:id="colPlot"      text="Plot"       prefWidth="100" reorderable="false" resizable="false"/>
                     <TableColumn fx:id="colMessage"   text="Message"    prefWidth="220" reorderable="false"/>
-                    <TableColumn fx:id="colTimestamp" text="Time"       prefWidth="120" reorderable="false" resizable="false"/>
+                    <TableColumn fx:id="colTimestamp" text="Time"       prefWidth="180" minWidth="170" reorderable="false" resizable="false"/>
                     <TableColumn fx:id="colStatus"    text="Status"     prefWidth="90"  reorderable="false" resizable="false"/>
                     <TableColumn fx:id="colAction"    text="Actions"    prefWidth="80"  reorderable="false" resizable="false" sortable="false"/>
                 </columns>
@@ -115,7 +115,7 @@
     </VBox>
 
     <!-- ═══════════════ RIGHT PANEL (Alert Details) ═══════════════ -->
-    <VBox fx:id="detailPane" styleClass="card,detail-pane" prefWidth="380" minWidth="380" maxWidth="380" spacing="16">
+    <VBox fx:id="detailPane" styleClass="card,detail-pane" prefWidth="420" minWidth="420" maxWidth="420" spacing="16">
         <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
 
         <HBox alignment="CENTER_LEFT">
@@ -158,8 +158,8 @@
                     <Label text="Details" styleClass="detail-section-title"/>
                     <GridPane vgap="8" hgap="10">
                         <columnConstraints>
-                            <ColumnConstraints minWidth="120" prefWidth="120"/>
-                            <ColumnConstraints hgrow="ALWAYS"/>
+                            <ColumnConstraints minWidth="130" prefWidth="140"/>
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="140"/>
                         </columnConstraints>
                         
                         <HBox alignment="CENTER_LEFT" spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
@@ -197,7 +197,7 @@
                 <!-- Recent Readings Chart -->
                 <VBox spacing="4">
                     <Label text="Recent Readings" styleClass="detail-section-title"/>
-                    <LineChart fx:id="detailChart" prefHeight="140" maxHeight="140" legendVisible="false" animated="false" createSymbols="true">
+                    <LineChart fx:id="detailChart" prefHeight="180" maxHeight="180" legendVisible="false" animated="false" createSymbols="true">
                         <xAxis><CategoryAxis fx:id="detailChartX" tickLabelsVisible="true"/></xAxis>
                         <yAxis><NumberAxis fx:id="detailChartY" autoRanging="true"/></yAxis>
                     </LineChart>

@@ -26,6 +26,7 @@ import smartfarm.model.Crop;
 import smartfarm.model.Plot;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
+import smartfarm.service.SystemLogManager;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -1055,11 +1056,15 @@ public class CropController {
         dialog.showAndWait().ifPresent(crop -> {
             try {
                 cropDAO.save(crop);
+                SystemLogManager.getInstance().info("CropController",
+                        "Crop '" + crop.getCropName() + "' added to Plot " + crop.getPlotId(), "manager");
                 loadCrops();
                 updateSummaryCards();
                 populatePieCharts();
                 refreshPlotFilter();
             } catch (SQLException e) {
+                SystemLogManager.getInstance().error("CropController",
+                        "Failed to save crop: " + e.getMessage(), "system");
                 showAlert("Error", "Failed to save: " + e.getMessage());
             }
         });
@@ -1072,11 +1077,15 @@ public class CropController {
             try {
                 updated.setCropId(crop.getCropId());
                 cropDAO.update(updated);
+                SystemLogManager.getInstance().info("CropController",
+                        "Crop '" + updated.getCropName() + "' updated", "manager");
                 loadCrops();
                 updateSummaryCards();
                 populatePieCharts();
                 refreshPlotFilter();
             } catch (SQLException e) {
+                SystemLogManager.getInstance().error("CropController",
+                        "Failed to update crop: " + e.getMessage(), "system");
                 showAlert("Error", "Failed to update: " + e.getMessage());
             }
         });
@@ -1091,11 +1100,15 @@ public class CropController {
             if (btn == ButtonType.YES) {
                 try {
                     cropDAO.delete(crop.getCropId());
+                    SystemLogManager.getInstance().info("CropController",
+                            "Crop '" + crop.getCropName() + "' deleted", "manager");
                     loadCrops();
                     updateSummaryCards();
                     populatePieCharts();
                     refreshPlotFilter();
                 } catch (SQLException e) {
+                    SystemLogManager.getInstance().error("CropController",
+                            "Failed to delete crop: " + e.getMessage(), "system");
                     showAlert("Error", "Failed to delete: " + e.getMessage());
                 }
             }

@@ -80,13 +80,18 @@ public class NotificationService {
         
         // Create alert in database
         try {
+            int plotId = 1; // fallback
+            try {
+                smartfarm.model.Device device = new smartfarm.dao.DeviceDAO().getByCode(deviceId);
+                if (device != null) plotId = device.getPlotId();
+            } catch (Exception ignored) {}
             Alert alert = new Alert(
                 "SENSOR_THRESHOLD",
                 severity,
                 message,
                 false,
                 java.time.LocalDateTime.now(),
-                0 // plot_id would be determined from device
+                plotId
             );
             alertDAO.save(alert);
         } catch (Exception e) {

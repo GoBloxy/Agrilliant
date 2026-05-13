@@ -4,6 +4,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
@@ -16,14 +18,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class ReportsController {
 
     @FXML private Label lblTotalHarvest, lblAvgYield, lblTotalRecords, lblGradeAPct;
     @FXML private BarChart<String, Number> yieldChart;
+    @FXML private LineChart<String, Number> monthlyChart;
+    @FXML private PieChart gradeChart;
     @FXML private TableView<HarvestRecord> harvestTable;
     @FXML private TableColumn<HarvestRecord, String> colDate, colCrop, colPlot, colQty, colGrade;
     @FXML private Button btnExport;
@@ -39,6 +46,8 @@ public class ReportsController {
         setupTableColumns();
         updateSummaryCards();
         buildYieldChart();
+        buildMonthlyChart();
+        buildGradeChart();
         populateTable();
     }
 
@@ -128,6 +137,56 @@ public class ReportsController {
                 if (data.getNode() != null) {
                     data.getNode().setStyle("-fx-bar-fill: #22c55e;");
                 }
+            }
+        });
+    }
+
+    private void buildMonthlyChart() {
+        monthlyChart.getData().clear();
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        series.setName("Harvest (kg)");
+
+        DateTimeFormatter monthFmt = DateTimeFormatter.ofPattern("MMM yyyy");
+        Map<String, Double> monthlyYield = new TreeMap<>();
+
+        for (HarvestRecord hr : allHarvests) {
+            if (hr.getHarvestDate() != null) {
+                String key = hr.getHarvestDate().format(monthFmt);
+                monthlyYield.merge(key, hr.getQuantityKg(), Double::sum);
+            }
+        }
+
+        monthlyYield.forEach((month, kg) ->
+                series.getData().add(new XYChart.Data<>(month, kg)));
+
+        monthlyChart.getData().add(series);
+    }
+
+    private void buildGradeChart() {
+        Map<String, Long> gradeCounts = allHarvests.stream()
+                .collect(Collectors.groupingBy(
+                        hr -> "Grade " + hr.getGrade().name(),
+                        Collectors.counting()));
+
+        ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
+        gradeCounts.forEach((grade, count) ->
+                pieData.add(new PieChart.Data(grade + " (" + count + ")", count)));
+
+        if (pieData.isEmpty()) {
+            pieData.add(new PieChart.Data("No Data", 1));
+        }
+
+        gradeChart.setData(pieData);
+
+        // Apply colors after layout pass
+        javafx.application.Platform.runLater(() -> {
+            String[] colors = {"#22c55e", "#f59e0b", "#ef4444", "#6366f1"};
+            int i = 0;
+            for (PieChart.Data d : gradeChart.getData()) {
+                if (d.getNode() != null) {
+                    d.getNode().setStyle("-fx-pie-color: " + colors[i % colors.length] + ";");
+                }
+                i++;
             }
         });
     }

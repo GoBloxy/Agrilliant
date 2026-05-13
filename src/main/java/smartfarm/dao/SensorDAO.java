@@ -59,6 +59,20 @@ public class SensorDAO implements GenericDAO<SensorReading> {
         return list;
     }
 
+    public List<SensorReading> getRecentForPlot(int plotId, int limit) throws SQLException {
+        List<SensorReading> list = new ArrayList<>();
+        String sql = "SELECT sr.* FROM sensor_readings sr "
+                   + "JOIN devices d ON sr.device_id = d.device_id "
+                   + "WHERE d.plot_id = ? ORDER BY sr.timestamp DESC LIMIT ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, plotId);
+            stmt.setInt(2, limit);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
     public List<SensorReading> getRecent(int limit) throws SQLException {
         List<SensorReading> list = new ArrayList<>();
         String sql = "SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT ?";

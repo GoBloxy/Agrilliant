@@ -2,6 +2,7 @@ package smartfarm.ui;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -11,30 +12,62 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
+import javafx.stage.FileChooser;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import smartfarm.dao.CropDAO;
 import smartfarm.dao.PlotDAO;
 import smartfarm.model.Crop;
+import smartfarm.service.SystemLogManager;
 import smartfarm.model.Plot;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PlotController {
 
+    // ── Summary Cards ──
     @FXML private Label lblTotalPlots, lblCultivation, lblAvailable, lblFallow;
+
+    // ── Overview Panel ──
     @FXML private StackPane chartContainer;
+    @FXML private Label lblChartTotal;
+    @FXML private Label lblLegendCultivation, lblLegendAvailable, lblLegendFallow;
+    @FXML private Label lblTotalArea, lblCultivatedArea, lblAvailableArea;
+    @FXML private Label lblStatusCultCount, lblStatusAvailCount, lblStatusFallowCount;
+
+    // ── Map ──
     @FXML private Pane plotMapPane;
     @FXML private ToggleButton btnDrawMode;
     @FXML private Button btnDeletePlot;
 
+    // ── Filters ──
+    @FXML private TextField txtSearch;
+    @FXML private ComboBox<String> cmbField, cmbStatus, cmbCrop;
+
+    // ── Buttons ──
+    @FXML private Button btnAddPlot, btnExport;
+
+    // ── Table ──
     @FXML private TableView<PlotRecord> plotTable;
     @FXML private TableColumn<PlotRecord, String> colPlotId, colField, colCrop, colArea;
     @FXML private TableColumn<PlotRecord, String> colStatus, colSoil, colIrrigation, colLastActivity, colActions;
+    @FXML private Label lblPagination;
+
+    // Data
+    private ObservableList<PlotRecord> allRecords = FXCollections.observableArrayList();
+    private FilteredList<PlotRecord> filteredRecords;
+    private List<Plot> dbPlots = new ArrayList<>();
+    private List<Crop> dbCrops = new ArrayList<>();
+    private Map<Integer, String> plotCropMap = new HashMap<>();
 
     // Drawing state
     private boolean drawingMode = false;
@@ -66,6 +99,10 @@ public class PlotController {
     // Hint label shown when map is empty
     private Label hintLabel;
 
+    // Manager ID for creating plots
+    private static int currentManagerId = 1;
+    public static void setCurrentManagerId(int id) { currentManagerId = id; }
+
     @FXML
     public void initialize() {
         try {
@@ -73,6 +110,8 @@ public class PlotController {
             plotMapPane.setPickOnBounds(true);
             setupDonutChart();
             setupTable();
+            setupFilters();
+            loadPlotData();
             setupDrawingTool();
             showEmptyHint();
             System.out.println("[PlotController] initialized — draw mode & selection active");
@@ -99,6 +138,27 @@ public class PlotController {
         if (hintLabel != null) {
             plotMapPane.getChildren().remove(hintLabel);
             hintLabel = null;
+        }
+    }
+
+    private Label drawHintLabel;
+
+    private void showDrawHint() {
+        removeDrawHint();
+        drawHintLabel = new Label("Drawing Mode — click on map to add points  •  double-click to finish");
+        drawHintLabel.setStyle("-fx-background-color: rgba(46,125,50,0.92); "
+            + "-fx-text-fill: white; -fx-font-size: 12; -fx-font-weight: bold; "
+            + "-fx-padding: 6 12; -fx-background-radius: 4;");
+        drawHintLabel.setMouseTransparent(true);
+        drawHintLabel.setLayoutX(150);
+        drawHintLabel.setLayoutY(15);
+        plotMapPane.getChildren().add(drawHintLabel);
+    }
+
+    private void removeDrawHint() {
+        if (drawHintLabel != null) {
+            plotMapPane.getChildren().remove(drawHintLabel);
+            drawHintLabel = null;
         }
     }
 
@@ -188,16 +248,31 @@ public class PlotController {
             btnDrawMode.selectedProperty().addListener((obs, oldVal, newVal) -> {
                 drawingMode = newVal;
                 plotMapPane.setCursor(drawingMode ? Cursor.CROSSHAIR : Cursor.DEFAULT);
+                // Visual feedback: highlight map border & change button bg when active
                 if (drawingMode) {
+                    plotMapPane.setStyle("-fx-background-color: rgba(76,175,80,0.10); "
+                        + "-fx-border-color: #4caf50; -fx-border-width: 3; -fx-border-style: dashed;");
+                    btnDrawMode.setStyle("-fx-background-color: #4caf50; -fx-background-radius: 4; "
+                        + "-fx-padding: 6; -fx-cursor: hand;");
                     deselectPlot();
+                    removeHintIfNeeded();
+                    showDrawHint();
+                    System.out.println("[PlotController] Draw mode ENABLED");
                 } else {
+                    plotMapPane.setStyle("-fx-background-color: transparent;");
+                    btnDrawMode.setStyle("-fx-background-color: white; -fx-background-radius: 4; "
+                        + "-fx-padding: 6; -fx-cursor: hand;");
+                    removeDrawHint();
                     cancelCurrentDrawing();
+                    System.out.println("[PlotController] Draw mode DISABLED");
                 }
             });
         }
 
         // Click on map pane background
         plotMapPane.setOnMouseClicked(event -> {
+            System.out.println("[PlotController] map clicked at " + event.getX() + "," + event.getY()
+                + " (drawMode=" + drawingMode + ", count=" + event.getClickCount() + ")");
             if (drawingMode) {
                 if (event.getClickCount() == 2 && currentPoints.size() >= 3) {
                     finishPolygon();
@@ -207,7 +282,7 @@ public class PlotController {
                     double y = event.getY();
                     currentPoints.add(new double[]{x, y});
 
-                    Circle dot = new Circle(x, y, 4, Color.WHITE);
+                    Circle dot = new Circle(x, y, 5, Color.WHITE);
                     dot.setStroke(Color.web("#2e7d32"));
                     dot.setStrokeWidth(2);
                     currentDots.add(dot);
@@ -262,51 +337,67 @@ public class PlotController {
         plotMapPane.getChildren().removeAll(currentDots);
         currentDots.clear();
 
-        // Create final polygon
-        Polygon poly = new Polygon();
-        for (double[] pt : currentPoints) {
-            poly.getPoints().addAll(pt[0], pt[1]);
-        }
-        String color = PLOT_COLORS[plotCounter % PLOT_COLORS.length];
-        poly.setFill(Color.web(color, 0.4));
-        poly.setStroke(Color.web(color));
-        poly.setStrokeWidth(2);
-        poly.setCursor(Cursor.HAND);
-        plotMapPane.getChildren().add(poly);
-
-        // Add centered label
-        double cx = 0, cy = 0;
-        for (double[] pt : currentPoints) { cx += pt[0]; cy += pt[1]; }
-        cx /= currentPoints.size();
-        cy /= currentPoints.size();
-
-        Label lbl = new Label("Plot " + plotCounter);
-        lbl.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11;"
-            + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 2, 0, 0, 1);");
-        lbl.setLayoutX(cx - 25);
-        lbl.setLayoutY(cy - 8);
-        lbl.setMouseTransparent(true);
-        plotMapPane.getChildren().add(lbl);
-
-        PlotEntry entry = new PlotEntry(poly, lbl, color);
-        allPlots.add(entry);
-        removeHintIfNeeded();
-
-        // Make the new plot selectable
-        poly.setOnMouseClicked(event -> {
-            if (!drawingMode) {
-                selectPlot(entry);
-                event.consume();
-            }
-        });
-
-        plotCounter++;
+        // Snapshot the points and reset state so further clicks don't add to this polygon
+        final List<double[]> finishedPoints = new ArrayList<>(currentPoints);
         currentPoints.clear();
 
-        // Exit draw mode
-        drawingMode = false;
+        // Exit draw mode immediately (visual feedback)
         if (btnDrawMode != null) btnDrawMode.setSelected(false);
-        plotMapPane.setCursor(Cursor.DEFAULT);
+
+        // Defer the modal dialog so it doesn't block the event handler
+        javafx.application.Platform.runLater(() -> {
+            TextInputDialog nameDialog = new TextInputDialog("Plot " + plotCounter);
+            nameDialog.setTitle("Name This Plot");
+            nameDialog.setHeaderText("Enter a name for the drawn plot:");
+            nameDialog.setContentText("Plot name:");
+            String plotName = nameDialog.showAndWait().orElse(null);
+            if (plotName == null || plotName.trim().isEmpty()) {
+                return;
+            }
+
+            // Pick crop color for the polygon (first available crop or default)
+            String cropName = plotCropMap.values().stream().findFirst().orElse(null);
+            String color = getCropColor(cropName);
+
+            // Create final polygon
+            Polygon poly = new Polygon();
+            for (double[] pt : finishedPoints) {
+                poly.getPoints().addAll(pt[0], pt[1]);
+            }
+            poly.setFill(Color.web(color, 0.4));
+            poly.setStroke(Color.web(color));
+            poly.setStrokeWidth(2);
+            poly.setCursor(Cursor.HAND);
+            plotMapPane.getChildren().add(poly);
+
+            // Add centered label
+            double cx = 0, cy = 0;
+            for (double[] pt : finishedPoints) { cx += pt[0]; cy += pt[1]; }
+            cx /= finishedPoints.size();
+            cy /= finishedPoints.size();
+
+            Label lbl = new Label(plotName.trim());
+            lbl.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11;"
+                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 2, 0, 0, 1);");
+            lbl.setLayoutX(cx - 25);
+            lbl.setLayoutY(cy - 8);
+            lbl.setMouseTransparent(true);
+            plotMapPane.getChildren().add(lbl);
+
+            PlotEntry entry = new PlotEntry(poly, lbl, color);
+            allPlots.add(entry);
+            removeHintIfNeeded();
+
+            // Make the new plot selectable
+            poly.setOnMouseClicked(event -> {
+                if (!drawingMode) {
+                    selectPlot(entry);
+                    event.consume();
+                }
+            });
+
+            plotCounter++;
+        });
     }
 
     private void cancelCurrentDrawing() {
@@ -321,34 +412,19 @@ public class PlotController {
 
     // ═══════════════ DONUT CHART ═══════════════
 
-    private void setupDonutChart() {
-        javafx.scene.shape.Arc arc1 = new javafx.scene.shape.Arc(65, 65, 50, 50, 90, 236);
-        arc1.setFill(Color.TRANSPARENT);
-        arc1.setStroke(Color.web("#28a745"));
-        arc1.setStrokeWidth(12);
-        
-        javafx.scene.shape.Arc arc2 = new javafx.scene.shape.Arc(65, 65, 50, 50, 330, 56);
-        arc2.setFill(Color.TRANSPARENT);
-        arc2.setStroke(Color.web("#ffc107"));
-        arc2.setStrokeWidth(12);
-        
-        javafx.scene.shape.Arc arc3 = new javafx.scene.shape.Arc(65, 65, 50, 50, 30, 56);
-        arc3.setFill(Color.TRANSPARENT);
-        arc3.setStroke(Color.web("#6f42c1"));
-        arc3.setStrokeWidth(12);
+    private javafx.scene.layout.Pane donutArcPane;
 
-        javafx.scene.layout.Pane arcPane = new javafx.scene.layout.Pane();
-        arcPane.setPrefSize(130, 130);
-        arcPane.getChildren().addAll(arc1, arc2, arc3);
-        
-        chartContainer.getChildren().add(0, arcPane);
+    private void setupDonutChart() {
+        donutArcPane = new javafx.scene.layout.Pane();
+        donutArcPane.setPrefSize(130, 130);
+        chartContainer.getChildren().add(0, donutArcPane);
     }
 
     // ═══════════════ TABLE ═══════════════
 
     private void setupTable() {
         plotTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colPlotId.setResizable(false);
+        // colPlotId stays resizable so it stretches to fill any remaining width
         colField.setResizable(false);
         colCrop.setResizable(false);
         colArea.setResizable(false);
@@ -378,15 +454,8 @@ public class PlotController {
                 HBox box = new HBox(6);
                 box.setAlignment(Pos.CENTER_LEFT);
 
-                // Colored dot matching crop type
                 Circle dot = new Circle(5);
-                switch (item) {
-                    case "Wheat":    dot.setFill(Color.web("#f59e0b")); break; // amber
-                    case "Maize":    dot.setFill(Color.web("#eab308")); break; // yellow
-                    case "Tomatoes": dot.setFill(Color.web("#ef4444")); break; // red
-                    case "Beans":    dot.setFill(Color.web("#22c55e")); break; // green
-                    default:         dot.setFill(Color.web("#9ca3af")); break; // gray
-                }
+                dot.setFill(Color.web(getCropColor(item)));
 
                 Label lbl = new Label(item);
                 lbl.setStyle("-fx-font-size: 12; -fx-text-fill: #374151;");
@@ -469,7 +538,7 @@ public class PlotController {
             }
         });
 
-        // ── Actions column: view / edit / more icons ──
+        // ── Actions column: view / edit / delete icons ──
         colActions.setCellFactory(col -> new TableCell<PlotRecord, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -482,23 +551,112 @@ public class PlotController {
                 FontIcon eye = new FontIcon("fth-eye");
                 eye.setIconSize(14); eye.setIconColor(Color.web("#6b7280"));
                 eye.setCursor(Cursor.HAND);
+                eye.setOnMouseClicked(e -> {
+                    PlotRecord rec = getTableView().getItems().get(getIndex());
+                    onViewPlot(rec);
+                });
 
                 FontIcon edit = new FontIcon("fth-edit-2");
                 edit.setIconSize(14); edit.setIconColor(Color.web("#6b7280"));
                 edit.setCursor(Cursor.HAND);
+                edit.setOnMouseClicked(e -> {
+                    PlotRecord rec = getTableView().getItems().get(getIndex());
+                    onEditPlotByRecord(rec);
+                });
 
-                FontIcon more = new FontIcon("fth-more-vertical");
-                more.setIconSize(14); more.setIconColor(Color.web("#6b7280"));
-                more.setCursor(Cursor.HAND);
+                FontIcon trash = new FontIcon("fth-trash-2");
+                trash.setIconSize(14); trash.setIconColor(Color.web("#ef4444"));
+                trash.setCursor(Cursor.HAND);
+                trash.setOnMouseClicked(e -> {
+                    PlotRecord rec = getTableView().getItems().get(getIndex());
+                    onDeletePlotByRecord(rec);
+                });
 
-                box.getChildren().addAll(eye, edit, more);
+                box.getChildren().addAll(eye, edit, trash);
                 setGraphic(box);
                 setText(null);
             }
         });
 
-        // ── Data from database ──
-        loadPlotData();
+    }
+
+    // ═══════════════ FILTERS ═══════════════
+
+    private void setupFilters() {
+        filteredRecords = new FilteredList<>(allRecords, p -> true);
+        plotTable.setItems(filteredRecords);
+
+        if (txtSearch != null) {
+            txtSearch.textProperty().addListener((obs, o, n) -> applyFilters());
+        }
+        if (cmbField != null) {
+            cmbField.setOnAction(e -> applyFilters());
+        }
+        if (cmbStatus != null) {
+            cmbStatus.getItems().setAll("All Status", "Under Cultivation", "Available", "Fallow");
+            cmbStatus.setOnAction(e -> applyFilters());
+        }
+        if (cmbCrop != null) {
+            cmbCrop.setOnAction(e -> applyFilters());
+        }
+    }
+
+    private void populateFilterCombos() {
+        if (cmbField != null) {
+            List<String> fields = allRecords.stream()
+                    .map(PlotRecord::getField)
+                    .distinct().sorted()
+                    .collect(Collectors.toList());
+            fields.add(0, "All Fields");
+            cmbField.getItems().setAll(fields);
+        }
+        if (cmbCrop != null) {
+            List<String> crops = allRecords.stream()
+                    .map(PlotRecord::getCrop)
+                    .filter(c -> !c.equals("—"))
+                    .distinct().sorted()
+                    .collect(Collectors.toList());
+            crops.add(0, "All Crops");
+            cmbCrop.getItems().setAll(crops);
+        }
+    }
+
+    private void applyFilters() {
+        String search = txtSearch != null ? txtSearch.getText() : "";
+        String fieldFilter = cmbField != null ? cmbField.getValue() : null;
+        String statusFilter = cmbStatus != null ? cmbStatus.getValue() : null;
+        String cropFilter = cmbCrop != null ? cmbCrop.getValue() : null;
+
+        filteredRecords.setPredicate(rec -> {
+            if (search != null && !search.isBlank()) {
+                String lower = search.toLowerCase();
+                boolean matches = rec.getPlotId().toLowerCase().contains(lower)
+                        || rec.getField().toLowerCase().contains(lower)
+                        || rec.getCrop().toLowerCase().contains(lower)
+                        || rec.getSoil().toLowerCase().contains(lower);
+                if (!matches) return false;
+            }
+            if (fieldFilter != null && !fieldFilter.equals("All Fields")) {
+                if (!rec.getField().equals(fieldFilter)) return false;
+            }
+            if (statusFilter != null && !statusFilter.equals("All Status")) {
+                if (!rec.getStatus().equals(statusFilter)) return false;
+            }
+            if (cropFilter != null && !cropFilter.equals("All Crops")) {
+                if (!rec.getCrop().equals(cropFilter)) return false;
+            }
+            return true;
+        });
+
+        updatePagination();
+    }
+
+    private void updatePagination() {
+        int total = allRecords.size();
+        int showing = filteredRecords.size();
+        if (lblPagination != null) {
+            lblPagination.setText("Showing " + showing + " of " + total + " plots");
+        }
     }
 
     // ═══════════════ DB DATA LOADING ═══════════════
@@ -507,60 +665,444 @@ public class PlotController {
         PlotDAO plotDAO = new PlotDAO();
         CropDAO cropDAO = new CropDAO();
         try {
-            List<Plot> plots = plotDAO.getAll();
-            List<Crop> crops = cropDAO.getAll();
+            dbPlots = plotDAO.getAll();
+            dbCrops = cropDAO.getAll();
 
-            // Build a map: plotId → crop name
-            Map<Integer, String> plotCropMap = new HashMap<>();
-            for (Crop c : crops) {
+            plotCropMap.clear();
+            for (Crop c : dbCrops) {
                 if (c.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
                     plotCropMap.put(c.getPlotId(), c.getCropName());
                 }
             }
 
-            ObservableList<PlotRecord> records = FXCollections.observableArrayList();
+            allRecords.clear();
             int cultivation = 0, available = 0, fallow = 0;
+            double totalArea = 0, cultivatedArea = 0, availableArea = 0;
 
-            for (Plot p : plots) {
+            for (Plot p : dbPlots) {
                 String cropName = plotCropMap.getOrDefault(p.getPlotId(), "—");
                 boolean hasCrop = !cropName.equals("—");
-                String status = hasCrop ? "Under Cultivation" : "Available";
-                if (hasCrop) cultivation++; else available++;
+                // Use persisted status if set, otherwise derive from crop presence
+                String status;
+                if (p.getStatus() != null && !p.getStatus().isEmpty()) {
+                    status = p.getStatus();
+                } else {
+                    status = hasCrop ? "Under Cultivation" : "Available";
+                }
+                if (status.equals("Under Cultivation")) cultivation++;
+                else if (status.equals("Fallow")) fallow++;
+                else available++;
+
+                totalArea += p.getSizeAcres();
+                if (status.equals("Under Cultivation")) cultivatedArea += p.getSizeAcres();
+                else if (status.equals("Available")) availableArea += p.getSizeAcres();
 
                 String plotLabel = p.getName() + " - " + p.getLocation();
                 String area = String.format("%.1f", p.getSizeAcres());
                 String updated = p.getUpdatedAt() != null
-                        ? p.getUpdatedAt().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                        ? p.getUpdatedAt().toLocalDate().format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
                         : "—";
 
-                records.add(new PlotRecord(
-                        plotLabel, p.getLocation(), cropName, area,
-                        status, p.getSoilType(), hasCrop ? "Drip" : "—", updated
+                String irrigation = p.getIrrigationType() != null ? p.getIrrigationType() : "—";
+                allRecords.add(new PlotRecord(
+                        p.getPlotId(), plotLabel, p.getLocation(), cropName, area,
+                        status, p.getSoilType(), irrigation, updated
                 ));
             }
 
-            plotTable.setItems(records);
-
             // Update summary cards
-            lblTotalPlots.setText(String.valueOf(plots.size()));
+            int total = dbPlots.size();
+            lblTotalPlots.setText(String.valueOf(total));
             lblCultivation.setText(String.valueOf(cultivation));
             lblAvailable.setText(String.valueOf(available));
             lblFallow.setText(String.valueOf(fallow));
 
+            // Update overview panel
+            updateOverviewPanel(total, cultivation, available, fallow, totalArea, cultivatedArea, availableArea);
+
+            // Populate filter combos
+            populateFilterCombos();
+            updatePagination();
+
         } catch (SQLException e) {
             System.err.println("Failed to load plot data: " + e.getMessage());
-            plotTable.setPlaceholder(new Label("Could not load plots from database"));
+            e.printStackTrace();
+            plotTable.setPlaceholder(new Label("Could not load plots: " + e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("Unexpected error loading plot data: " + e.getMessage());
+            e.printStackTrace();
+            plotTable.setPlaceholder(new Label("Unexpected error: " + e.getMessage()));
         }
+    }
+
+    private void updateOverviewPanel(int total, int cultivation, int available, int fallow,
+                                     double totalArea, double cultivatedArea, double availableArea) {
+        if (lblChartTotal != null) lblChartTotal.setText(String.valueOf(total));
+
+        if (total > 0) {
+            String cultPct = String.format("%.1f", (cultivation * 100.0 / total));
+            String availPct = String.format("%.1f", (available * 100.0 / total));
+            String fallPct = String.format("%.1f", (fallow * 100.0 / total));
+
+            if (lblLegendCultivation != null) lblLegendCultivation.setText(cultivation + " (" + cultPct + "%)");
+            if (lblLegendAvailable != null) lblLegendAvailable.setText(available + " (" + availPct + "%)");
+            if (lblLegendFallow != null) lblLegendFallow.setText(fallow + " (" + fallPct + "%)");
+        }
+
+        if (lblTotalArea != null) lblTotalArea.setText(String.format("%.1f ha", totalArea));
+        if (lblCultivatedArea != null) {
+            String pct = totalArea > 0 ? String.format(" (%.1f%%)", cultivatedArea * 100.0 / totalArea) : "";
+            lblCultivatedArea.setText(String.format("%.1f ha%s", cultivatedArea, pct));
+        }
+        if (lblAvailableArea != null) lblAvailableArea.setText(String.format("%.1f ha", availableArea));
+
+        if (lblStatusCultCount != null) lblStatusCultCount.setText(String.valueOf(cultivation));
+        if (lblStatusAvailCount != null) lblStatusAvailCount.setText(String.valueOf(available));
+        if (lblStatusFallowCount != null) lblStatusFallowCount.setText(String.valueOf(fallow));
+
+        // Update donut chart arcs proportionally
+        updateDonutChartArcs(cultivation, available, fallow);
+    }
+
+    private void updateDonutChartArcs(int cultivation, int available, int fallow) {
+        if (donutArcPane == null) return;
+        donutArcPane.getChildren().clear();
+
+        int total = cultivation + available + fallow;
+        if (total == 0) {
+            // Draw a single grey ring as placeholder
+            javafx.scene.shape.Arc empty = new javafx.scene.shape.Arc(65, 65, 50, 50, 0, 360);
+            empty.setFill(Color.TRANSPARENT);
+            empty.setStroke(Color.web("#e5e7eb"));
+            empty.setStrokeWidth(12);
+            donutArcPane.getChildren().add(empty);
+            return;
+        }
+
+        double cultAngle = (cultivation * 360.0) / total;
+        double availAngle = (available * 360.0) / total;
+        double fallAngle = (fallow * 360.0) / total;
+
+        double startAngle = 90;
+
+        if (cultAngle > 0) {
+            javafx.scene.shape.Arc arc1 = new javafx.scene.shape.Arc(65, 65, 50, 50, startAngle, cultAngle);
+            arc1.setFill(Color.TRANSPARENT);
+            arc1.setStroke(Color.web("#28a745"));
+            arc1.setStrokeWidth(12);
+            arc1.setType(javafx.scene.shape.ArcType.OPEN);
+            donutArcPane.getChildren().add(arc1);
+        }
+        startAngle += cultAngle;
+
+        if (availAngle > 0) {
+            javafx.scene.shape.Arc arc2 = new javafx.scene.shape.Arc(65, 65, 50, 50, startAngle, availAngle);
+            arc2.setFill(Color.TRANSPARENT);
+            arc2.setStroke(Color.web("#ffc107"));
+            arc2.setStrokeWidth(12);
+            arc2.setType(javafx.scene.shape.ArcType.OPEN);
+            donutArcPane.getChildren().add(arc2);
+        }
+        startAngle += availAngle;
+
+        if (fallAngle > 0) {
+            javafx.scene.shape.Arc arc3 = new javafx.scene.shape.Arc(65, 65, 50, 50, startAngle, fallAngle);
+            arc3.setFill(Color.TRANSPARENT);
+            arc3.setStroke(Color.web("#6f42c1"));
+            arc3.setStrokeWidth(12);
+            arc3.setType(javafx.scene.shape.ArcType.OPEN);
+            donutArcPane.getChildren().add(arc3);
+        }
+    }
+
+    // ═══════════════ CROP COLORS ═══════════════
+
+    private static final String[] CROP_PALETTE = {
+        "#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#8b5cf6",
+        "#ec4899", "#14b8a6", "#f97316", "#06b6d4", "#84cc16",
+        "#e11d48", "#0ea5e9", "#d946ef", "#facc15", "#10b981"
+    };
+
+    private static String getCropColor(String cropName) {
+        if (cropName == null || cropName.equals("—") || cropName.isEmpty()) return "#9ca3af";
+        int hash = Math.abs(cropName.hashCode());
+        return CROP_PALETTE[hash % CROP_PALETTE.length];
+    }
+
+    // ═══════════════ CRUD OPERATIONS ═══════════════
+
+    // Tracks the crop selected in the dialog so we can re-assign after save
+    private String dialogSelectedCrop = null;
+
+    @FXML
+    private void onAddPlot() {
+        Dialog<Plot> dialog = createPlotDialog(null, null);
+        dialog.showAndWait().ifPresent(plot -> {
+            PlotDAO plotDAO = new PlotDAO();
+            try {
+                plotDAO.save(plot);
+                // If a crop was selected, assign it to this new plot
+                if (dialogSelectedCrop != null && !dialogSelectedCrop.equals("None")) {
+                    reassignCropToPlot(dialogSelectedCrop, plot.getPlotId());
+                }
+                SystemLogManager.getInstance().info("PlotController",
+                        "Plot '" + plot.getName() + "' created (" + plot.getSizeAcres() + " acres)", "manager");
+                loadPlotData();
+            } catch (SQLException e) {
+                SystemLogManager.getInstance().error("PlotController",
+                        "Failed to save plot: " + e.getMessage(), "system");
+                showAlert("Error", "Failed to save plot: " + e.getMessage());
+            }
+        });
+    }
+
+    private void onEditPlotByRecord(PlotRecord rec) {
+        Plot dbPlot = findPlotById(rec.getDbPlotId());
+        if (dbPlot == null) { showAlert("Error", "Plot not found in database"); return; }
+
+        String currentCrop = plotCropMap.getOrDefault(dbPlot.getPlotId(), null);
+        Dialog<Plot> dialog = createPlotDialog(dbPlot, currentCrop);
+        dialog.showAndWait().ifPresent(updated -> {
+            PlotDAO plotDAO = new PlotDAO();
+            try {
+                updated.setPlotId(dbPlot.getPlotId());
+                plotDAO.update(updated);
+                // Only reassign crop if user selected a DIFFERENT one
+                if (dialogSelectedCrop != null
+                        && !dialogSelectedCrop.equals("None")
+                        && !dialogSelectedCrop.equals(currentCrop)) {
+                    reassignCropToPlot(dialogSelectedCrop, dbPlot.getPlotId());
+                }
+                SystemLogManager.getInstance().info("PlotController",
+                        "Plot '" + updated.getName() + "' updated", "manager");
+                loadPlotData();
+            } catch (SQLException e) {
+                SystemLogManager.getInstance().error("PlotController",
+                        "Failed to update plot: " + e.getMessage(), "system");
+                showAlert("Error", "Failed to update plot: " + e.getMessage());
+            }
+        });
+    }
+
+    private void reassignCropToPlot(String cropName, int plotId) {
+        CropDAO cropDAO = new CropDAO();
+        try {
+            List<Crop> all = cropDAO.getAll();
+            for (Crop c : all) {
+                if (c.getCropName().equals(cropName) && c.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
+                    c.setPlotId(plotId);
+                    cropDAO.update(c);
+                    return;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to reassign crop: " + e.getMessage());
+        }
+    }
+
+    private void onDeletePlotByRecord(PlotRecord rec) {
+        Plot dbPlot = findPlotById(rec.getDbPlotId());
+        if (dbPlot == null) { showAlert("Error", "Plot not found in database"); return; }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Delete \"" + dbPlot.getName() + "\"?\nThis cannot be undone.",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setTitle("Delete Plot");
+        confirm.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.YES) {
+                PlotDAO plotDAO = new PlotDAO();
+                try {
+                    plotDAO.delete(dbPlot.getPlotId());
+                    SystemLogManager.getInstance().info("PlotController",
+                            "Plot '" + dbPlot.getName() + "' deleted", "manager");
+                    loadPlotData();
+                } catch (SQLException e) {
+                    SystemLogManager.getInstance().error("PlotController",
+                            "Failed to delete plot: " + e.getMessage(), "system");
+                    showAlert("Error", "Failed to delete: " + e.getMessage()
+                            + "\nThe plot may have linked crops, tasks, or sensors.");
+                }
+            }
+        });
+    }
+
+    private void onViewPlot(PlotRecord rec) {
+        Plot dbPlot = findPlotById(rec.getDbPlotId());
+        if (dbPlot == null) return;
+
+        String cropName = plotCropMap.getOrDefault(dbPlot.getPlotId(), "None");
+        String irr = dbPlot.getIrrigationType() != null ? dbPlot.getIrrigationType() : "—";
+        String info = String.format(
+                "Name: %s\nLocation: %s\nSize: %.1f acres\nSoil Type: %s\nIrrigation: %s\nCurrent Crop: %s\nStatus: %s\nCreated: %s\nLast Updated: %s",
+                dbPlot.getName(), dbPlot.getLocation(), dbPlot.getSizeAcres(),
+                dbPlot.getSoilType(), irr, cropName, rec.getStatus(),
+                dbPlot.getCreatedAt() != null ? dbPlot.getCreatedAt().toLocalDate() : "—",
+                dbPlot.getUpdatedAt() != null ? dbPlot.getUpdatedAt().toLocalDate() : "—"
+        );
+
+        Alert detail = new Alert(Alert.AlertType.INFORMATION);
+        detail.setTitle("Plot Details");
+        detail.setHeaderText(dbPlot.getName());
+        detail.setContentText(info);
+        detail.getDialogPane().setMinWidth(400);
+        detail.showAndWait();
+    }
+
+    private Plot findPlotById(int plotId) {
+        return dbPlots.stream().filter(p -> p.getPlotId() == plotId).findFirst().orElse(null);
+    }
+
+    private Dialog<Plot> createPlotDialog(Plot existing, String currentCropName) {
+        Dialog<Plot> dialog = new Dialog<>();
+        dialog.setTitle(existing == null ? "Add New Plot" : "Edit Plot");
+        dialog.setHeaderText(null);
+
+        ButtonType saveBtn = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
+
+        TextField nameField = new TextField(existing != null ? existing.getName() : "");
+        nameField.setPromptText("Plot Name");
+
+        TextField locationField = new TextField(existing != null ? existing.getLocation() : "");
+        locationField.setPromptText("Location / Field");
+
+        TextField sizeField = new TextField(existing != null ? String.valueOf(existing.getSizeAcres()) : "");
+        sizeField.setPromptText("Size in acres");
+
+        ComboBox<String> soilCombo = new ComboBox<>();
+        soilCombo.getItems().addAll("Loamy", "Clay", "Sandy", "Silt", "Peaty", "Chalky", "Alluvial");
+        soilCombo.setMaxWidth(Double.MAX_VALUE);
+        if (existing != null && existing.getSoilType() != null) {
+            soilCombo.setValue(existing.getSoilType());
+        }
+        soilCombo.setPromptText("Select Soil Type");
+
+        // Crop selection — list all active (non-harvested) crops
+        ComboBox<String> cropCombo = new ComboBox<>();
+        cropCombo.setMaxWidth(Double.MAX_VALUE);
+        cropCombo.getItems().add("None");
+        for (Crop c : dbCrops) {
+            if (c.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
+                cropCombo.getItems().add(c.getCropName());
+            }
+        }
+        cropCombo.setValue(currentCropName != null ? currentCropName : "None");
+        cropCombo.setPromptText("Select Crop");
+
+        // Irrigation type
+        ComboBox<String> irrigationCombo = new ComboBox<>();
+        irrigationCombo.getItems().addAll("None", "Drip", "Sprinkler", "Flood", "Drone");
+        irrigationCombo.setMaxWidth(Double.MAX_VALUE);
+        String existingIrr = existing != null ? existing.getIrrigationType() : null;
+        irrigationCombo.setValue(existingIrr != null ? existingIrr : "None");
+        irrigationCombo.setPromptText("Select Irrigation");
+
+        // Status
+        ComboBox<String> statusCombo = new ComboBox<>();
+        statusCombo.getItems().addAll("Under Cultivation", "Available", "Fallow");
+        statusCombo.setMaxWidth(Double.MAX_VALUE);
+        String existingStatus = existing != null ? existing.getStatus() : null;
+        if (existingStatus != null) {
+            statusCombo.setValue(existingStatus);
+        } else {
+            // Derive from crop: if crop is assigned, default to Under Cultivation
+            statusCombo.setValue(currentCropName != null && !currentCropName.equals("None")
+                    ? "Under Cultivation" : "Available");
+        }
+        statusCombo.setPromptText("Select Status");
+
+        VBox form = new VBox(10,
+                new Label("Plot Name:"), nameField,
+                new Label("Location / Field:"), locationField,
+                new Label("Size (acres):"), sizeField,
+                new Label("Soil Type:"), soilCombo,
+                new Label("Crop:"), cropCombo,
+                new Label("Status:"), statusCombo,
+                new Label("Irrigation:"), irrigationCombo);
+        form.setPadding(new Insets(20));
+        form.setPrefWidth(380);
+
+        ScrollPane sp = new ScrollPane(form);
+        sp.setFitToWidth(true);
+        sp.setPrefHeight(420);
+        sp.setStyle("-fx-background-color: transparent;");
+        dialog.getDialogPane().setContent(sp);
+
+        dialog.setResultConverter(btn -> {
+            if (btn == saveBtn) {
+                String name = nameField.getText().trim();
+                if (name.isEmpty()) { showAlert("Validation", "Plot name is required"); return null; }
+                String location = locationField.getText().trim();
+                if (location.isEmpty()) { showAlert("Validation", "Location is required"); return null; }
+                double size;
+                try { size = Double.parseDouble(sizeField.getText().trim()); }
+                catch (NumberFormatException e) { showAlert("Validation", "Invalid size value"); return null; }
+                if (size <= 0) { showAlert("Validation", "Size must be greater than 0"); return null; }
+                String soil = soilCombo.getValue();
+                if (soil == null || soil.isEmpty()) { showAlert("Validation", "Please select a soil type"); return null; }
+
+                // Store crop selection for post-save handling
+                dialogSelectedCrop = cropCombo.getValue();
+
+                Plot plot = new Plot(name, location, size, soil, currentManagerId);
+                String irr = irrigationCombo.getValue();
+                plot.setIrrigationType(irr != null && !irr.equals("None") ? irr : null);
+                plot.setStatus(statusCombo.getValue());
+                return plot;
+            }
+            return null;
+        });
+        return dialog;
+    }
+
+    // ═══════════════ EXPORT ═══════════════
+
+    @FXML
+    private void onExport() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Export Plots");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        chooser.setInitialFileName("plots.csv");
+        File file = chooser.showSaveDialog(btnExport.getScene().getWindow());
+        if (file == null) return;
+
+        try (FileWriter w = new FileWriter(file)) {
+            w.write("Plot Name,Field,Crop,Area (ha),Status,Soil Type,Irrigation,Last Activity\n");
+            for (PlotRecord rec : filteredRecords) {
+                w.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s\n",
+                        rec.getPlotName(), rec.getField(), rec.getCrop(), rec.getArea(),
+                        rec.getStatus(), rec.getSoil(), rec.getIrrigation(), rec.getLastActivity()));
+            }
+            showInfo("Export Successful", "Exported " + filteredRecords.size() + " plots to " + file.getName());
+        } catch (IOException e) {
+            showAlert("Error", "Failed to export: " + e.getMessage());
+        }
+    }
+
+    // ═══════════════ ALERTS ═══════════════
+
+    private void showAlert(String title, String msg) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
+        alert.setTitle(title);
+        alert.showAndWait();
+    }
+
+    private void showInfo(String title, String msg) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK);
+        alert.setTitle(title);
+        alert.showAndWait();
     }
 
     // ═══════════════ DATA MODEL ═══════════════
 
     public static class PlotRecord {
-        private final String plotId, field, crop, area, status, soil, irrigation, lastActivity;
+        private final int dbPlotId;
+        private final String plotName, field, crop, area, status, soil, irrigation, lastActivity;
 
-        public PlotRecord(String plotId, String field, String crop, String area,
+        public PlotRecord(int dbPlotId, String plotName, String field, String crop, String area,
                           String status, String soil, String irrigation, String lastActivity) {
-            this.plotId = plotId;
+            this.dbPlotId = dbPlotId;
+            this.plotName = plotName;
             this.field = field;
             this.crop = crop;
             this.area = area;
@@ -570,7 +1112,9 @@ public class PlotController {
             this.lastActivity = lastActivity;
         }
 
-        public String getPlotId() { return plotId; }
+        public int getDbPlotId() { return dbPlotId; }
+        public String getPlotId() { return plotName; }
+        public String getPlotName() { return plotName; }
         public String getField() { return field; }
         public String getCrop() { return crop; }
         public String getArea() { return area; }
