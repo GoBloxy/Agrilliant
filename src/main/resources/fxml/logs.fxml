@@ -89,7 +89,7 @@
         <Label text="System Logs" styleClass="card-title"/>
         <TableView fx:id="logTable" VBox.vgrow="ALWAYS" prefHeight="400">
             <columns>
-                <TableColumn fx:id="colTimestamp" text="Timestamp"  prefWidth="150"/>
+                <TableColumn fx:id="colTimestamp" text="Timestamp"  prefWidth="170" minWidth="160"/>
                 <TableColumn fx:id="colType"      text="Type"       prefWidth="80"/>
                 <TableColumn fx:id="colSource"    text="Source"     prefWidth="120"/>
                 <TableColumn fx:id="colMessage"   text="Message"    prefWidth="280"/>

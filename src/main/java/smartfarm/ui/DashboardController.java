@@ -68,6 +68,7 @@ public class DashboardController {
     private XYChart.Series<String, Number> soilSeries;
     private int dataPointIndex = 0;
     private static final int MAX_DATA_POINTS = 40;
+    private float lastTempCelsius = Float.NaN;
 
     // ── Tables ──
     @FXML private TableView<Crop> cropTable;
@@ -98,8 +99,8 @@ public class DashboardController {
                           btnUsers, btnLogs, btnCropsCrops, btnCropsPlots;
 
     // ── Hyperlinks ──
-    @FXML private Hyperlink linkViewSensors, linkViewAlerts, linkShowAllAlerts,
-                             linkViewTasks, linkViewAllTasks, linkViewCrops,
+    @FXML private Hyperlink linkViewSensors, linkShowAllAlerts,
+                             linkViewAllTasks, linkViewCrops,
                              linkViewWorkers, linkViewHarvests, linkManagePlots;
 
     private ContextMenu userMenu;
@@ -146,6 +147,9 @@ public class DashboardController {
             btnSettings.setVisible(false);   btnSettings.setManaged(false);
             btnUsers.setVisible(false);      btnUsers.setManaged(false);
             btnLogs.setVisible(false);       btnLogs.setManaged(false);
+        }
+        if (role == smartfarm.model.User.Role.MANAGER) {
+            btnUsers.setVisible(false);      btnUsers.setManaged(false);
         }
     }
 
@@ -391,9 +395,7 @@ public class DashboardController {
 
     private void setupHyperlinks() {
         linkViewSensors.setOnAction(e -> loadFxmlPage("/fxml/monitoring.fxml", btnMonitoring));
-        linkViewAlerts.setOnAction(e -> loadFxmlPage("/fxml/alerts.fxml", btnAlerts));
         linkShowAllAlerts.setOnAction(e -> loadFxmlPage("/fxml/alerts.fxml", btnAlerts));
-        linkViewTasks.setOnAction(e -> loadFxmlPage("/fxml/tasks.fxml", btnTasks));
         linkViewAllTasks.setOnAction(e -> loadFxmlPage("/fxml/tasks.fxml", btnTasks));
         linkViewCrops.setOnAction(e -> loadFxmlPage("/fxml/crops.fxml", btnCropsCrops));
         linkViewWorkers.setOnAction(e -> loadFxmlPage("/fxml/workers.fxml", btnWorkers));
@@ -801,7 +803,7 @@ public class DashboardController {
         sensorChart.setMaxHeight(200);
 
         tempSeries = new XYChart.Series<>();
-        tempSeries.setName("Temperature (°C)");
+        tempSeries.setName(smartfarm.service.SettingsManager.getInstance().isUseFahrenheit() ? "Temperature (°F)" : "Temperature (°C)");
         humSeries = new XYChart.Series<>();
         humSeries.setName("Humidity (%)");
         soilSeries = new XYChart.Series<>();
@@ -887,11 +889,20 @@ public class DashboardController {
             dotDb.getStyleClass().setAll("status-dot-offline");
         }
 
+        // Query DB for devices with ONLINE status
         LiveSensorData live = LiveSensorData.getInstance();
-        updateSensorDot(live.activeSensorsProperty().get());
-        live.activeSensorsProperty().addListener((obs, oldVal, newVal) ->
-            updateSensorDot(newVal.intValue())
-        );
+        int dbOnline = 0;
+        try {
+            dbOnline = new smartfarm.dao.DeviceDAO().countByStatus("ONLINE");
+        } catch (SQLException ignored) {}
+        int initialCount = Math.max(dbOnline, live.activeSensorsProperty().get());
+        updateSensorDot(initialCount);
+        live.activeSensorsProperty().addListener((obs, oldVal, newVal) -> {
+            int liveCount = newVal.intValue();
+            int fromDb = 0;
+            try { fromDb = new smartfarm.dao.DeviceDAO().countByStatus("ONLINE"); } catch (SQLException ignored) {}
+            updateSensorDot(Math.max(liveCount, fromDb));
+        });
     }
 
     private void updateSensorDot(int count) {
@@ -909,6 +920,16 @@ public class DashboardController {
         live.soilMoistureProperty().addListener((obs, oldVal, newVal) -> updateSoilMoisture(newVal.floatValue()));
         live.deviceIdProperty().addListener((obs, oldVal, newVal) -> updatePlotLabels(newVal));
 
+        // Re-format temperature labels immediately when the user changes the unit
+        smartfarm.service.SettingsManager.getInstance().useFahrenheitProperty().addListener((obs, oldVal, newVal) -> {
+            if (!Float.isNaN(lastTempCelsius)) {
+                smartfarm.service.SettingsManager sm = smartfarm.service.SettingsManager.getInstance();
+                lblTemperature.setText(sm.formatTemp(lastTempCelsius));
+                lblTempTop.setText(sm.formatTempShort(lastTempCelsius));
+                tempSeries.setName(newVal ? "Temperature (°F)" : "Temperature (°C)");
+            }
+        });
+
         float t = live.temperatureProperty().get();
         float h = live.humidityProperty().get();
         float s = live.soilMoistureProperty().get();
@@ -920,6 +941,7 @@ public class DashboardController {
     }
 
     private void updateTemperature(float t) {
+        lastTempCelsius = t;
         smartfarm.service.SettingsManager sm = smartfarm.service.SettingsManager.getInstance();
         lblTemperature.setText(sm.formatTemp(t));
         lblTempTop.setText(sm.formatTempShort(t));
@@ -997,7 +1019,7 @@ public class DashboardController {
     @FXML private void onNavHarvests()   { loadFxmlPage("/fxml/harvest.fxml", btnHarvests); }
     @FXML private void onNavReports()    { loadFxmlPage("/fxml/reports.fxml", btnReports); }
     @FXML private void onNavSettings()   { showPage(new SettingsPage(), btnSettings); }
-    @FXML private void onNavUsers()      { loadFxmlPage("/fxml/workers.fxml", btnUsers); }
+    @FXML private void onNavUsers()      { loadFxmlPage("/fxml/users.fxml", btnUsers); }
     @FXML private void onNavLogs()       { loadFxmlPage("/fxml/logs.fxml", btnLogs); }
 
     private void showPage(Node page, Button navBtn) {

@@ -104,6 +104,18 @@ public class DeviceDAO implements GenericDAO<Device> {
         }
     }
 
+    public int countByStatus(String status) throws SQLException {
+        if (conn == null) return 0;
+        String sql = "SELECT COUNT(*) FROM devices WHERE status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
     private Device mapRow(ResultSet rs) throws SQLException {
         return new Device(
             rs.getInt("device_id"),

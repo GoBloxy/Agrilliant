@@ -247,8 +247,6 @@
                         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                         <HBox alignment="CENTER_LEFT">
                             <Label text="Recent Alerts" styleClass="card-title"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Hyperlink fx:id="linkViewAlerts" text="View All"/>
                         </HBox>
                         <ListView fx:id="alertListView" prefHeight="170" maxHeight="170" styleClass="ghost-list"/>
                         <Hyperlink fx:id="linkShowAllAlerts" text="Show all alerts →" styleClass="link-end"/>
@@ -259,8 +257,6 @@
                         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                         <HBox alignment="CENTER_LEFT">
                             <Label fx:id="lblTasksTitle" text="Tasks" styleClass="card-title"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Hyperlink fx:id="linkViewTasks" text="View All"/>
                         </HBox>
                         <ListView fx:id="taskListView" prefHeight="160" maxHeight="160" styleClass="ghost-list"/>
                         <Hyperlink fx:id="linkViewAllTasks" text="View all tasks →" styleClass="link-end"/>

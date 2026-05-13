@@ -184,7 +184,7 @@ public class MonitoringController {
         trendChart.setCreateSymbols(false);
 
         tempSeries = new XYChart.Series<>();
-        tempSeries.setName("Temperature (°C)");
+        tempSeries.setName(smartfarm.service.SettingsManager.getInstance().isUseFahrenheit() ? "Temperature (°F)" : "Temperature (°C)");
         humSeries = new XYChart.Series<>();
         humSeries.setName("Humidity (%)");
         soilSeries = new XYChart.Series<>();

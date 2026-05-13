@@ -97,6 +97,8 @@ public class SettingsPage extends VBox {
         cmbTempUnit.getItems().addAll("Celsius (°C)", "Fahrenheit (°F)");
         cmbTempUnit.setValue(SettingsManager.getInstance().isUseFahrenheit() ? "Fahrenheit (°F)" : "Celsius (°C)");
         cmbTempUnit.setPrefWidth(180);
+        cmbTempUnit.setOnAction(e ->
+                SettingsManager.getInstance().setUseFahrenheit("Fahrenheit (°F)".equals(cmbTempUnit.getValue())));
 
         grid.add(new Label("Temperature Unit"), 0, 0);
         grid.add(cmbTempUnit, 1, 0);
