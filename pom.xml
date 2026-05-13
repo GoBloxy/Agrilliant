@@ -38,6 +38,10 @@
              without a profile builds for the current OS instead of
              Android. Profiles below override this. -->
         <gluonfx.target>host</gluonfx.target>
+
+        <!-- Gluon Attach — mobile/desktop service abstractions
+             (Settings, Storage, Lifecycle, ...). -->
+        <attach.version>4.0.23</attach.version>
     </properties>
 
     <repositories>
@@ -113,6 +117,33 @@
             <artifactId>gson</artifactId>
             <version>2.11.0</version>
         </dependency>
+
+        <!-- Gluon Attach — mobile/desktop service abstractions. Used by:
+               util.DBConnection      (Settings  — DB creds layer)
+               service.SessionManager (Settings  — H6, session token)
+               util.CSVExporter       (Storage   — H8, SAF on Android)
+             API jars are on the compile classpath for desktop too;
+             GluonFX plugin's <attachList> picks the right runtime impl. -->
+        <dependency>
+            <groupId>com.gluonhq.attach</groupId>
+            <artifactId>util</artifactId>
+            <version>${attach.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gluonhq.attach</groupId>
+            <artifactId>settings</artifactId>
+            <version>${attach.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gluonhq.attach</groupId>
+            <artifactId>storage</artifactId>
+            <version>${attach.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gluonhq.attach</groupId>
+            <artifactId>lifecycle</artifactId>
+            <version>${attach.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -140,11 +171,16 @@
                 <configuration>
                     <target>${gluonfx.target}</target>
                     <mainClass>${main.class}</mainClass>
-                    <!-- H2 will populate this; left empty so the build
-                         config validates even before that lands. -->
-                    <reflectionList />
-                    <resourcesList />
-                    <bundlesList />
+                    <!-- Reflection/resource/bundle config lives in
+                         src/main/resources/META-INF/native-image/smartfarm/
+                         and is auto-discovered by GraalVM at AOT time
+                         (set up in H2). -->
+                    <attachVersion>${attach.version}</attachVersion>
+                    <attachList>
+                        <list>settings</list>
+                        <list>storage</list>
+                        <list>lifecycle</list>
+                    </attachList>
                 </configuration>
             </plugin>
         </plugins>

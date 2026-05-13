@@ -1,0 +1,19 @@
+# Copy this file to src/main/resources/db.properties and fill in your values.
+# The real file is gitignored.
+#
+# DBConnection (util.DBConnection) loads credentials in this order:
+#   1. Environment variables   DB_URL, DB_USER, DB_PASSWORD
+#   2. Gluon Attach Settings   db.url, db.user, db.password
+#                              (Android SharedPreferences / desktop user-config)
+#   3. This file               (classpath fallback / packaged in Android assets)
+#
+# Layer 2 lets the app prompt the user for credentials at first run on
+# Android and remember them per device — without baking them into the APK.
+
+# JDBC URL. Example (LAN MySQL):
+#   db.url=jdbc:mysql://192.168.1.50:3306/smartfarm?useSSL=false&serverTimezone=UTC
+# On a phone over 4G/5G, this must be a public host or via VPN.
+db.url=jdbc:mysql://localhost:3306/smartfarm?useSSL=false&serverTimezone=UTC
+
+db.user=smartfarm_user
+db.password=replace_me

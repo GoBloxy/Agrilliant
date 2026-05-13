@@ -331,7 +331,68 @@ a baseline.
   3bdelbary lands the launcher icons.
 
 ### H4. DBConnection rewrite (lazy, layered creds, async helper)
-> Status: **pending**.
+> Status: **done**, 2026-05-13.
+
+`util/DBConnection.java` rewritten to keep the existing public
+surface (`Connection getInstance()`) and add three new entry points:
+
+- `static <T> CompletableFuture<T> runAsync(Callable<T> task)` —
+  schedules `task` on a 2-thread daemon executor so DB work never
+  blocks the FX UI thread. Wraps checked exceptions into the future.
+- `static void reset()` — drops the cached `Connection` so the next
+  `getInstance()` re-opens. Safe from any thread (atomic ref).
+- `static void closeQuietly()` — for app shutdown; resets the cache
+  and shuts the executor down. Wire from `Main#stop()` on desktop
+  and from a Gluon `LifecycleService.PAUSE` listener on Android.
+
+Credential layering, in resolution order (first non-null wins, cached
+on the first call):
+
+1. **Env vars** `DB_URL`, `DB_USER`, `DB_PASSWORD` — desktop dev / CI.
+2. **Gluon Attach `SettingsService`** keys `db.url`, `db.user`,
+   `db.password` — Android `SharedPreferences` or desktop user-config.
+   Looked up via `Services.get(SettingsService.class)`; a missing
+   service (no Attach runtime) returns `Optional.empty()` and we
+   fall through silently.
+3. **Classpath resource** `db.properties` — bundled fallback.
+   New `src/main/resources/db.properties.example` documents the keys
+   for first-time contributors; the real file stays gitignored.
+
+The cached `Connection` is held in an `AtomicReference`. On any
+`SQLException` during `getInstance()` we null it out so the next
+call retries — survives Android's "OS freezes our process for a few
+minutes" scenario.
+
+#### pom.xml changes (Hagag's lane)
+- New property `<attach.version>4.0.23</attach.version>`.
+- New compile deps: `com.gluonhq.attach:{util, settings, storage,
+  lifecycle}:4.0.23`. Storage/lifecycle are added now so H8 and the
+  Phase 2 lifecycle wiring don't have to touch the pom later.
+- `gluonfx-maven-plugin` config gains `<attachVersion>` +
+  `<attachList>` (settings, storage, lifecycle). This is how the
+  plugin auto-selects per-platform Attach impls at AOT time.
+
+#### Verification (run 2026-05-13)
+| Gate                                  | Result |
+|---------------------------------------|--------|
+| `mvn -Pdesktop compile`               | BUILD SUCCESS — Attach API jars resolved from Maven Central |
+| `mvn -Pandroid validate`              | BUILD SUCCESS |
+| DBConnection.java javadoc + members   | matches plan §H4 acceptance |
+
+**Deferred:** "connects, runs `SELECT 1`, disconnects without
+throwing" requires a real MySQL host. None available from this
+session; the team should smoke-test the happy path once a dev MySQL
+is reachable.
+
+#### TODOs for the merge phase
+
+- `// TODO(phase-2)`: wire `DBConnection.closeQuietly()` into
+  `Main#stop()` once 3bdelbary's B1 settles the `Main.java`
+  rewrite, and into a Gluon `LifecycleService.PAUSE` listener.
+- `// TODO(phase-2)`: add a "Settings" admin screen where the user
+  can enter `db.url`/`db.user`/`db.password` once at first run; the
+  values go through `SettingsService.store(...)` and layer 2 above
+  picks them up next launch. 3bdelbary owns this screen.
 
 ### H5. DAO sweep (logger, thread-safety doc)
 > Status: **pending**.
