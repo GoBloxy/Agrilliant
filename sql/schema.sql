@@ -81,7 +81,10 @@ CREATE TABLE crops (
     planting_date  DATE,
     harvest_date   DATE,
     growth_stage   ENUM('PLANTED','GROWING','READY','HARVESTED') NOT NULL DEFAULT 'PLANTED',
+<<<<<<< HEAD
     expected_yield DOUBLE,
+=======
+>>>>>>> 4ff0dc5c6580e2ce0a05e5fe050938f3f285d2a4
     plot_id        INT          NOT NULL,
     CONSTRAINT fk_crops_plot FOREIGN KEY (plot_id) REFERENCES plots(plot_id) ON DELETE RESTRICT ON UPDATE CASCADE
 );

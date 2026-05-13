@@ -119,6 +119,11 @@ public class LogsController {
         // Show newest logs first
         Collections.reverse(filtered);
         logTable.setItems(FXCollections.observableArrayList(filtered));
+        if (filtered.isEmpty() && !search.isEmpty()) {
+            logTable.setPlaceholder(new Label("No logs matching \"" + search + "\""));
+        } else if (filtered.isEmpty()) {
+            logTable.setPlaceholder(new Label("No logs found"));
+        }
 
         long infoCount = logs.stream().filter(l -> l.getType() == SystemLog.LogType.INFO).count();
         long warnCount = logs.stream().filter(l -> l.getType() == SystemLog.LogType.WARNING).count();

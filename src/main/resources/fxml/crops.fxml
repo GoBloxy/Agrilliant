@@ -4,6 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
+<?import javafx.scene.chart.*?>
 <?import org.kordamp.ikonli.javafx.*?>
 
 <StackPane prefHeight="900" prefWidth="1200" styleClass="content-pane" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartfarm.ui.CropController">
@@ -78,6 +79,34 @@
             </VBox>
         </HBox>
 
+        <!-- Crop Stage Distribution Chart -->
+        <HBox spacing="16">
+            <VBox spacing="10" styleClass="card" HBox.hgrow="ALWAYS">
+                <padding><Insets bottom="16" left="20" right="20" top="16" /></padding>
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <FontIcon iconColor="#2e7d32" iconLiteral="fth-pie-chart" iconSize="16" />
+                    <Label style="-fx-font-size:15;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Crop Stage Distribution" />
+                </HBox>
+                <HBox spacing="12" alignment="CENTER">
+                    <PieChart fx:id="stagePieChart" prefHeight="180" maxHeight="200" prefWidth="180"
+                              legendVisible="false" labelsVisible="false" animated="true" style="-fx-background-color:transparent;" />
+                    <VBox fx:id="stageLegendBox" spacing="8" alignment="CENTER_LEFT" />
+                </HBox>
+            </VBox>
+            <VBox spacing="10" styleClass="card" HBox.hgrow="ALWAYS">
+                <padding><Insets bottom="16" left="20" right="20" top="16" /></padding>
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <FontIcon iconColor="#d97706" iconLiteral="fth-map-pin" iconSize="16" />
+                    <Label style="-fx-font-size:15;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Crops by Plot" />
+                </HBox>
+                <HBox spacing="12" alignment="CENTER">
+                    <PieChart fx:id="statusPieChart" prefHeight="180" maxHeight="200" prefWidth="180"
+                              legendVisible="false" labelsVisible="false" animated="true" style="-fx-background-color:transparent;" />
+                    <VBox fx:id="statusLegendBox" spacing="8" alignment="CENTER_LEFT" />
+                </HBox>
+            </VBox>
+        </HBox>
+
         <!-- Filters -->
         <HBox alignment="CENTER_LEFT" spacing="12">
             <HBox alignment="CENTER_LEFT" styleClass="search-box">
@@ -105,12 +134,7 @@
             <HBox alignment="CENTER_LEFT" style="-fx-padding:12 0 4 0;">
                 <Label fx:id="lblPagination" style="-fx-font-size:12;-fx-text-fill:#6b7280;" text="Showing 1 to 8 of 24 crops" />
                 <Region HBox.hgrow="ALWAYS" />
-                <HBox spacing="4">
-                    <Button styleClass="page-btn" text="&lt;" />
-                    <Button styleClass="page-btn,page-btn-active" text="1" />
-                    <Button styleClass="page-btn" text="2" />
-                    <Button styleClass="page-btn" text="3" />
-                    <Button styleClass="page-btn" text="&gt;" />
+                <HBox fx:id="cropPaginationBox" spacing="4">
                 </HBox>
             </HBox>
         </VBox>
@@ -283,12 +307,10 @@
 
                             <!-- Stage Pipeline -->
                             <HBox fx:id="stageTimeline" alignment="CENTER" spacing="0" style="-fx-padding:12 0 8 0;">
-                                <!-- Dynamically populated: stage circles + connecting lines -->
                             </HBox>
 
                             <!-- Stage Labels Row -->
                             <HBox fx:id="stageLabels" alignment="CENTER" spacing="0">
-                                <!-- Dynamically populated: labels below each stage -->
                             </HBox>
 
                             <Separator />
@@ -382,11 +404,17 @@
 
                 <!-- ═══ PHOTOS TAB ═══ -->
                 <VBox fx:id="photosPane" managed="false" spacing="16" visible="false">
-                    <VBox alignment="CENTER" spacing="12" styleClass="card">
-                        <padding><Insets bottom="40" left="24" right="24" top="40" /></padding>
-                        <FontIcon iconColor="#9ca3af" iconLiteral="fth-camera" iconSize="48" />
-                        <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#374151;" text="No Photos Yet" />
-                        <Label style="-fx-font-size:13;-fx-text-fill:#6b7280;" text="Upload crop photos to track visual progress over time." />
+                    <VBox spacing="12" styleClass="card">
+                        <padding><Insets bottom="20" left="24" right="24" top="20" /></padding>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Crop Photos" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button fx:id="btnUploadPhoto" onAction="#onUploadPhoto"
+                                    style="-fx-background-color:#2e7d32;-fx-text-fill:white;-fx-font-weight:bold;-fx-background-radius:8;-fx-cursor:hand;-fx-padding:6 14;"
+                                    text="+ Upload Photo" />
+                        </HBox>
+                        <FlowPane fx:id="photoGrid" hgap="12" vgap="12" prefWrapLength="600" />
+                        <Label fx:id="lblNoPhotos" style="-fx-font-size:13;-fx-text-fill:#9ca3af;-fx-padding:20 0;" text="No photos yet. Upload photos to track visual progress." />
                     </VBox>
                 </VBox>
 

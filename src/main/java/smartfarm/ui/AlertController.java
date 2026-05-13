@@ -165,6 +165,21 @@ public class AlertController {
         int from = currentPage * PAGE_SIZE;
         int to = Math.min(from + PAGE_SIZE, total);
 
+        String search = txtSearch.getText() != null ? txtSearch.getText().trim() : "";
+        String sev = cmbSeverity.getValue();
+        String stat = cmbStatus.getValue();
+        boolean hasFilters = !search.isEmpty()
+                || (sev != null && !"All Severity".equals(sev))
+                || (stat != null && !"All Status".equals(stat));
+
+        if (total == 0 && !search.isEmpty()) {
+            alertTable.setPlaceholder(new Label("No alerts matching \"" + search + "\""));
+        } else if (total == 0 && hasFilters) {
+            alertTable.setPlaceholder(new Label("No alerts match the selected filters"));
+        } else if (total == 0) {
+            alertTable.setPlaceholder(new Label("No alerts found"));
+        }
+
         ObservableList<Alert> pageItems = FXCollections.observableArrayList(
                 filteredList.subList(from, to)
         );
@@ -172,6 +187,7 @@ public class AlertController {
 
         lblPagination.setText(total > 0
                 ? "Showing " + (from + 1) + " to " + to + " of " + total + " alerts"
+                : total == 0 && !search.isEmpty() ? "No alerts matching \"" + search + "\""
                 : "No alerts found");
 
         buildPaginationButtons(maxPage);
@@ -307,10 +323,10 @@ public class AlertController {
     }
 
     private void updateSummaryCards() {
-        int unresolved = (int) masterList.stream().filter(a -> !a.isResolved()).count();
         int resolved   = (int) masterList.stream().filter(Alert::isResolved).count();
         int critical   = (int) masterList.stream().filter(a -> !a.isResolved() && a.isCritical()).count();
         int warnings   = (int) masterList.stream().filter(a -> !a.isResolved() && a.getSeverity().name().equals("WARNING")).count();
+        int unresolved = (int) masterList.stream().filter(a -> !a.isResolved()).count();
 
         lblCritical.setText(String.valueOf(critical));
         lblWarnings.setText(String.valueOf(warnings));
@@ -521,8 +537,18 @@ public class AlertController {
         grid.add(new Label(String.valueOf(alert.getPlotId())), 1, 2);
         dp.setContent(grid);
 
+        Button okBtn = (Button) dp.lookupButton(ButtonType.OK);
+        okBtn.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            if (descField.getText().trim().isEmpty()) {
+                descField.setStyle("-fx-border-color:red;");
+                event.consume();
+            } else {
+                descField.setStyle("");
+            }
+        });
+
         dialog.showAndWait().ifPresent(result -> {
-            if (result == ButtonType.OK && !descField.getText().trim().isEmpty()) {
+            if (result == ButtonType.OK) {
                 try {
                     TaskDAO taskDAO = new TaskDAO();
                     Task task = new Task(
