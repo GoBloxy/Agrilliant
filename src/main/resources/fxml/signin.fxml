@@ -33,6 +33,20 @@
             <Label fx:id="lblError" styleClass="auth-error" visible="false"/>
             <Button fx:id="btnSignIn" text="Sign In" styleClass="auth-btn" onAction="#onSignIn"/>
         </VBox>
+        <!-- Divider -->
+        <HBox alignment="CENTER" spacing="10">
+            <Region HBox.hgrow="ALWAYS" style="-fx-border-color: #e0e0e0; -fx-border-width: 0 0 1 0;"/>
+            <Label text="OR" styleClass="auth-subtitle"/>
+            <Region HBox.hgrow="ALWAYS" style="-fx-border-color: #e0e0e0; -fx-border-width: 0 0 1 0;"/>
+        </HBox>
+
+        <!-- Fingerprint Login -->
+        <VBox spacing="8" alignment="CENTER">
+            <Label text="Worker Fingerprint Login" styleClass="auth-subtitle"/>
+            <Button fx:id="btnFingerprint" text="Scan Fingerprint" styleClass="auth-btn-secondary" onAction="#onFingerprintLogin"/>
+            <Label fx:id="lblFpStatus" text="" styleClass="auth-subtitle" visible="false"/>
+        </VBox>
+
         <HBox spacing="4" alignment="CENTER">
             <Label text="Don't have an account?" styleClass="auth-subtitle"/>
             <Hyperlink text="Sign Up" styleClass="auth-link" onAction="#onGoToSignUp"/>

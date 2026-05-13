@@ -21,14 +21,16 @@ The R307 optical fingerprint sensor is used for **worker attendance tracking**. 
 
 ### Wiring (ESP32 + R307)
 
-| R307 Wire (Color) | R307 Pin | ESP32 Pin       | Notes                |
-|--------------------|----------|-----------------|----------------------|
-| Red                | VCC      | 5V (VIN)        | Must use 5V, not 3.3V |
-| Black              | GND      | GND             | Common ground        |
-| Green              | TX       | GPIO 16 (RX2)   | UART2 RX             |
-| Yellow             | RX       | GPIO 17 (TX2)   | UART2 TX             |
+| R307 Wire (Color) | R307 Pin | ESP32 Pin       | Notes                  |
+|--------------------|----------|-----------------|------------------------|
+| Red                | VCC      | 5V (VIN)        | Must use 5V, not 3.3V  |
+| Black              | GND      | GND             | Common ground          |
+| Yellow             | TX       | GPIO 16 (RX2)   | UART2 RX               |
+| Green              | RX       | GPIO 17 (TX2)   | UART2 TX               |
+| Blue               | Wakeup   | Not connected   | Optional touch detect  |
+| White              | 3.3V     | Not connected   | Optional touch power   |
 
-> **Note:** The white and blue wires (USB D+ / D-) are unused in UART mode.
+> **Note:** Blue (wakeup) and white (3.3V touch) are optional — only needed if you want touch-detect to wake the ESP32 from deep sleep.
 
 ### Full System Wiring (All Sensors)
 

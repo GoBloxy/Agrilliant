@@ -64,6 +64,13 @@
             <version>12.3.1</version>
         </dependency>
 
+        <!-- jSerialComm — Serial port communication (R307 fingerprint on desktop) -->
+        <dependency>
+            <groupId>com.fazecast</groupId>
+            <artifactId>jSerialComm</artifactId>
+            <version>2.10.4</version>
+        </dependency>
+
         <!-- JFreeChart for advanced charts -->
         <dependency>
             <groupId>org.jfree</groupId>

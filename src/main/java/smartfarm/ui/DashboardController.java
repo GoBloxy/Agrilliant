@@ -70,6 +70,22 @@ public class DashboardController {
             lblUserName.setText(user.getFullName());
             lblUserRole.setText(user.getRole().name());
             WorkerController.setCurrentManagerId(user.getId());
+            applyRolePermissions(user.getRole());
+        }
+    }
+
+    private void applyRolePermissions(smartfarm.model.User.Role role) {
+        if (role == smartfarm.model.User.Role.WORKER) {
+            // Workers can only see: Dashboard, Attendance, Tasks
+            btnMonitoring.setVisible(false); btnMonitoring.setManaged(false);
+            btnAlerts.setVisible(false);     btnAlerts.setManaged(false);
+            btnCrops.setVisible(false);      btnCrops.setManaged(false);
+            btnWorkers.setVisible(false);    btnWorkers.setManaged(false);
+            btnHarvests.setVisible(false);   btnHarvests.setManaged(false);
+            btnReports.setVisible(false);    btnReports.setManaged(false);
+            btnSettings.setVisible(false);   btnSettings.setManaged(false);
+            btnUsers.setVisible(false);      btnUsers.setManaged(false);
+            btnLogs.setVisible(false);       btnLogs.setManaged(false);
         }
     }
 

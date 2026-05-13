@@ -213,11 +213,7 @@ public class WorkerController {
         CheckBox onDutyCb = new CheckBox("On Duty");
         onDutyCb.setSelected(existing != null && existing.isOnDuty());
 
-<<<<<<< HEAD
-        VBox form = new VBox(10, nameField, phoneField, jobField, skillsField, fpField, onDutyCb);
-=======
-        VBox form = new VBox(10, nameField, phoneField, emailField, jobField, skillsField, onDutyCb);
->>>>>>> 83dc482b39cd9e222d5bd246f0547b770d8abfd2
+        VBox form = new VBox(10, nameField, phoneField, emailField, jobField, skillsField, fpField, onDutyCb);
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 

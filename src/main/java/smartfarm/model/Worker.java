@@ -18,13 +18,14 @@ public class Worker {
     private LocalDateTime updatedAt;
 
     // Full constructor (loading from DB)
-<<<<<<< HEAD
-    public Worker(int workerId, String fullName, String phone, String jobTitle, String skills,
-                  boolean onDuty, Integer fingerprintId, int managerId,
-                  LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Worker(int workerId, String fullName, String phone, String email, String passwordHash,
+                  String jobTitle, String skills, boolean onDuty, Integer fingerprintId,
+                  int managerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.workerId       = workerId;
         this.fullName       = fullName;
         this.phone          = phone;
+        this.email          = email;
+        this.passwordHash   = passwordHash;
         this.jobTitle       = jobTitle;
         this.skills         = skills;
         this.onDuty         = onDuty;
@@ -35,10 +36,13 @@ public class Worker {
     }
 
     // Without workerId (creating new)
-    public Worker(String fullName, String phone, String jobTitle, String skills, int managerId) {
+    public Worker(String fullName, String phone, String email, String passwordHash,
+                  String jobTitle, String skills, int managerId) {
         this.workerId       = -1;
         this.fullName       = fullName;
         this.phone          = phone;
+        this.email          = email;
+        this.passwordHash   = passwordHash;
         this.jobTitle       = jobTitle;
         this.skills         = skills;
         this.onDuty         = false;
@@ -46,36 +50,6 @@ public class Worker {
         this.managerId      = managerId;
         this.createdAt      = LocalDateTime.now();
         this.updatedAt      = LocalDateTime.now();
-=======
-    public Worker(int workerId, String fullName, String phone, String email, String passwordHash, String jobTitle, String skills,
-                  boolean onDuty, int managerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.workerId  = workerId;
-        this.fullName  = fullName;
-        this.phone     = phone;
-        this.email     = email;
-        this.passwordHash = passwordHash;
-        this.jobTitle  = jobTitle;
-        this.skills    = skills;
-        this.onDuty    = onDuty;
-        this.managerId = managerId;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    // Without workerId (creating new)
-    public Worker(String fullName, String phone, String email, String passwordHash, String jobTitle, String skills, int managerId) {
-        this.workerId  = -1;
-        this.fullName  = fullName;
-        this.phone     = phone;
-        this.email     = email;
-        this.passwordHash = passwordHash;
-        this.jobTitle  = jobTitle;
-        this.skills    = skills;
-        this.onDuty    = false;
-        this.managerId = managerId;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
->>>>>>> 83dc482b39cd9e222d5bd246f0547b770d8abfd2
     }
 
     public int getWorkerId() { return workerId; }

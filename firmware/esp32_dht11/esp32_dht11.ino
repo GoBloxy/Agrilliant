@@ -45,10 +45,10 @@
 #include <Adafruit_Fingerprint.h>
 
 // ─── Configuration ───────────────────────────────────────────────
-#define WIFI_SSID     "trying"
-#define WIFI_PASSWORD "123456789"
+#define WIFI_SSID     "314Pi"
+#define WIFI_PASSWORD "TheGreatPi123@"
 
-#define SERVER_IP     "10.116.238.210"   // IP of the PC running the Java app
+#define SERVER_IP     "192.168.8.147"   // IP of the PC running the Java app
 #define SERVER_PORT   8080
 
 #define DHT_PIN       4                 // GPIO pin connected to DHT11 DATA
