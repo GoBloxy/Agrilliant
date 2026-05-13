@@ -12,15 +12,54 @@
     <name>Agrilliant</name>
     <description>A Full-Stack Java and IoT College Project — OOP II Module</description>
 
+    <!--
+        Build profiles:
+          mvn ...                     → desktop (default; runs javafx-maven-plugin + shade)
+          mvn -Pdesktop ...           → same as default
+          mvn -Pandroid gluonfx:build → AOT-compile + link a Gluon native Android app
+
+        See docs/MIGRATION_HAGAG.md for the full Android setup.
+    -->
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
         <javafx.version>21.0.2</javafx.version>
+
+        <!-- Main class — same for both desktop (javafx Application) and
+             Android (Gluon MobileApplication, after 3bdelbary's B1). -->
+        <main.class>smartfarm.Main</main.class>
+
+        <!-- Gluon build toolchain. 1.0.28 (2025-10-24) is current. -->
+        <gluonfx.plugin.version>1.0.28</gluonfx.plugin.version>
+        <!-- Default to `host` so an accidental `mvn gluonfx:build`
+             without a profile builds for the current OS instead of
+             Android. Profiles below override this. -->
+        <gluonfx.target>host</gluonfx.target>
     </properties>
 
+    <repositories>
+        <!-- Gluon's nexus for GluonFX plugin releases + javafx-statics
+             builds. Maven Central is implicit. -->
+        <repository>
+            <id>gluon-releases</id>
+            <url>https://nexus.gluonhq.com/nexus/content/repositories/releases</url>
+        </repository>
+    </repositories>
+
     <dependencies>
-        <!-- JavaFX -->
+        <!-- =======================================================
+             Dependencies common to BOTH desktop and Android builds.
+             Desktop-only deps (jSerialComm, JFreeChart) live in the
+             `desktop` profile below so the Android classpath stays
+             clean.
+             ======================================================= -->
+
+        <!-- JavaFX (on Android, GluonFX bundles its own static build
+             of these and ignores the Maven artifacts; declaring them
+             here keeps the desktop IDE / `javafx:run` happy.) -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -32,27 +71,31 @@
             <version>${javafx.version}</version>
         </dependency>
 
-        <!-- AtlantaFX — Modern JavaFX CSS Themes -->
+        <!-- AtlantaFX — JavaFX CSS theme. Pure CSS + resources,
+             portable to GluonFX. -->
         <dependency>
             <groupId>io.github.mkpaz</groupId>
             <artifactId>atlantafx-base</artifactId>
             <version>2.0.1</version>
         </dependency>
 
-        <!-- MySQL JDBC Driver -->
+        <!-- MySQL JDBC Driver. Reflection-heavy → needs entries in
+             META-INF/native-image/smartfarm/reflect-config.json (H2). -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.3.0</version>
         </dependency>
-        <!-- jbcrypt -->
+
+        <!-- jBCrypt — pure Java password hashing. -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
 
-        <!-- Ikonli — Icon Packs for JavaFX -->
+        <!-- Ikonli — Icon Packs for JavaFX. Needs reflection config
+             for the Feather pack (H2). -->
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-javafx</artifactId>
@@ -64,81 +107,163 @@
             <version>12.3.1</version>
         </dependency>
 
-        <!-- jSerialComm — Serial port communication (R307 fingerprint on desktop) -->
-        <dependency>
-            <groupId>com.fazecast</groupId>
-            <artifactId>jSerialComm</artifactId>
-            <version>2.11.0</version>
-        </dependency>
-
-        <!-- Gson — JSON parsing for Crop.health API -->
+        <!-- Gson — JSON parsing (Plant.id response + Crop health). -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.11.0</version>
         </dependency>
-
-        <!-- JFreeChart for advanced charts -->
-        <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.5.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart-fx</artifactId>
-            <version>1.0.1</version>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Keep the desktop JavaFX run plugin so `mvn javafx:run`
+                 keeps working unchanged for the desktop build. -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>smartfarm.Main</mainClass>
+                    <mainClass>${main.class}</mainClass>
                 </configuration>
             </plugin>
 
-            <!-- Fat JAR for jpackage (excludes JavaFX, provided via module-path) -->
+            <!-- GluonFX plugin — AOT + native image + Android packaging.
+                 The `target` property is set per profile (desktop → host,
+                 android → android). `gluonfx:compile` / `gluonfx:build`
+                 / `gluonfx:package` / `gluonfx:install` / `gluonfx:nativerun`
+                 are the goals the team will use. -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.1</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals><goal>shade</goal></goals>
-                        <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>org.openjfx:*</exclude>
-                                </excludes>
-                            </artifactSet>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>module-info.class</exclude>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>smartfarm.Launcher</mainClass>
-                                </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
+                <groupId>com.gluonhq</groupId>
+                <artifactId>gluonfx-maven-plugin</artifactId>
+                <version>${gluonfx.plugin.version}</version>
+                <configuration>
+                    <target>${gluonfx.target}</target>
+                    <mainClass>${main.class}</mainClass>
+                    <!-- H2 will populate this; left empty so the build
+                         config validates even before that lands. -->
+                    <reflectionList />
+                    <resourcesList />
+                    <bundlesList />
+                </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- ===========================================================
+             DESKTOP profile (default).
+             Pulls in jSerialComm + JFreeChart, runs the shade plugin
+             at `package` phase to build the fat JAR for jpackage.
+             =========================================================== -->
+        <profile>
+            <id>desktop</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <properties>
+                <gluonfx.target>host</gluonfx.target>
+            </properties>
+
+            <dependencies>
+                <!-- jSerialComm — R307 fingerprint over USB serial.
+                     Desktop-only; will not link on Android (H7). -->
+                <dependency>
+                    <groupId>com.fazecast</groupId>
+                    <artifactId>jSerialComm</artifactId>
+                    <version>2.11.0</version>
+                </dependency>
+
+                <!-- JFreeChart — advanced charts. Currently unused in
+                     source but kept in the desktop profile until
+                     3bdelbary's B6 chart audit confirms removal. -->
+                <dependency>
+                    <groupId>org.jfree</groupId>
+                    <artifactId>jfreechart</artifactId>
+                    <version>1.5.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.jfree</groupId>
+                    <artifactId>jfreechart-fx</artifactId>
+                    <version>1.0.1</version>
+                </dependency>
+            </dependencies>
+
+            <build>
+                <plugins>
+                    <!-- Fat JAR for jpackage. Desktop only — Android
+                         uses GluonFX's AOT output, no shading. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>3.5.1</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals><goal>shade</goal></goals>
+                                <configuration>
+                                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                                    <artifactSet>
+                                        <excludes>
+                                            <exclude>org.openjfx:*</exclude>
+                                        </excludes>
+                                    </artifactSet>
+                                    <filters>
+                                        <filter>
+                                            <artifact>*:*</artifact>
+                                            <excludes>
+                                                <exclude>module-info.class</exclude>
+                                                <exclude>META-INF/*.SF</exclude>
+                                                <exclude>META-INF/*.DSA</exclude>
+                                                <exclude>META-INF/*.RSA</exclude>
+                                            </excludes>
+                                        </filter>
+                                    </filters>
+                                    <transformers>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                            <mainClass>smartfarm.Launcher</mainClass>
+                                        </transformer>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                    </transformers>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- ===========================================================
+             ANDROID profile.
+
+             Switches GluonFX target to `android`. The Android build
+             also needs:
+
+               - H7: split `service/FingerprintService.java` into an
+                     Android-safe stub (same path) + a desktop-only
+                     `service/desktop/FingerprintServiceDesktop.java`.
+               - H9: profile-guard `server/**` (FarmServer +
+                     SensorHandler) out of the Android compile.
+               - 3bdelbary B1: convert `Main.java` to a Gluon
+                     `MobileApplication` so it stops importing
+                     `smartfarm.server.FarmServer`.
+
+             Until those land, `mvn -Pandroid compile` will fail with
+             jSerialComm import errors in FingerprintService. The
+             structural verification for H1 is `mvn -Pandroid validate`
+             plus the effective-pom check (see docs/MIGRATION_HAGAG.md).
+
+             Per-source exclusions go in H7 + H9 once the desktop-only
+             code has its own path (`service/desktop/**`, `server/**`)
+             that isn't imported by any Android-compiled source.
+             =========================================================== -->
+        <profile>
+            <id>android</id>
+
+            <properties>
+                <gluonfx.target>android</gluonfx.target>
+            </properties>
+        </profile>
+    </profiles>
 </project>

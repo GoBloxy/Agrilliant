@@ -168,7 +168,49 @@ The verification gate (per §10 of the migration plan) goes in the
 "Verify" subsection.
 
 ### H1. GluonFX plugin + Maven profiles
-> Status: **pending**.
+> Status: **done (structural)**, 2026-05-13.
+
+What landed in `pom.xml`:
+- `${main.class} = smartfarm.Main`, used by both `javafx-maven-plugin`
+  and `gluonfx-maven-plugin`.
+- `gluonfx-maven-plugin` 1.0.28 wired at project root with
+  `<target>${gluonfx.target}</target>` and empty `reflectionList /
+  resourcesList / bundlesList` stubs that H2 populates.
+- Gluon nexus added to `<repositories>` (needed for the JavaFX
+  static builds used by Android AOT).
+- `desktop` profile (default, `activeByDefault=true`):
+  - Adds the desktop-only deps (`jSerialComm`, `jfreechart`,
+    `jfreechart-fx`).
+  - Owns the `maven-shade-plugin` execution that produces the
+    `jpackage`-friendly fat JAR.
+  - Sets `gluonfx.target=host`.
+- `android` profile:
+  - Sets `gluonfx.target=android`.
+  - **No per-source excludes yet** — see the deferred gate below.
+
+Verification (run 2026-05-13):
+| Gate                                               | Result |
+|----------------------------------------------------|--------|
+| `mvn -Pdesktop validate`                           | BUILD SUCCESS |
+| `mvn -Pandroid validate`                           | BUILD SUCCESS |
+| `mvn -Pdesktop compile`                            | BUILD SUCCESS, 66 source files |
+| Effective POM (android): GluonFX target = android  | confirmed |
+| Effective POM (android): mainClass = smartfarm.Main | confirmed |
+
+**Deferred:** `mvn -Pandroid compile` cannot pass yet because
+`WorkerController` / `SignInController` import
+`smartfarm.service.FingerprintService` (which imports jSerialComm),
+and `Main.java` imports `smartfarm.server.FarmServer`. The plan splits
+this work across H7 (FingerprintService stub), H9 (FarmServer profile
+guard), and 3bdelbary's B1 (Main.java → MobileApplication). Once those
+land the android compile gate runs cleanly. Tracking TODO:
+
+- `// TODO(phase-2)`: re-verify `mvn -Pandroid compile` succeeds end-to-end
+  once H7+H9+B1 are merged.
+- `// TODO(phase-2)`: once `service/desktop/**` exists, add
+  `<excludes><exclude>**/smartfarm/service/desktop/**</exclude></excludes>`
+  to the android profile's `maven-compiler-plugin` config.
+
 
 ### H2. GraalVM native-image config
 > Status: **pending**.
