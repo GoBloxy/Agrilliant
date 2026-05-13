@@ -4,6 +4,9 @@ src/main/resources/crop-health.properties
 
 # === Build output ===
 target/
+.maven-bundled/
+gluonfx/
+gvm/
 
 # === IDE files ===
 .idea/

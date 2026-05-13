@@ -1,0 +1,240 @@
+# Hagag — Android Migration Notes (Build / Data / IoT track)
+
+> Track-local notes for §8.A of `ANDROID_MIGRATION.md`. Only this file,
+> the build config, the DAO/service/server/util layers, the GraalVM
+> native-image config, and the Android manifest live in this lane (see
+> §6 of the migration plan).
+>
+> If you want to know what to touch, the source of truth is
+> `ANDROID_MIGRATION.md` §6 + §7. This file is **notes**, not rules.
+
+---
+
+## 0. Branch
+
+- Branch: `android/hagag`, forked from `mobile-app` HEAD on
+  2026-05-13. (The plan says `android/hagag` off `main`; we forked off
+  `mobile-app` because the mobile-app branch already contains the
+  cleaned-up desktop baseline the team wants to migrate from.)
+- All Hagag commits land here. Merge into `main` only after the
+  matching Phase 1 checklist below is green.
+
+## 1. Phase 0 — Joint setup outcomes
+
+### 1.1 Decisions (locked in)
+
+| Decision                | Value                                    | Why                                                                 |
+|-------------------------|------------------------------------------|---------------------------------------------------------------------|
+| GluonFX Maven plugin    | `1.0.28`                                 | Latest stable on Maven Central (2025-10-24). Targets Android SDK 35 + NDK 28. |
+| Min Android API         | `26` (Android 8.0 Oreo)                  | Per `ANDROID_MIGRATION.md` §5.                                       |
+| Target / compile SDK    | `35` (Android 15)                        | GluonFX 1.0.27+ default.                                             |
+| Android NDK             | `28`                                     | GluonFX 1.0.27+ default.                                             |
+| Target ABI              | `aarch64-android` (arm64-v8a only)       | Gluon only supports arm64 on Android.                                |
+| JDK (build)             | OpenJDK 17+ for `javac` / Maven          | Project `pom.xml` is `--release 17`. Newer JDKs are fine for build. |
+| JDK (AOT image)         | Gluon GraalVM CE / Liberica NIK 24       | Pinned by GluonFX 1.0.28 internally; you don't choose it manually.   |
+| Build host              | Linux (Arch on Hagag's machine)          | Gluon docs: "Android can be built only on Linux OS or from Windows WSL2". |
+
+### 1.2 Machine prerequisites
+
+This is what **must** be on the machine before any `mvn -Pandroid gluonfx:*`
+goal will work end-to-end.
+
+#### A. OpenJDK 17 (or newer) on the PATH
+
+Arch:
+```bash
+sudo pacman -S jdk17-openjdk
+sudo archlinux-java set java-17-openjdk     # if you have multiple JDKs
+```
+
+Verify:
+```bash
+java -version          # should be >= 17
+javac -version
+```
+
+> **Note for our setup:** the system currently ships JDK 26 as
+> default. `mvn compile` still works because `pom.xml` pins
+> `--release 17`, but `javafx:run` is fragile on JDK 26 + plugin
+> 0.0.8. If `javafx:run` misbehaves, switch to JDK 17 for the
+> desktop run target.
+
+#### B. Maven 3.9+
+
+We bundled `apache-maven-3.9.6` in `maven.zip` at the repo root.
+Unzipped into `.maven-bundled/` (gitignored). Either:
+
+```bash
+# Option 1: install system-wide
+sudo pacman -S maven
+
+# Option 2: use the bundled one (no install, gitignored)
+cd /path/to/Agrilliant
+unzip maven.zip -d .maven-bundled            # one-time
+alias mvn="$(pwd)/.maven-bundled/apache-maven-3.9.6/bin/mvn"
+```
+
+GluonFX plugin 1.0.25+ explicitly fixed Maven-3.9+ compatibility, so
+3.9.6 is fine.
+
+#### C. GraalVM is **not** required to be pre-installed
+
+The GluonFX plugin (1.0.24+) downloads its own Gluon-tweaked GraalVM
+build (currently `GraalVM CE 23-dev+25.1` with JDK 23) the first time
+you run `mvn gluonfx:build`. You do **not** need `GRAALVM_HOME` set.
+
+If you'd rather install one yourself (faster first build, more
+predictable), use Liberica NIK 24 (Full JDK):
+- https://bell-sw.com/pages/downloads/native-image-kit/
+
+Once installed, set:
+```bash
+export GRAALVM_HOME=/path/to/liberica-nik
+export PATH=$GRAALVM_HOME/bin:$PATH
+```
+
+#### D. Android SDK + NDK
+
+The GluonFX plugin will auto-download SDK and NDK on first build if
+both `ANDROID_SDK` and `ANDROID_NDK` are **unset**. This is the
+recommended path — no manual install.
+
+If you want to control the install:
+
+```bash
+# Arch: install command-line tools
+yay -S android-sdk android-sdk-cmdline-tools-latest android-ndk
+
+# Required packages (per Gluon docs)
+sudo sdkmanager "platform-tools" "platforms;android-35" \
+                "build-tools;35.0.0" "ndk-bundle" \
+                "extras;android;m2repository" \
+                "extras;google;m2repository"
+
+# Point GluonFX at it
+export ANDROID_SDK=/opt/android-sdk
+export ANDROID_NDK=/opt/android-ndk
+```
+
+#### E. Linux native build tools (for GraalVM AOT)
+
+```bash
+sudo pacman -S gcc make pkgconf glibc zlib base-devel
+```
+
+These are usually already installed on a developer Arch machine; if
+the first `gluonfx:build` complains about missing `gcc` or `ld`, that
+is what to install.
+
+#### F. Working ADB connection (for install/run goals)
+
+```bash
+adb devices
+```
+
+Phone must have **Developer Options → USB debugging** turned on.
+First connection prompts "Allow USB debugging?" on the device.
+
+### 1.3 Verification of the desktop baseline
+
+The plan says Phase 0 ends when `mvn clean javafx:run` works on
+`main`. Practical baseline on this branch (`android/hagag`,
+pre-Phase-1):
+
+```bash
+.maven-bundled/apache-maven-3.9.6/bin/mvn -B compile
+```
+
+Result on 2026-05-13: BUILD SUCCESS. Source still compiles cleanly
+against the unchanged `pom.xml` baseline before any H-task edits.
+
+Full `javafx:run` requires a graphical session, so we don't smoke-test
+it from a headless terminal session — confirm it once interactively
+before H1 touches `pom.xml`:
+
+```bash
+mvn -Pdesktop javafx:run
+```
+
+If the run target fails on JDK 26, drop down to JDK 17 (§1.2.A) for
+the desktop variant.
+
+---
+
+## 2. Phase 1 task log
+
+Each `H*` task gets one section here and one commit on `android/hagag`.
+The verification gate (per §10 of the migration plan) goes in the
+"Verify" subsection.
+
+### H1. GluonFX plugin + Maven profiles
+> Status: **pending**.
+
+### H2. GraalVM native-image config
+> Status: **pending**.
+
+### H3. AndroidManifest.xml + permissions
+> Status: **pending**.
+
+### H4. DBConnection rewrite (lazy, layered creds, async helper)
+> Status: **pending**.
+
+### H5. DAO sweep (logger, thread-safety doc)
+> Status: **pending**.
+
+### H6. SessionManager — Gluon Settings + desktop fallback
+> Status: **pending**.
+
+### H7. FingerprintService — Android stub + desktop impl split
+> Status: **pending**.
+
+### H8. CSVExporter — Gluon Storage + desktop fallback
+> Status: **pending**.
+
+### H9. FarmServer — desktop-only profile guard
+> Status: **pending**.
+
+### H10. Logger / ThresholdConfig housekeeping
+> Status: **pending**.
+
+### H11. Final notes (this file's TODO log)
+> Status: **pending**.
+
+---
+
+## 3. Cross-track TODOs (for Phase 2 merge)
+
+> Things this track must stop short of (because the other track owns
+> the file). Each `// TODO(phase-2): ...` comment Hagag adds in code
+> gets a corresponding bullet here, with file + reason.
+
+_Empty for now. Append as we go._
+
+---
+
+## 4. Cheat sheet — common GluonFX commands
+
+```bash
+# Desktop dev (unchanged from before migration)
+mvn -Pdesktop javafx:run
+
+# Android: AOT compile (slow; takes minutes; needs internet first time)
+mvn -Pandroid gluonfx:compile
+
+# Android: produce native arm64 binary
+mvn -Pandroid gluonfx:build
+
+# Android: package as APK + AAB
+mvn -Pandroid gluonfx:package
+
+# Android: install APK on connected device
+mvn -Pandroid gluonfx:install
+
+# Android: launch on device with adb logcat streamed
+mvn -Pandroid gluonfx:nativerun
+
+# Capture GraalVM reflection config from a desktop run
+mvn -Pdesktop -Dagent=true javafx:run
+# (then copy native-image-agent output into
+#  src/main/resources/META-INF/native-image/smartfarm/)
+```
