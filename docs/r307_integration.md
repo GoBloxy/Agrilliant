@@ -168,6 +168,47 @@ Enrollment must be done **separately** using the Adafruit example sketch before 
 - The ESP32 only sends the matched ID — it does **not** send raw fingerprint data
 - If the R307 is not connected, the system auto-detects this at boot and runs without attendance (no errors)
 
+## Desktop Fingerprint Login (Worker Access)
+
+Workers do **not** use email/password. Instead, they log in via the R307 connected to the desktop PC through a **USB-to-UART adapter** (CP2102, FTDI, or CH340).
+
+### Hardware Setup (Desktop)
+
+```
+R307 Sensor ──(wires)──> USB-to-UART Adapter ──(USB cable)──> Desktop PC
+```
+
+| R307 Wire | Adapter Pin |
+|-----------|-------------|
+| Red (VCC) | 5V          |
+| Black (GND) | GND      |
+| Yellow (TX) | RX       |
+| Green (RX) | TX         |
+
+### Login Flow
+
+1. User opens the Agrilliant app → Sign-in screen
+2. Below the email/password form, clicks **"Scan Fingerprint"**
+3. The app auto-detects the R307 on any available COM port
+4. Status label shows: "Place your finger on the sensor..."
+5. Worker places finger → R307 matches → app looks up `fingerprint_id` in `worker` table
+6. Match found → Worker is logged in with **restricted access** (WORKER role)
+
+### Access Control (RBAC)
+
+| Role | Login Method | Visible Pages |
+|------|-------------|---------------|
+| **Admin** | Email + Password | All pages |
+| **Manager** | Email + Password | All pages |
+| **Worker** | Fingerprint scan | Dashboard, Attendance, Tasks |
+
+Workers cannot see: Monitoring, Alerts, Crops, Workers, Harvests, Reports, Settings, Users, Logs.
+
+### Dependencies
+
+- **jSerialComm** (`com.fazecast:jSerialComm:2.10.4`) — Java serial port communication
+- Added to `pom.xml` for USB-to-UART R307 access from the desktop app
+
 ## Files Modified/Created
 
 | File | Change |
@@ -175,11 +216,18 @@ Enrollment must be done **separately** using the Adafruit example sketch before 
 | `firmware/esp32_dht11/esp32_dht11.ino` | Added R307 init, `checkFingerprint()`, OLED indicators |
 | `sql/schema.sql` | Added `fingerprint_id` to worker, new `attendance` table |
 | `src/.../model/Attendance.java` | New model class |
-| `src/.../model/Worker.java` | Added `fingerprintId` field |
+| `src/.../model/Worker.java` | Added `fingerprintId`, `email`, `passwordHash` fields |
 | `src/.../dao/AttendanceDAO.java` | New DAO for attendance CRUD |
-| `src/.../dao/WorkerDAO.java` | Updated save/update/mapRow for fingerprint_id |
+| `src/.../dao/WorkerDAO.java` | Updated save/update/mapRow for fingerprint_id, email, password_hash |
 | `src/.../service/AttendanceService.java` | New service with toggle check-in/out logic |
+| `src/.../service/FingerprintService.java` | New — serial R307 communication for desktop login |
 | `src/.../server/SensorHandler.java` | Routes `FINGERPRINT:` messages to AttendanceService |
 | `src/.../ui/AttendancePage.java` | New JavaFX page with attendance table |
-| `src/.../ui/DashboardController.java` | Added `btnAttendance` + `onNavAttendance()` |
+| `src/.../ui/SignInController.java` | Added fingerprint login button + `onFingerprintLogin()` |
+| `src/.../ui/DashboardController.java` | Added `btnAttendance`, `onNavAttendance()`, `applyRolePermissions()` |
+| `src/.../ui/WorkerController.java` | Added fingerprint ID field to add/edit dialog, fingerprint column |
+| `src/.../resources/fxml/signin.fxml` | Added "Scan Fingerprint" button with OR divider |
 | `src/.../resources/fxml/dashboard.fxml` | Added Attendance sidebar button |
+| `src/.../resources/fxml/workers.fxml` | Added Fingerprint column to table |
+| `src/.../resources/css/farm-theme.css` | Added `auth-btn-secondary` style |
+| `pom.xml` | Added `jSerialComm` dependency |
