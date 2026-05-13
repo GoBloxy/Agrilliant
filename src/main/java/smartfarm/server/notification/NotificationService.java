@@ -68,21 +68,21 @@ public class NotificationService {
     /**
      * Send sensor alert based on threshold violations
      */
-    public void sendSensorAlert(String deviceId, String sensorType, double value, double threshold, String severity) {
+    public void sendSensorAlert(String deviceId, String sensorType, double value, double threshold, Alert.Severity severity) {
         String title = "Sensor Alert";
         String message = String.format("%s sensor %s: %.2f (threshold: %.2f)", 
             deviceId, sensorType, value, threshold);
         String details = String.format("Device: %s\nSensor: %s\nCurrent: %.2f\nThreshold: %.2f\nSeverity: %s", 
             deviceId, sensorType, value, threshold, severity);
         
-        NotificationType type = "HIGH".equals(severity) ? NotificationType.CRITICAL : NotificationType.WARNING;
+        NotificationType type = severity == Alert.Severity.CRITICAL ? NotificationType.CRITICAL : NotificationType.WARNING;
         sendNotification(type, title, message, details);
         
         // Create alert in database
         try {
             Alert alert = new Alert(
                 "SENSOR_THRESHOLD",
-                Alert.Severity.valueOf(severity),
+                severity,
                 message,
                 false,
                 java.time.LocalDateTime.now(),
@@ -150,21 +150,21 @@ public class NotificationService {
                 
                 // Check temperature thresholds
                 if (reading.getTemperature() > 40.0) {
-                    sendSensorAlert(deviceId, "Temperature", reading.getTemperature(), 40.0, "HIGH");
+                    sendSensorAlert(deviceId, "Temperature", reading.getTemperature(), 40.0, Alert.Severity.CRITICAL);
                 } else if (reading.getTemperature() < 5.0) {
-                    sendSensorAlert(deviceId, "Temperature", reading.getTemperature(), 5.0, "LOW");
+                    sendSensorAlert(deviceId, "Temperature", reading.getTemperature(), 5.0, Alert.Severity.CRITICAL);
                 }
                 
                 // Check humidity thresholds
                 if (reading.getHumidity() > 90.0) {
-                    sendSensorAlert(deviceId, "Humidity", reading.getHumidity(), 90.0, "HIGH");
+                    sendSensorAlert(deviceId, "Humidity", reading.getHumidity(), 90.0, Alert.Severity.WARNING);
                 } else if (reading.getHumidity() < 20.0) {
-                    sendSensorAlert(deviceId, "Humidity", reading.getHumidity(), 20.0, "LOW");
+                    sendSensorAlert(deviceId, "Humidity", reading.getHumidity(), 20.0, Alert.Severity.WARNING);
                 }
                 
                 // Check soil moisture thresholds
                 if (reading.getSoilMoisture() < 30.0) {
-                    sendSensorAlert(deviceId, "Soil Moisture", reading.getSoilMoisture(), 30.0, "LOW");
+                    sendSensorAlert(deviceId, "Soil Moisture", reading.getSoilMoisture(), 30.0, Alert.Severity.WARNING);
                 }
             }
         } catch (Exception e) {

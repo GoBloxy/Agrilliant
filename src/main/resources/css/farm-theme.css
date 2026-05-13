@@ -848,6 +848,46 @@
     -fx-cursor: hand;
 }
 
+/* ═══════════════ CROP DETAIL TABS ═══════════════ */
+.crop-tab {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20 10 20;
+    -fx-border-color: transparent transparent #e5e7eb transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.crop-tab:hover {
+    -fx-text-fill: #1f2937;
+    -fx-border-color: transparent transparent #9ca3af transparent;
+}
+
+.crop-tab-active {
+    -fx-text-fill: #2e7d32;
+    -fx-border-color: transparent transparent #2e7d32 transparent;
+}
+
+.crop-tab-active:hover {
+    -fx-text-fill: #2e7d32;
+    -fx-border-color: transparent transparent #2e7d32 transparent;
+}
+
+/* ═══════════════ CROP LIFECYCLE BAR ═══════════════ */
+.progress-bar > .bar {
+    -fx-background-color: #2e7d32;
+    -fx-background-radius: 5;
+    -fx-background-insets: 0;
+}
+.progress-bar > .track {
+    -fx-background-color: #e5e7eb;
+    -fx-background-radius: 5;
+    -fx-background-insets: 0;
+}
+
 /* ═══════════════ AUTH PAGES ═══════════════ */
 .auth-root {
     -fx-background-color: #f5f7fa;

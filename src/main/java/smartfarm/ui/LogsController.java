@@ -34,6 +34,13 @@ public class LogsController {
     }
 
     private void setupTableColumns() {
+        logTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colTimestamp.setResizable(false);
+        colType.setResizable(false);
+        colSource.setResizable(false);
+        colMessage.setResizable(false);
+        colUser.setResizable(false);
+
         colTimestamp.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleStringProperty(d.getValue().getFormattedTimestamp()));
         colType.setCellValueFactory(d ->
