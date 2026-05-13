@@ -3,6 +3,7 @@ package smartfarm.server;
 import smartfarm.dao.DeviceDAO;
 import smartfarm.model.Device;
 import smartfarm.model.SensorReading;
+import smartfarm.service.AttendanceService;
 import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 public class SensorHandler implements Runnable {
     private final Socket socket;
     private final SensorService sensorService = new SensorService();
+    private final AttendanceService attendanceService = new AttendanceService();
     private final DeviceDAO deviceDAO = new DeviceDAO();
     private String lastDeviceCode;
 
@@ -29,14 +31,18 @@ public class SensorHandler implements Runnable {
                 new InputStreamReader(socket.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Parsed parsed = parseLine(line);
-                if (parsed != null) {
-                    lastDeviceCode = parsed.deviceCode;
-                    int deviceId = resolveDeviceId(parsed.deviceCode);
-                    SensorReading reading = new SensorReading(
-                        deviceId, parsed.temperature, parsed.humidity, parsed.soilMoisture, LocalDateTime.now()
-                    );
-                    sensorService.processReading(reading, parsed.deviceCode);
+                if (line.startsWith("FINGERPRINT:")) {
+                    handleFingerprint(line);
+                } else {
+                    Parsed parsed = parseLine(line);
+                    if (parsed != null) {
+                        lastDeviceCode = parsed.deviceCode;
+                        int deviceId = resolveDeviceId(parsed.deviceCode);
+                        SensorReading reading = new SensorReading(
+                            deviceId, parsed.temperature, parsed.humidity, parsed.soilMoisture, LocalDateTime.now()
+                        );
+                        sensorService.processReading(reading, parsed.deviceCode);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -55,6 +61,20 @@ public class SensorHandler implements Runnable {
             return d != null ? d.getDeviceId() : 0;
         } catch (SQLException e) {
             return 0;
+        }
+    }
+
+    // Parses "FINGERPRINT:<device_code>,ID:<fingerprint_id>"
+    private void handleFingerprint(String raw) {
+        try {
+            String[] parts = raw.split(",");
+            String deviceCode = parts[0].split(":")[1];
+            int fingerprintId = Integer.parseInt(parts[1].split(":")[1]);
+            lastDeviceCode = deviceCode;
+            String result = attendanceService.handleFingerprintScan(fingerprintId, deviceCode);
+            System.out.println("Fingerprint scan on " + deviceCode + " → " + result);
+        } catch (Exception e) {
+            System.err.println("Bad fingerprint data: " + raw);
         }
     }
 

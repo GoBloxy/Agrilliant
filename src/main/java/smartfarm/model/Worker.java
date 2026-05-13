@@ -10,35 +10,39 @@ public class Worker {
     private String jobTitle;
     private String skills;
     private boolean onDuty;
+    private Integer fingerprintId;
     private int managerId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // Full constructor (loading from DB)
     public Worker(int workerId, String fullName, String phone, String jobTitle, String skills,
-                  boolean onDuty, int managerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.workerId  = workerId;
-        this.fullName  = fullName;
-        this.phone     = phone;
-        this.jobTitle  = jobTitle;
-        this.skills    = skills;
-        this.onDuty    = onDuty;
-        this.managerId = managerId;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+                  boolean onDuty, Integer fingerprintId, int managerId,
+                  LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.workerId       = workerId;
+        this.fullName       = fullName;
+        this.phone          = phone;
+        this.jobTitle       = jobTitle;
+        this.skills         = skills;
+        this.onDuty         = onDuty;
+        this.fingerprintId  = fingerprintId;
+        this.managerId      = managerId;
+        this.createdAt      = createdAt;
+        this.updatedAt      = updatedAt;
     }
 
     // Without workerId (creating new)
     public Worker(String fullName, String phone, String jobTitle, String skills, int managerId) {
-        this.workerId  = -1;
-        this.fullName  = fullName;
-        this.phone     = phone;
-        this.jobTitle  = jobTitle;
-        this.skills    = skills;
-        this.onDuty    = false;
-        this.managerId = managerId;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.workerId       = -1;
+        this.fullName       = fullName;
+        this.phone          = phone;
+        this.jobTitle       = jobTitle;
+        this.skills         = skills;
+        this.onDuty         = false;
+        this.fingerprintId  = null;
+        this.managerId      = managerId;
+        this.createdAt      = LocalDateTime.now();
+        this.updatedAt      = LocalDateTime.now();
     }
 
     public int getWorkerId() { return workerId; }
@@ -53,6 +57,8 @@ public class Worker {
     public void setSkills(String skills) { this.skills = skills; }
     public boolean isOnDuty() { return onDuty; }
     public void setOnDuty(boolean onDuty) { this.onDuty = onDuty; }
+    public Integer getFingerprintId() { return fingerprintId; }
+    public void setFingerprintId(Integer fingerprintId) { this.fingerprintId = fingerprintId; }
     public int getManagerId() { return managerId; }
     public void setManagerId(int managerId) { this.managerId = managerId; }
     public LocalDateTime getCreatedAt() { return createdAt; }

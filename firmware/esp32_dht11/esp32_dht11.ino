@@ -1,7 +1,8 @@
 /*
- * ESP32 + DHT11 + FC-28 + SH1106 OLED Firmware
+ * ESP32 + DHT11 + FC-28 + SH1106 OLED + R307 Fingerprint Firmware
  * Reads temperature, humidity, and soil moisture every 2 seconds,
  * displays them on a 1.3" OLED screen, and sends to the Java server via TCP.
+ * Also handles R307 fingerprint scanner for worker attendance (check-in/out).
  *
  * Wiring:
  *   DHT11 VCC   -> ESP32 3.3V
@@ -17,12 +18,20 @@
  *   SH1106 SDA  -> ESP32 GPIO 21
  *   SH1106 SCL  -> ESP32 GPIO 22
  *
- * Data format sent: DEVICE:<id>,TEMP:<value>,HUM:<value>,SOIL:<value>
+ *   R307  VCC   -> ESP32 5V (VIN)
+ *   R307  GND   -> ESP32 GND
+ *   R307  TX    -> ESP32 GPIO 16 (UART2 RX)
+ *   R307  RX    -> ESP32 GPIO 17 (UART2 TX)
+ *
+ * Data formats sent:
+ *   Sensor:      DEVICE:<id>,TEMP:<value>,HUM:<value>,SOIL:<value>
+ *   Fingerprint: FINGERPRINT:<id>,ID:<fingerprint_id>
  *
  * Libraries required (install via Arduino Library Manager):
  *   - DHT sensor library by Adafruit
  *   - Adafruit Unified Sensor
  *   - U8g2 by oliver
+ *   - Adafruit Fingerprint Sensor Library
  *
  * Board: ESP32 Dev Module (select in Arduino IDE -> Tools -> Board)
  *
@@ -33,12 +42,13 @@
 #include <DHT.h>
 #include <U8g2lib.h>
 #include <Wire.h>
+#include <Adafruit_Fingerprint.h>
 
 // ─── Configuration ───────────────────────────────────────────────
-#define WIFI_SSID     "314Pi"
-#define WIFI_PASSWORD "TheGreatPi123@"
+#define WIFI_SSID     "trying"
+#define WIFI_PASSWORD "123456789"
 
-#define SERVER_IP     "192.168.8.147"   // IP of the PC running the Java app
+#define SERVER_IP     "10.116.238.210"   // IP of the PC running the Java app
 #define SERVER_PORT   8080
 
 #define DHT_PIN       4                 // GPIO pin connected to DHT11 DATA
@@ -47,6 +57,9 @@
 #define DEVICE_ID     "plot1_sensor"    // Unique ID for this sensor node
 
 #define READ_INTERVAL 2000              // Milliseconds between readings (DHT11 min ~1s)
+#define FP_RX_PIN     16               // GPIO pin for R307 TX -> ESP32 RX (UART2)
+#define FP_TX_PIN     17               // GPIO pin for R307 RX -> ESP32 TX (UART2)
+#define FP_CHECK_INTERVAL 500          // Milliseconds between fingerprint scan checks
 
 // FC-28 calibration (adjust after testing with your sensor)
 #define SOIL_DRY      4095              // ADC value when sensor is in dry air
@@ -58,6 +71,12 @@ DHT dht(DHT_PIN, DHT_TYPE);
 WiFiClient client;
 unsigned long lastRead = 0;
 bool soilSensorDetected = false;        // Auto-detected at startup
+
+// R307 Fingerprint on UART2
+HardwareSerial fpSerial(2);
+Adafruit_Fingerprint finger = Adafruit_Fingerprint(&fpSerial);
+bool fingerprintDetected = false;
+unsigned long lastFpCheck = 0;
 
 // SH1106 OLED (128x64, I2C on default SDA=21, SCL=22)
 U8G2_SH1106_128X64_NONAME_F_HW_I2C oled(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -98,6 +117,19 @@ void setup() {
     soilSensorDetected = detectSoilSensor();
     Serial.println(soilSensorDetected ? "FC-28 detected on GPIO 34" : "No FC-28 detected on GPIO 34");
 
+    // Initialize R307 fingerprint sensor on UART2
+    fpSerial.begin(57600, SERIAL_8N1, FP_RX_PIN, FP_TX_PIN);
+    finger.begin(57600);
+    if (finger.verifyPassword()) {
+        fingerprintDetected = true;
+        Serial.println("R307 fingerprint sensor detected");
+        Serial.print("Enrolled fingerprints: ");
+        finger.getTemplateCount();
+        Serial.println(finger.templateCount);
+    } else {
+        Serial.println("No R307 fingerprint sensor detected");
+    }
+
     // Connect to WiFi
     Serial.printf("Connecting to %s", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -118,6 +150,12 @@ void setup() {
 }
 
 void loop() {
+    // Check fingerprint scanner (non-blocking, every 500ms)
+    if (fingerprintDetected && millis() - lastFpCheck >= FP_CHECK_INTERVAL) {
+        lastFpCheck = millis();
+        checkFingerprint();
+    }
+
     if (millis() - lastRead < READ_INTERVAL) return;
     lastRead = millis();
 
@@ -191,8 +229,60 @@ void updateOLED(float temp, float hum, float soil) {
     }
     oled.drawStr(0, 52, buf);
 
-    // Connection status
-    oled.drawStr(0, 64, client.connected() ? "[Server OK]" : "[No Server]");
+    // Connection status + fingerprint indicator
+    if (fingerprintDetected) {
+        oled.drawStr(0, 64, client.connected() ? "[Server OK] [FP]" : "[No Server] [FP]");
+    } else {
+        oled.drawStr(0, 64, client.connected() ? "[Server OK]" : "[No Server]");
+    }
 
     oled.sendBuffer();
+}
+
+void checkFingerprint() {
+    uint8_t p = finger.getImage();
+    if (p != FINGERPRINT_OK) return;  // No finger on sensor
+
+    p = finger.image2Tz();
+    if (p != FINGERPRINT_OK) return;
+
+    p = finger.fingerSearch();
+    if (p != FINGERPRINT_OK) {
+        Serial.println("Fingerprint not recognized");
+        // Show on OLED briefly
+        oled.clearBuffer();
+        oled.setFont(u8g2_font_6x10_tf);
+        oled.drawStr(10, 30, "Fingerprint");
+        oled.drawStr(10, 45, "NOT RECOGNIZED");
+        oled.sendBuffer();
+        delay(1500);
+        return;
+    }
+
+    int fpId = finger.fingerID;
+    int confidence = finger.confidence;
+    Serial.printf("Fingerprint matched! ID: %d (confidence: %d)\n", fpId, confidence);
+
+    // Show on OLED
+    char buf[32];
+    oled.clearBuffer();
+    oled.setFont(u8g2_font_6x10_tf);
+    oled.drawStr(10, 25, "Fingerprint OK!");
+    snprintf(buf, sizeof(buf), "ID: %d", fpId);
+    oled.drawStr(10, 40, buf);
+    snprintf(buf, sizeof(buf), "Conf: %d", confidence);
+    oled.drawStr(10, 55, buf);
+    oled.sendBuffer();
+
+    // Send to server
+    if (client.connected()) {
+        String payload = "FINGERPRINT:" + String(DEVICE_ID) + ",ID:" + String(fpId);
+        client.println(payload);
+        client.flush();
+        Serial.println("Sent: " + payload);
+    } else {
+        Serial.println("Cannot send fingerprint — not connected to server");
+    }
+
+    delay(2000);  // Debounce — prevent multiple reads of same finger
 }

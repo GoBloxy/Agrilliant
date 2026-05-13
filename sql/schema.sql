@@ -34,15 +34,16 @@ CREATE TABLE manager (
 -- ═══════════════ WORKER ═══════════════
 -- Workers have NO login credentials; managed by a manager.
 CREATE TABLE worker (
-    worker_id   INT AUTO_INCREMENT PRIMARY KEY,
-    full_name   VARCHAR(100) NOT NULL,
-    phone       VARCHAR(20),
-    job_title   VARCHAR(50),
-    skills      TEXT,
-    on_duty     BOOLEAN      NOT NULL DEFAULT TRUE,
-    manager_id  INT          NOT NULL,
-    created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    worker_id      INT AUTO_INCREMENT PRIMARY KEY,
+    full_name      VARCHAR(100) NOT NULL,
+    phone          VARCHAR(20),
+    job_title      VARCHAR(50),
+    skills         TEXT,
+    on_duty        BOOLEAN      NOT NULL DEFAULT TRUE,
+    fingerprint_id INT          NULL,
+    manager_id     INT          NOT NULL,
+    created_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (manager_id) REFERENCES manager(manager_id) ON DELETE CASCADE
 );
 
@@ -147,4 +148,14 @@ CREATE TABLE harvest_records (
     crop_id      INT     NOT NULL,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (crop_id) REFERENCES crops(crop_id) ON DELETE CASCADE
+);
+
+-- ═══════════════ ATTENDANCE (R307 Fingerprint) ═══════════════
+CREATE TABLE attendance (
+    attendance_id INT AUTO_INCREMENT PRIMARY KEY,
+    worker_id     INT          NOT NULL,
+    check_in      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    check_out     TIMESTAMP    NULL,
+    device_code   VARCHAR(50),
+    FOREIGN KEY (worker_id) REFERENCES worker(worker_id) ON DELETE CASCADE
 );

@@ -14,15 +14,17 @@ public class WorkerDAO implements GenericDAO<Worker> {
     @Override
     public void save(Worker item) throws SQLException {
         if (conn == null) return;
-        String sql = "INSERT INTO worker (full_name, phone, job_title, skills, on_duty, manager_id) "
-                   + "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO worker (full_name, phone, job_title, skills, on_duty, fingerprint_id, manager_id) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, item.getFullName());
             ps.setString(2, item.getPhone());
             ps.setString(3, item.getJobTitle());
             ps.setString(4, item.getSkills());
             ps.setBoolean(5, item.isOnDuty());
-            ps.setInt(6, item.getManagerId());
+            if (item.getFingerprintId() != null) ps.setInt(6, item.getFingerprintId());
+            else ps.setNull(6, java.sql.Types.INTEGER);
+            ps.setInt(7, item.getManagerId());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -74,7 +76,7 @@ public class WorkerDAO implements GenericDAO<Worker> {
     @Override
     public void update(Worker item) throws SQLException {
         if (conn == null) return;
-        String sql = "UPDATE worker SET full_name = ?, phone = ?, job_title = ?, skills = ?, on_duty = ?, manager_id = ? "
+        String sql = "UPDATE worker SET full_name = ?, phone = ?, job_title = ?, skills = ?, on_duty = ?, fingerprint_id = ?, manager_id = ? "
                    + "WHERE worker_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, item.getFullName());
@@ -82,8 +84,10 @@ public class WorkerDAO implements GenericDAO<Worker> {
             ps.setString(3, item.getJobTitle());
             ps.setString(4, item.getSkills());
             ps.setBoolean(5, item.isOnDuty());
-            ps.setInt(6, item.getManagerId());
-            ps.setInt(7, item.getWorkerId());
+            if (item.getFingerprintId() != null) ps.setInt(6, item.getFingerprintId());
+            else ps.setNull(6, java.sql.Types.INTEGER);
+            ps.setInt(7, item.getManagerId());
+            ps.setInt(8, item.getWorkerId());
             ps.executeUpdate();
         }
     }
@@ -99,6 +103,8 @@ public class WorkerDAO implements GenericDAO<Worker> {
     }
 
     private Worker mapRow(ResultSet rs) throws SQLException {
+        int fpRaw = rs.getInt("fingerprint_id");
+        Integer fingerprintId = rs.wasNull() ? null : fpRaw;
         return new Worker(
             rs.getInt("worker_id"),
             rs.getString("full_name"),
@@ -106,6 +112,7 @@ public class WorkerDAO implements GenericDAO<Worker> {
             rs.getString("job_title"),
             rs.getString("skills"),
             rs.getBoolean("on_duty"),
+            fingerprintId,
             rs.getInt("manager_id"),
             rs.getObject("created_at", LocalDateTime.class),
             rs.getObject("updated_at", LocalDateTime.class)

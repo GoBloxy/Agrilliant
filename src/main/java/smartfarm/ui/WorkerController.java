@@ -25,12 +25,16 @@ public class WorkerController {
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbStatus;
     @FXML private TableView<Worker> workerTable;
-    @FXML private TableColumn<Worker, String> colName, colPhone, colJobTitle, colSkills, colStatus, colWorkload, colActions;
+    @FXML private TableColumn<Worker, String> colName, colPhone, colJobTitle, colSkills, colStatus, colWorkload, colFingerprint, colActions;
     @FXML private Button btnAddWorker;
 
     private final WorkerService workerService = new WorkerService(new WorkerDAO(), new TaskDAO());
     private final ObservableList<Worker> allWorkers = FXCollections.observableArrayList();
     private List<Task> allTasks;
+
+    // Set by DashboardController so new workers get the correct manager
+    private static int currentManagerId = 1;
+    public static void setCurrentManagerId(int id) { currentManagerId = id; }
 
     @FXML
     public void initialize() {
@@ -67,6 +71,11 @@ public class WorkerController {
         colWorkload.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getActiveTaskCount(allTasks) + " tasks"));
+        colFingerprint.setCellValueFactory(data ->
+                new javafx.beans.property.SimpleStringProperty(
+                        data.getValue().getFingerprintId() != null
+                                ? "ID: " + data.getValue().getFingerprintId()
+                                : "Not enrolled"));
 
         colActions.setCellFactory(col -> new TableCell<Worker, String>() {
             private final Button editBtn = new Button("", new FontIcon("fth-edit-2"));
@@ -196,10 +205,13 @@ public class WorkerController {
         jobField.setPromptText("Job Title");
         TextField skillsField = new TextField(existing != null ? existing.getSkills() : "");
         skillsField.setPromptText("Skills (comma separated)");
+        TextField fpField = new TextField(existing != null && existing.getFingerprintId() != null
+                ? String.valueOf(existing.getFingerprintId()) : "");
+        fpField.setPromptText("R307 Fingerprint ID (e.g. 1, 2, 3...)");
         CheckBox onDutyCb = new CheckBox("On Duty");
         onDutyCb.setSelected(existing != null && existing.isOnDuty());
 
-        VBox form = new VBox(10, nameField, phoneField, jobField, skillsField, onDutyCb);
+        VBox form = new VBox(10, nameField, phoneField, jobField, skillsField, fpField, onDutyCb);
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
@@ -212,8 +224,17 @@ public class WorkerController {
                 }
                 Worker worker = new Worker(name, phoneField.getText().trim(),
                         jobField.getText().trim(), skillsField.getText().trim(),
-                        existing != null ? existing.getManagerId() : 1);
+                        existing != null ? existing.getManagerId() : currentManagerId);
                 worker.setOnDuty(onDutyCb.isSelected());
+                String fpText = fpField.getText().trim();
+                if (!fpText.isEmpty()) {
+                    try {
+                        worker.setFingerprintId(Integer.parseInt(fpText));
+                    } catch (NumberFormatException e) {
+                        showAlert("Validation", "Fingerprint ID must be a number");
+                        return null;
+                    }
+                }
                 return worker;
             }
             return null;

@@ -57,8 +57,8 @@ public class DashboardController {
     @FXML private VBox dashboardPage;
     @FXML private VBox cropsSubmenu;
     @FXML private Button btnDashboard, btnMonitoring, btnAlerts, btnCrops, btnWorkers,
-                          btnTasks, btnHarvests, btnReports, btnSettings, btnUsers, btnLogs,
-                          btnCropsCrops, btnCropsPlots;
+                          btnAttendance, btnTasks, btnHarvests, btnReports, btnSettings,
+                          btnUsers, btnLogs, btnCropsCrops, btnCropsPlots;
 
     private ContextMenu userMenu;
     private Button activeNavButton;
@@ -69,6 +69,7 @@ public class DashboardController {
         if (user != null) {
             lblUserName.setText(user.getFullName());
             lblUserRole.setText(user.getRole().name());
+            WorkerController.setCurrentManagerId(user.getId());
         }
     }
 
@@ -236,6 +237,7 @@ public class DashboardController {
     @FXML private void onNavCropsList()  { showPage(new CropsPage(), btnCropsCrops); }
     @FXML private void onNavPlotsList()  { loadFxmlPage("/fxml/plots.fxml", btnCropsPlots); }
     @FXML private void onNavWorkers()    { loadFxmlPage("/fxml/workers.fxml", btnWorkers); }
+    @FXML private void onNavAttendance() { showPage(new AttendancePage(), btnAttendance); }
     @FXML private void onNavTasks()      { loadFxmlPage("/fxml/tasks.fxml", btnTasks); }
     @FXML private void onNavHarvests()   { loadFxmlPage("/fxml/harvest.fxml", btnHarvests); }
     @FXML private void onNavReports()    { loadFxmlPage("/fxml/reports.fxml", btnReports); }

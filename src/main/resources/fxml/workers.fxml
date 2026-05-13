@@ -83,10 +83,11 @@
                 <TableColumn fx:id="colName"     text="Name"       prefWidth="160"/>
                 <TableColumn fx:id="colPhone"    text="Phone"      prefWidth="130"/>
                 <TableColumn fx:id="colJobTitle" text="Job Title"  prefWidth="120"/>
-                <TableColumn fx:id="colSkills"   text="Skills"     prefWidth="150"/>
-                <TableColumn fx:id="colStatus"   text="Status"     prefWidth="90"/>
-                <TableColumn fx:id="colWorkload" text="Workload"   prefWidth="90"/>
-                <TableColumn fx:id="colActions"  text="Actions"    prefWidth="100"/>
+                <TableColumn fx:id="colSkills"       text="Skills"        prefWidth="150"/>
+                <TableColumn fx:id="colStatus"      text="Status"        prefWidth="90"/>
+                <TableColumn fx:id="colWorkload"    text="Workload"      prefWidth="90"/>
+                <TableColumn fx:id="colFingerprint" text="Fingerprint"   prefWidth="100"/>
+                <TableColumn fx:id="colActions"     text="Actions"       prefWidth="100"/>
             </columns>
         </TableView>
     </VBox>

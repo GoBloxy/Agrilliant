@@ -53,8 +53,11 @@
                 </Button>
             </VBox>
 
-            <Button fx:id="btnWorkers"    onAction="#onNavWorkers"   styleClass="nav-btn" maxWidth="Infinity" text="Workers"    graphicTextGap="12">
+            <Button fx:id="btnWorkers"    onAction="#onNavWorkers"    styleClass="nav-btn" maxWidth="Infinity" text="Workers"    graphicTextGap="12">
                 <graphic><FontIcon iconLiteral="fth-users" iconSize="16"/></graphic>
+            </Button>
+            <Button fx:id="btnAttendance" onAction="#onNavAttendance" styleClass="nav-btn" maxWidth="Infinity" text="Attendance" graphicTextGap="12">
+                <graphic><FontIcon iconLiteral="fth-user-check" iconSize="16"/></graphic>
             </Button>
             <Button fx:id="btnTasks"      onAction="#onNavTasks"     styleClass="nav-btn" maxWidth="Infinity" text="Tasks"      graphicTextGap="12">
                 <graphic><FontIcon iconLiteral="fth-check-square" iconSize="16"/></graphic>
