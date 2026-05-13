@@ -1,3 +1,6 @@
+// Desktop build only — Android cannot keep a server socket alive in
+// the background, so this class is profile-guarded out of the Android
+// Maven profile and gated at runtime via `Constants.IS_ANDROID` in Main.
 package smartfarm.server;
 
 import java.io.IOException;

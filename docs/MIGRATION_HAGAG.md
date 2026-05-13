@@ -636,7 +636,73 @@ Android runtime checks.
   file directly (Gluon Attach `ShareService.share(...)`).
 
 ### H9. FarmServer — desktop-only profile guard
-> Status: **pending**.
+> Status: **done (Hagag side)**, 2026-05-13. Final gate is gated on
+> 3bdelbary's B1 — see deferred note below.
+
+Three things landed:
+
+1. **`util/Constants.java`** — single static `IS_ANDROID` boolean
+   resolved at class-load time via
+   `com.gluonhq.attach.util.Platform.isAndroid()`. The lookup is
+   wrapped in a `try { ... } catch (Throwable t) { return false; }`
+   so the same flag works on a pre-GluonFX desktop dev environment
+   (where Attach reports DESKTOP) and on Android (where it reports
+   ANDROID).
+
+   The class lives in `smartfarm.util` so callers don't need to
+   import Gluon Attach directly — they just read `Constants.IS_ANDROID`.
+
+2. **One-line "desktop build only" header** on each of:
+   - `server/FarmServer.java`
+   - `server/SensorHandler.java`
+   - `server/notification/NotificationService.java`
+
+3. **maven-compiler-plugin `<excludes>`** already in place from H7's
+   pom change for `**/smartfarm/server/**/*.java`.
+
+#### Verification (run 2026-05-13)
+
+Cleaned and rebuilt against the Android profile from scratch:
+
+| Class                                   | On Android `target/classes`? | On desktop? |
+|-----------------------------------------|------------------------------|-------------|
+| `smartfarm/util/Constants.class`        | yes (H9)                     | yes |
+| `smartfarm/service/desktop/FingerprintServiceDesktop.class` | **absent** (H7 success) | yes |
+| `smartfarm/server/notification/NotificationService.class`   | **absent** (no static refs) | yes |
+| `smartfarm/server/FarmServer.class`     | **still present** (javac implicit compile) | yes |
+| `smartfarm/server/SensorHandler.class`  | **still present** (javac implicit compile) | yes |
+
+| Smoke                                                       | Result |
+|-------------------------------------------------------------|--------|
+| `target/h9-smoke/H9Smoke.java` → `Constants.IS_ANDROID`     | `false` on host JVM (desktop), correct. |
+| `mvn -Pdesktop clean compile`                               | BUILD SUCCESS (72 sources). |
+| `mvn -Pandroid clean compile`                               | BUILD SUCCESS (68 sources). |
+
+**Deferred (depends on 3bdelbary's B1):** the strict gate
+"Android profile build does not include `FarmServer.class`" cannot
+fully close in this branch alone. `Main.java` still has the line
+`import smartfarm.server.FarmServer;` plus `Thread serverThread =
+new Thread(() -> new FarmServer().start());` — javac then implicit-
+compiles `FarmServer.java` and `SensorHandler.java` from sourcepath
+despite the exclude. 3bdelbary's B1 rewrites `Main.java` into a
+Gluon `MobileApplication` whose entry point doesn't reference the
+TCP server. After that merge:
+
+* the `**/smartfarm/server/**/*.java` exclude becomes structurally
+  effective end-to-end, and
+* the runtime path in any remaining `Main.start()` caller goes
+  through `if (!Constants.IS_ANDROID) new FarmServer().start();`,
+  so even an accidental import doesn't fire the listener on Android.
+
+#### TODOs for the merge phase
+
+- `// TODO(phase-2)`: in `Main.java`, gate the
+  `new FarmServer().start()` call (and its `import`) on
+  `!Constants.IS_ANDROID`. Owned by 3bdelbary's B1 since `Main.java`
+  is in their lane.
+- `// TODO(phase-2)`: confirm on a clean Android AOT build that the
+  `server.*` classes are absent from the APK — once B1 lands, run
+  `unzip -l target/.../app.apk | grep server` and check.
 
 ### H10. Logger / ThresholdConfig housekeeping
 > Status: **pending**.

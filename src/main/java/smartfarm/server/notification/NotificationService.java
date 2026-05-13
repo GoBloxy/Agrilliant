@@ -1,3 +1,4 @@
+// Desktop build only — paired with FarmServer (see its header comment).
 package smartfarm.server.notification;
 
 import smartfarm.service.LiveSensorData;
