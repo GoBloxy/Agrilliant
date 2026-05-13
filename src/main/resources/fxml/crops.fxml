@@ -6,7 +6,7 @@
 <?import javafx.scene.shape.*?>
 <?import org.kordamp.ikonli.javafx.*?>
 
-<StackPane prefHeight="900" prefWidth="1200" styleClass="content-pane" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12" fx:controller="smartfarm.ui.CropController">
+<StackPane prefHeight="900" prefWidth="1200" styleClass="content-pane" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartfarm.ui.CropController">
 
     <!-- ════════ VIEW 1: CROP LIST ════════ -->
     <VBox fx:id="listView" spacing="16">
@@ -96,10 +96,7 @@
                 <columns>
                     <TableColumn fx:id="colCropName" prefWidth="140" text="Crop Name" />
                     <TableColumn fx:id="colPlot" prefWidth="100" text="Plot" />
-                    <TableColumn fx:id="colPlantedDate" prefWidth="120" text="Planted Date">
-                  <columns>
-                          <TableColumn fx:id="colVariety" prefWidth="120" text="Variety" />
-                  </columns></TableColumn>
+                    <TableColumn fx:id="colPlantedDate" prefWidth="120" text="Planted Date" />
                     <TableColumn fx:id="colHarvestDate" prefWidth="120" text="Harvest Date" />
                     <TableColumn fx:id="colStatus" prefWidth="100" text="Status" />
                     <TableColumn fx:id="colActions" prefWidth="100" text="Actions" />

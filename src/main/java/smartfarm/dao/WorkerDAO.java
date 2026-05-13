@@ -14,21 +14,8 @@ public class WorkerDAO implements GenericDAO<Worker> {
     @Override
     public void save(Worker item) throws SQLException {
         if (conn == null) return;
-<<<<<<< HEAD
-        String sql = "INSERT INTO worker (full_name, phone, job_title, skills, on_duty, fingerprint_id, manager_id) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, item.getFullName());
-            ps.setString(2, item.getPhone());
-            ps.setString(3, item.getJobTitle());
-            ps.setString(4, item.getSkills());
-            ps.setBoolean(5, item.isOnDuty());
-            if (item.getFingerprintId() != null) ps.setInt(6, item.getFingerprintId());
-            else ps.setNull(6, java.sql.Types.INTEGER);
-            ps.setInt(7, item.getManagerId());
-=======
-        String sql = "INSERT INTO worker (full_name, phone, email, password_hash, job_title, skills, on_duty, manager_id) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO worker (full_name, phone, email, password_hash, job_title, skills, on_duty, fingerprint_id, manager_id) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, item.getFullName());
             ps.setString(2, item.getPhone());
@@ -37,8 +24,9 @@ public class WorkerDAO implements GenericDAO<Worker> {
             ps.setString(5, item.getJobTitle());
             ps.setString(6, item.getSkills());
             ps.setBoolean(7, item.isOnDuty());
-            ps.setInt(8, item.getManagerId());
->>>>>>> 83dc482b39cd9e222d5bd246f0547b770d8abfd2
+            if (item.getFingerprintId() != null) ps.setInt(8, item.getFingerprintId());
+            else ps.setNull(8, java.sql.Types.INTEGER);
+            ps.setInt(9, item.getManagerId());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -90,32 +78,20 @@ public class WorkerDAO implements GenericDAO<Worker> {
     @Override
     public void update(Worker item) throws SQLException {
         if (conn == null) return;
-<<<<<<< HEAD
-        String sql = "UPDATE worker SET full_name = ?, phone = ?, job_title = ?, skills = ?, on_duty = ?, fingerprint_id = ?, manager_id = ? "
-=======
-        String sql = "UPDATE worker SET full_name = ?, phone = ?, email = ?, password_hash = ?, job_title = ?, skills = ?, on_duty = ?, manager_id = ? "
->>>>>>> 83dc482b39cd9e222d5bd246f0547b770d8abfd2
+        String sql = "UPDATE worker SET full_name = ?, phone = ?, email = ?, password_hash = ?, job_title = ?, skills = ?, on_duty = ?, fingerprint_id = ?, manager_id = ? "
                    + "WHERE worker_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, item.getFullName());
             ps.setString(2, item.getPhone());
-<<<<<<< HEAD
-            ps.setString(3, item.getJobTitle());
-            ps.setString(4, item.getSkills());
-            ps.setBoolean(5, item.isOnDuty());
-            if (item.getFingerprintId() != null) ps.setInt(6, item.getFingerprintId());
-            else ps.setNull(6, java.sql.Types.INTEGER);
-            ps.setInt(7, item.getManagerId());
-            ps.setInt(8, item.getWorkerId());
-=======
             ps.setString(3, item.getEmail());
             ps.setString(4, item.getPasswordHash());
             ps.setString(5, item.getJobTitle());
             ps.setString(6, item.getSkills());
             ps.setBoolean(7, item.isOnDuty());
-            ps.setInt(8, item.getManagerId());
-            ps.setInt(9, item.getWorkerId());
->>>>>>> 83dc482b39cd9e222d5bd246f0547b770d8abfd2
+            if (item.getFingerprintId() != null) ps.setInt(8, item.getFingerprintId());
+            else ps.setNull(8, java.sql.Types.INTEGER);
+            ps.setInt(9, item.getManagerId());
+            ps.setInt(10, item.getWorkerId());
             ps.executeUpdate();
         }
     }
