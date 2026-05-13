@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.geometry.Insets?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
@@ -10,7 +11,7 @@
     <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
     <HBox alignment="CENTER_LEFT" spacing="12">
-        <Label text="Users and Workers" styleClass="page-title"/>
+        <Label text="Workers" styleClass="page-title"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button fx:id="btnAddWorker" text="+ Add Worker" styleClass="btn-primary" onAction="#onAddWorker"/>
     </HBox>
@@ -25,6 +26,7 @@
                 <VBox spacing="0">
                     <Label text="Total Workers" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
                     <Label fx:id="lblTotalWorkers" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Registered in system" style="-fx-font-size:10;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -37,18 +39,7 @@
                 <VBox spacing="0">
                     <Label text="On Duty" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
                     <Label fx:id="lblOnDuty" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                </VBox>
-            </HBox>
-        </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="8">
-            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
-            <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
-                    <FontIcon iconLiteral="fth-clock" iconSize="20" iconColor="#d97706"/>
-                </StackPane>
-                <VBox spacing="0">
-                    <Label text="Available" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
-                    <Label fx:id="lblAvailable" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Currently working" style="-fx-font-size:10;-fx-text-fill:#9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -56,12 +47,29 @@
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#fee2e2;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
-                    <FontIcon iconLiteral="fth-alert-circle" iconSize="20" iconColor="#dc2626"/>
+                    <FontIcon iconLiteral="fth-moon" iconSize="20" iconColor="#dc2626"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="Busy" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
-                    <Label fx:id="lblBusy" text="0" style="-fx-font-size:22;-fx-font-weight:bold;"/>
+                    <Label text="Off Duty" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label fx:id="lblOffDuty" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Not currently working" style="-fx-font-size:10;-fx-text-fill:#9ca3af;"/>
                 </VBox>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <!-- Charts Row -->
+    <HBox spacing="12">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <FontIcon iconLiteral="fth-pie-chart" iconSize="14" iconColor="#2e7d32"/>
+                <Label text="Worker Status" style="-fx-font-size:14;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+            </HBox>
+            <HBox spacing="12" alignment="CENTER">
+                <PieChart fx:id="statusPieChart" legendVisible="false" labelsVisible="false"
+                          prefWidth="200" prefHeight="180" maxWidth="200" maxHeight="180"/>
+                <VBox fx:id="statusLegendBox" spacing="8" alignment="CENTER_LEFT"/>
             </HBox>
         </VBox>
     </HBox>
@@ -80,14 +88,15 @@
         <Label text="All Workers" styleClass="card-title"/>
         <TableView fx:id="workerTable" VBox.vgrow="ALWAYS" prefHeight="400">
             <columns>
-                <TableColumn fx:id="colName"     text="Name"       prefWidth="160"/>
-                <TableColumn fx:id="colPhone"    text="Phone"      prefWidth="130"/>
-                <TableColumn fx:id="colJobTitle" text="Job Title"  prefWidth="120"/>
-                <TableColumn fx:id="colSkills"       text="Skills"        prefWidth="150"/>
-                <TableColumn fx:id="colStatus"      text="Status"        prefWidth="90"/>
-                <TableColumn fx:id="colWorkload"    text="Workload"      prefWidth="90"/>
-                <TableColumn fx:id="colFingerprint" text="Fingerprint"   prefWidth="100"/>
-                <TableColumn fx:id="colActions"     text="Actions"       prefWidth="100"/>
+                <TableColumn fx:id="colName"        text="Name"        prefWidth="140"/>
+                <TableColumn fx:id="colEmail"       text="Email"       prefWidth="170"/>
+                <TableColumn fx:id="colPhone"       text="Phone"       prefWidth="120"/>
+                <TableColumn fx:id="colJobTitle"    text="Job Title"   prefWidth="110"/>
+                <TableColumn fx:id="colSkills"      text="Skills"      prefWidth="140"/>
+                <TableColumn fx:id="colStatus"      text="Status"      prefWidth="80"/>
+                <TableColumn fx:id="colWorkload"    text="Workload"    prefWidth="80"/>
+                <TableColumn fx:id="colFingerprint" text="Fingerprint" prefWidth="90"/>
+                <TableColumn fx:id="colActions"     text="Actions"     prefWidth="90"/>
             </columns>
         </TableView>
     </VBox>

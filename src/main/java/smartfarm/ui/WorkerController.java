@@ -4,9 +4,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import smartfarm.dao.TaskDAO;
@@ -22,12 +26,14 @@ import java.util.stream.Collectors;
 
 public class WorkerController {
 
-    @FXML private Label lblTotalWorkers, lblOnDuty, lblAvailable, lblBusy;
+    @FXML private Label lblTotalWorkers, lblOnDuty, lblOffDuty;
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbStatus;
     @FXML private TableView<Worker> workerTable;
-    @FXML private TableColumn<Worker, String> colName, colPhone, colJobTitle, colSkills, colStatus, colWorkload, colFingerprint, colActions;
+    @FXML private TableColumn<Worker, String> colName, colEmail, colPhone, colJobTitle, colSkills, colStatus, colWorkload, colFingerprint, colActions;
     @FXML private Button btnAddWorker;
+    @FXML private PieChart statusPieChart;
+    @FXML private VBox statusLegendBox;
 
     private final WorkerService workerService = new WorkerService(new WorkerDAO(), new TaskDAO());
     private final ObservableList<Worker> allWorkers = FXCollections.observableArrayList();
@@ -44,6 +50,7 @@ public class WorkerController {
         setupFilters();
         loadWorkers();
         updateSummaryCards();
+        populateCharts();
     }
 
     private void loadTasks() {
@@ -57,6 +64,7 @@ public class WorkerController {
     private void setupTableColumns() {
         workerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colName.setResizable(false);
+        colEmail.setResizable(false);
         colPhone.setResizable(false);
         colJobTitle.setResizable(false);
         colSkills.setResizable(false);
@@ -67,6 +75,10 @@ public class WorkerController {
 
         colName.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(data.getValue().getFullName()));
+        colEmail.setCellValueFactory(data ->
+                new javafx.beans.property.SimpleStringProperty(
+                        data.getValue().getEmail() != null && !data.getValue().getEmail().isEmpty()
+                                ? data.getValue().getEmail() : "--"));
         colPhone.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getPhone() != null ? data.getValue().getPhone() : "--"));
@@ -153,12 +165,47 @@ public class WorkerController {
     private void updateSummaryCards() {
         int total = allWorkers.size();
         long onDuty = allWorkers.stream().filter(Worker::isOnDuty).count();
-        long available = allWorkers.stream().filter(w -> w.isOnDuty() && w.isAvailable(allTasks)).count();
-        long busy = onDuty - available;
+        long offDuty = total - onDuty;
         lblTotalWorkers.setText(String.valueOf(total));
         lblOnDuty.setText(String.valueOf(onDuty));
-        lblAvailable.setText(String.valueOf(available));
-        lblBusy.setText(String.valueOf(busy));
+        lblOffDuty.setText(String.valueOf(offDuty));
+    }
+
+    private void populateCharts() {
+        // ── Status Pie Chart ──
+        statusPieChart.getData().clear();
+        statusLegendBox.getChildren().clear();
+        long onDuty = allWorkers.stream().filter(Worker::isOnDuty).count();
+        long offDuty = allWorkers.size() - onDuty;
+        int total = allWorkers.size();
+
+        if (total == 0) {
+            statusPieChart.getData().add(new PieChart.Data("No Workers", 1));
+            statusPieChart.getData().get(0).getNode().setStyle("-fx-pie-color:#e5e7eb;");
+            return;
+        }
+
+        PieChart.Data onData = new PieChart.Data("On Duty", onDuty);
+        PieChart.Data offData = new PieChart.Data("Off Duty", offDuty);
+        statusPieChart.getData().addAll(onData, offData);
+        onData.getNode().setStyle("-fx-pie-color:#22c55e;");
+        offData.getNode().setStyle("-fx-pie-color:#f87171;");
+
+        statusLegendBox.getChildren().addAll(
+                buildLegendRow("#22c55e", "On Duty", onDuty, total > 0 ? (int)(onDuty * 100 / total) : 0),
+                buildLegendRow("#f87171", "Off Duty", offDuty, total > 0 ? (int)(offDuty * 100 / total) : 0)
+        );
+
+    }
+
+    private HBox buildLegendRow(String color, String label, long count, int pct) {
+        Circle dot = new Circle(6);
+        dot.setFill(Color.web(color));
+        Label lbl = new Label(label + "  " + count + " (" + pct + "%)");
+        lbl.setStyle("-fx-font-size:12;-fx-text-fill:#374151;");
+        HBox row = new HBox(8, dot, lbl);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
     }
 
     @FXML
@@ -169,6 +216,7 @@ public class WorkerController {
                 workerService.addWorker(worker);
                 loadWorkers();
                 updateSummaryCards();
+                populateCharts();
             } catch (RuntimeException e) {
                 // Rollback: delete enrolled fingerprint from R307 if save failed
                 if (worker.getFingerprintId() != null && worker.getFingerprintId() > 0) {
@@ -196,6 +244,7 @@ public class WorkerController {
                 workerService.updateWorkerData(updated);
                 loadWorkers();
                 updateSummaryCards();
+                populateCharts();
             } catch (RuntimeException e) {
                 showAlert("Error", e.getMessage());
             }
@@ -225,6 +274,7 @@ public class WorkerController {
                     workerService.deleteWorker(worker.getWorkerId());
                     loadWorkers();
                     updateSummaryCards();
+                    populateCharts();
                 } catch (RuntimeException e) {
                     showAlert("Error", e.getMessage());
                 }
