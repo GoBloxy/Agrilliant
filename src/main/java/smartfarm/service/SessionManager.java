@@ -1,44 +1,151 @@
 package smartfarm.service;
 
+import smartfarm.util.Logger;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.Properties;
 
+import com.gluonhq.attach.settings.SettingsService;
+import com.gluonhq.attach.util.Services;
+
 /**
- * Persists a signed session token to a local file so the user stays
- * logged in across app restarts.  The email is stored alongside an
- * HMAC-SHA256 signature so that manual tampering is detected.
+ * Persists a signed session token so the user stays logged in across
+ * app restarts.
  *
- * File: ~/.agrilliant/session.properties
+ * <h2>Storage layering (H6)</h2>
+ * <ol>
+ *   <li>Gluon Attach {@link SettingsService} — Android
+ *       {@code SharedPreferences} or desktop user-config. This is the
+ *       primary backend on both targets if Attach is wired in.</li>
+ *   <li>Local properties file at
+ *       {@code ~/.agrilliant/session.properties} — original desktop
+ *       behaviour, kept as a fallback so a development laptop without
+ *       Attach configured keeps working unchanged.</li>
+ * </ol>
+ *
+ * The HMAC-SHA256 tamper check is identical to the pre-H6 implementation —
+ * only the storage layer changed. The values written to either backend
+ * are {@code session.email} and {@code session.token}.
+ *
+ * Public API (unchanged):
+ * <pre>
+ *   SessionManager.saveSession(email);
+ *   String email = SessionManager.loadSession();
+ *   SessionManager.clearSession();
+ * </pre>
  */
 public class SessionManager {
 
-    private static final Path SESSION_DIR  = Paths.get(System.getProperty("user.home"), ".agrilliant");
-    private static final Path SESSION_FILE = SESSION_DIR.resolve("session.properties");
+    private static final String TAG = "SessionManager";
+
     private static final String HMAC_ALGO  = "HmacSHA256";
     private static final String SECRET_KEY = "AgR1ll1ant-S3cr3t!@2025";
 
+    private static final String KEY_EMAIL = "session.email";
+    private static final String KEY_TOKEN = "session.token";
+
+    private static final Path SESSION_DIR  = Paths.get(System.getProperty("user.home"), ".agrilliant");
+    private static final Path SESSION_FILE = SESSION_DIR.resolve("session.properties");
+
+    // ---------------------------------------------------------------------
+    // Public API — same shape as before, behaviour just dispatches
+    // through whichever storage layer is available.
+    // ---------------------------------------------------------------------
+
     public static void saveSession(String email) {
+        if (email == null || email.isEmpty()) {
+            clearSession();
+            return;
+        }
+        String token = sign(email);
+
+        Optional<SettingsService> settings = lookup();
+        if (settings.isPresent()) {
+            try {
+                SettingsService s = settings.get();
+                s.store(KEY_EMAIL, email);
+                s.store(KEY_TOKEN, token);
+                return;
+            } catch (Throwable t) {
+                Logger.w(TAG, "SettingsService.store failed — falling back to file", t);
+            }
+        }
+        saveSessionToFile(email, token);
+    }
+
+    public static String loadSession() {
+        Optional<SettingsService> settings = lookup();
+        if (settings.isPresent()) {
+            try {
+                SettingsService s = settings.get();
+                String email = s.retrieve(KEY_EMAIL);
+                String token = s.retrieve(KEY_TOKEN);
+                if (email != null && token != null) {
+                    if (token.equals(sign(email))) return email;
+                    Logger.w(TAG, "Session tampered (Settings) — clearing");
+                    clearSession();
+                    return null;
+                }
+                // Settings present but empty — try migrating from the
+                // legacy file (a user who upgraded an existing install).
+                String migrated = loadSessionFromFile();
+                if (migrated != null) {
+                    Logger.i(TAG, "Migrating legacy session file to SettingsService");
+                    s.store(KEY_EMAIL, migrated);
+                    s.store(KEY_TOKEN, sign(migrated));
+                    deleteFileSilently();
+                }
+                return migrated;
+            } catch (Throwable t) {
+                Logger.w(TAG, "SettingsService.retrieve failed — falling back to file", t);
+            }
+        }
+        return loadSessionFromFile();
+    }
+
+    public static void clearSession() {
+        lookup().ifPresent(s -> {
+            try {
+                s.remove(KEY_EMAIL);
+                s.remove(KEY_TOKEN);
+            } catch (Throwable t) {
+                Logger.w(TAG, "SettingsService.remove failed", t);
+            }
+        });
+        deleteFileSilently();
+    }
+
+    // ---------------------------------------------------------------------
+    // File-backed storage (the original implementation, kept as fallback)
+    // ---------------------------------------------------------------------
+
+    private static void saveSessionToFile(String email, String token) {
         try {
             Files.createDirectories(SESSION_DIR);
             Properties props = new Properties();
             props.setProperty("email", email);
-            props.setProperty("token", sign(email));
+            props.setProperty("token", token);
             try (OutputStream out = Files.newOutputStream(SESSION_FILE)) {
                 props.store(out, "Agrilliant session — do not edit");
             }
         } catch (IOException e) {
-            System.err.println("Failed to save session: " + e.getMessage());
+            Logger.e(TAG, "Failed to save session to file", e);
         }
     }
 
-    public static String loadSession() {
+    private static String loadSessionFromFile() {
         if (!Files.exists(SESSION_FILE)) return null;
         try (InputStream in = Files.newInputStream(SESSION_FILE)) {
             Properties props = new Properties();
@@ -47,22 +154,35 @@ public class SessionManager {
             String token = props.getProperty("token");
             if (email == null || token == null) return null;
             if (!token.equals(sign(email))) {
-                System.err.println("Session tampered — signature mismatch. Clearing session.");
-                clearSession();
+                Logger.w(TAG, "Session tampered (file) — clearing");
+                deleteFileSilently();
                 return null;
             }
             return email;
         } catch (IOException e) {
-            System.err.println("Failed to load session: " + e.getMessage());
+            Logger.e(TAG, "Failed to load session from file", e);
             return null;
         }
     }
 
-    public static void clearSession() {
+    private static void deleteFileSilently() {
         try {
             Files.deleteIfExists(SESSION_FILE);
         } catch (IOException e) {
-            System.err.println("Failed to clear session: " + e.getMessage());
+            Logger.w(TAG, "Failed to delete session file", e);
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+
+    private static Optional<SettingsService> lookup() {
+        try {
+            return Services.get(SettingsService.class);
+        } catch (Throwable t) {
+            // Attach isn't on the classpath at runtime — fine, fall back.
+            return Optional.empty();
         }
     }
 

@@ -462,7 +462,58 @@ unchanged.
   `SQLException`. Out of scope for Phase 1.
 
 ### H6. SessionManager — Gluon Settings + desktop fallback
-> Status: **pending**.
+> Status: **done**, 2026-05-13.
+
+`service/SessionManager.java` rewritten. Public surface is unchanged:
+```
+SessionManager.saveSession(email);
+String email = SessionManager.loadSession();
+SessionManager.clearSession();
+```
+Storage now layers like H4 does: try Gluon Attach `SettingsService`
+first, fall back to the original `~/.agrilliant/session.properties`
+file. The HMAC-SHA256 tamper check is copy-paste identical to the
+pre-H6 implementation — only the storage layer changed.
+
+Keys written to either backend:
+- `session.email` — the user's email
+- `session.token` — HMAC-SHA256(email, SECRET_KEY), Base64
+
+A migration step also runs in `loadSession()`: if Attach Settings is
+present but empty, and the legacy file has a valid session, we copy
+it into Settings and delete the file. Existing desktop installs
+transition transparently after one launch.
+
+Logging: replaced the file's `System.err.println(...)` calls with
+`Logger.w(TAG, ...)` / `Logger.e(TAG, ...)` (H5's new API).
+
+#### Verification (run 2026-05-13)
+
+Wrote a one-off smoke test at `target/h6-smoke/H6Smoke.java`
+(gitignored). On a bare desktop run (Attach Settings desktop impl
+absent), it confirmed:
+
+| Step                                              | Result |
+|---------------------------------------------------|--------|
+| `clearSession()` → `loadSession()` returns null   | OK    |
+| `saveSession(email)` → `loadSession()` returns email | OK |
+| Hand-edit `session.properties` → `loadSession()` returns null and clears | OK |
+
+Logger output confirmed the new `W/SessionManager: Session tampered (file) — clearing` format from H5.
+
+`mvn -Pdesktop compile` and `mvn -Pandroid validate` both green.
+
+**Deferred:** "saved email survives an app restart on the Android
+emulator" — needs the full GluonFX Android build to run on an
+emulator; gated by the same things as the other Android runtime
+checks.
+
+#### TODOs for the merge phase
+
+- `// TODO(phase-2)`: after 3bdelbary's B1 lands, decide if the
+  `SECRET_KEY` constant should move out of source into a build-time
+  secret (Git history will leak it otherwise; current placement
+  matches the pre-migration behaviour).
 
 ### H7. FingerprintService — Android stub + desktop impl split
 > Status: **pending**.
