@@ -13,6 +13,7 @@ import smartfarm.dao.TaskDAO;
 import smartfarm.dao.WorkerDAO;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
+import smartfarm.service.FingerprintService;
 import smartfarm.service.WorkerService;
 
 import java.sql.SQLException;
@@ -217,13 +218,58 @@ public class WorkerController {
         jobField.setPromptText("Job Title");
         TextField skillsField = new TextField(existing != null ? existing.getSkills() : "");
         skillsField.setPromptText("Skills (comma separated)");
-        TextField fpField = new TextField(existing != null && existing.getFingerprintId() != null
-                ? String.valueOf(existing.getFingerprintId()) : "");
-        fpField.setPromptText("R307 Fingerprint ID (e.g. 1, 2, 3...)");
+        // Fingerprint enrollment
+        final int[] enrolledFpId = { existing != null && existing.getFingerprintId() != null
+                ? existing.getFingerprintId() : -1 };
+        Label fpStatusLabel = new Label(enrolledFpId[0] >= 0
+                ? "Fingerprint enrolled (ID: " + enrolledFpId[0] + ")"
+                : "No fingerprint enrolled");
+        fpStatusLabel.setStyle("-fx-font-size: 11; -fx-text-fill: #6b7280;");
+        Button enrollBtn = new Button(enrolledFpId[0] >= 0 ? "Re-enroll Fingerprint" : "Enroll Fingerprint");
+        enrollBtn.setStyle("-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-font-weight: bold; "
+                + "-fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 16;");
+        enrollBtn.setOnAction(ev -> {
+            enrollBtn.setDisable(true);
+            fpStatusLabel.setText("Connecting to sensor...");
+            new Thread(() -> {
+                FingerprintService fps = new FingerprintService();
+                try {
+                    if (!fps.autoConnect()) {
+                        javafx.application.Platform.runLater(() -> {
+                            fpStatusLabel.setText("No sensor detected. Connect R307 via USB.");
+                            enrollBtn.setDisable(false);
+                        });
+                        return;
+                    }
+                    int nextId = fps.getTemplateCount() + 1;
+                    if (enrolledFpId[0] >= 0) nextId = enrolledFpId[0]; // re-enroll same slot
+
+                    final int slotId = nextId;
+                    boolean ok = fps.enroll(slotId, msg ->
+                            javafx.application.Platform.runLater(() -> fpStatusLabel.setText(msg)));
+
+                    if (ok) {
+                        enrolledFpId[0] = slotId;
+                        javafx.application.Platform.runLater(() -> {
+                            fpStatusLabel.setText("Fingerprint enrolled (ID: " + slotId + ")");
+                            enrollBtn.setText("Re-enroll Fingerprint");
+                        });
+                    }
+                } catch (Exception ex) {
+                    javafx.application.Platform.runLater(() ->
+                            fpStatusLabel.setText("Error: " + ex.getMessage()));
+                } finally {
+                    fps.disconnect();
+                    javafx.application.Platform.runLater(() -> enrollBtn.setDisable(false));
+                }
+            }).start();
+        });
+        VBox fpBox = new VBox(6, enrollBtn, fpStatusLabel);
+
         CheckBox onDutyCb = new CheckBox("On Duty");
         onDutyCb.setSelected(existing != null && existing.isOnDuty());
 
-        VBox form = new VBox(10, nameField, phoneField, emailField, jobField, skillsField, fpField, onDutyCb);
+        VBox form = new VBox(10, nameField, phoneField, emailField, jobField, skillsField, fpBox, onDutyCb);
         form.setPadding(new Insets(20));
         dialog.getDialogPane().setContent(form);
 
@@ -235,18 +281,12 @@ public class WorkerController {
                     return null;
                 }
                 Worker worker = new Worker(name, phoneField.getText().trim(),
-                        emailField.getText().trim(), "", // email and empty password hash
+                        emailField.getText().trim(), "",
                         jobField.getText().trim(), skillsField.getText().trim(),
                         existing != null ? existing.getManagerId() : currentManagerId);
                 worker.setOnDuty(onDutyCb.isSelected());
-                String fpText = fpField.getText().trim();
-                if (!fpText.isEmpty()) {
-                    try {
-                        worker.setFingerprintId(Integer.parseInt(fpText));
-                    } catch (NumberFormatException e) {
-                        showAlert("Validation", "Fingerprint ID must be a number");
-                        return null;
-                    }
+                if (enrolledFpId[0] >= 0) {
+                    worker.setFingerprintId(enrolledFpId[0]);
                 }
                 return worker;
             }

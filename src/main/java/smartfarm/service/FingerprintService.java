@@ -2,82 +2,103 @@ package smartfarm.service;
 
 import com.fazecast.jSerialComm.SerialPort;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
 /**
- * Communicates with the R307 fingerprint sensor connected to the desktop PC
- * via a USB-to-UART adapter (e.g., CP2102, FTDI, CH340).
+ * Communicates with the R307 fingerprint sensor via the ESP32 as a serial bridge.
+ * The ESP32 is connected to the PC via USB. Commands are sent as text over serial,
+ * and the ESP32 relays them to the R307 and returns text results.
  *
- * Protocol: Adafruit fingerprint sensor protocol at 57600 baud.
- * This service handles image capture, template conversion, and search.
+ * Protocol (text-based over USB serial at 115200 baud):
+ *   PC → ESP32:  SCAN\n              ESP32 → PC: SCAN_OK:<id>,<confidence> or SCAN_FAIL:<reason>
+ *   PC → ESP32:  ENROLL:<slot>\n      ESP32 → PC: ENROLL_OK:<slot> or ENROLL_FAIL:<reason>
+ *   PC → ESP32:  TEMPLATE_COUNT\n     ESP32 → PC: TEMPLATE_COUNT:<n>
+ *   PC → ESP32:  PING\n              ESP32 → PC: PONG
  */
 public class FingerprintService {
 
     private SerialPort port;
+    private BufferedReader reader;
+    private OutputStream writer;
     private boolean connected = false;
 
-    private static final int BAUD_RATE = 57600;
-    private static final int TIMEOUT_MS = 3000;
+    private static final int BAUD_RATE = 115200;
+    private static final int TIMEOUT_MS = 20000; // Enrollment can take a while
 
-    // R307 packet constants
-    private static final byte[] HEADER = {(byte) 0xEF, (byte) 0x01};
-    private static final byte[] DEFAULT_ADDR = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-    private static final byte PKT_COMMAND = 0x01;
-    private static final byte PKT_ACK = 0x07;
-
-    // R307 instruction codes
-    private static final byte CMD_GEN_IMAGE = 0x01;
-    private static final byte CMD_IMG_2_TZ = 0x02;
-    private static final byte CMD_SEARCH = 0x04;
-    private static final byte CMD_VERIFY_PWD = 0x13;
-
-    /**
-     * Attempts to connect to the R307 sensor on the given COM port.
-     * @param portName e.g. "COM3" on Windows or "/dev/ttyUSB0" on Linux
-     * @return true if connection successful and password verified
-     */
-    public boolean connect(String portName) {
-        port = SerialPort.getCommPort(portName);
-        port.setBaudRate(BAUD_RATE);
-        port.setNumDataBits(8);
-        port.setNumStopBits(1);
-        port.setParity(SerialPort.NO_PARITY);
-        port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, TIMEOUT_MS, TIMEOUT_MS);
-
-        if (!port.openPort()) {
-            System.err.println("Failed to open port: " + portName);
-            return false;
-        }
-
-        // Verify password (default 0x00000000)
-        connected = verifyPassword();
-        if (!connected) {
-            port.closePort();
-            System.err.println("R307 password verification failed on " + portName);
-        }
-        return connected;
+    /** Callback for enrollment/scan progress updates */
+    public interface EnrollCallback {
+        void onStatus(String message);
     }
 
     /**
-     * Auto-detect the R307 on any available COM port.
-     * @return true if found and connected
+     * Connect to the ESP32 on the given COM port.
+     */
+    public boolean connect(String portName) {
+        try {
+            port = SerialPort.getCommPort(portName);
+            port.setBaudRate(BAUD_RATE);
+            port.setNumDataBits(8);
+            port.setNumStopBits(1);
+            port.setParity(SerialPort.NO_PARITY);
+            port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, TIMEOUT_MS, TIMEOUT_MS);
+
+            if (!port.openPort()) {
+                System.err.println("Failed to open port: " + portName);
+                return false;
+            }
+
+            reader = new BufferedReader(new InputStreamReader(port.getInputStream(), StandardCharsets.UTF_8));
+            writer = port.getOutputStream();
+
+            // Small delay for ESP32 to be ready
+            Thread.sleep(500);
+
+            // Flush any pending output from ESP32 boot
+            while (port.bytesAvailable() > 0) {
+                port.getInputStream().skip(port.bytesAvailable());
+                Thread.sleep(50);
+            }
+
+            // Test connection with PING
+            sendLine("PING");
+            String resp = waitForResponse("PONG", 3000);
+            if (resp != null) {
+                connected = true;
+                System.out.println("ESP32 connected on " + portName);
+                return true;
+            }
+
+            port.closePort();
+            System.err.println("ESP32 did not respond to PING on " + portName);
+            return false;
+        } catch (Exception e) {
+            System.err.println("Error connecting to " + portName + ": " + e.getMessage());
+            if (port != null && port.isOpen()) port.closePort();
+            return false;
+        }
+    }
+
+    /**
+     * Auto-detect the ESP32 on any available COM port.
      */
     public boolean autoConnect() {
         for (SerialPort sp : SerialPort.getCommPorts()) {
             String name = sp.getSystemPortName();
-            System.out.println("Trying R307 on " + name + "...");
-            if (connect(name)) {
-                System.out.println("R307 connected on " + name);
-                return true;
-            }
+            System.out.println("Trying ESP32 on " + name + "...");
+            if (connect(name)) return true;
         }
-        System.err.println("R307 not found on any COM port");
+        System.err.println("ESP32 not found on any COM port");
         return false;
     }
 
     public void disconnect() {
-        if (port != null && port.isOpen()) {
-            port.closePort();
-        }
         connected = false;
+        try { if (reader != null) reader.close(); } catch (Exception ignored) {}
+        try { if (writer != null) writer.close(); } catch (Exception ignored) {}
+        if (port != null && port.isOpen()) port.closePort();
     }
 
     public boolean isConnected() {
@@ -89,105 +110,123 @@ public class FingerprintService {
     }
 
     /**
-     * Scans a finger and returns the matched fingerprint ID, or -1 if not found/error.
-     * This is a blocking call — waits up to TIMEOUT_MS for a finger.
+     * Scan a finger and return the matched fingerprint ID, or -1 if not found.
      */
     public int scanAndMatch() {
         if (!isConnected()) return -1;
-
-        // Step 1: Capture image
-        if (!genImage()) return -1;
-
-        // Step 2: Convert image to template in buffer 1
-        if (!img2Tz((byte) 1)) return -1;
-
-        // Step 3: Search library (all slots 0-999)
-        return search();
-    }
-
-    private boolean verifyPassword() {
-        byte[] data = {CMD_VERIFY_PWD, 0x00, 0x00, 0x00, 0x00};
-        byte[] response = sendCommand(data);
-        return response != null && response.length > 0 && response[0] == 0x00;
-    }
-
-    private boolean genImage() {
-        byte[] data = {CMD_GEN_IMAGE};
-        byte[] response = sendCommand(data);
-        return response != null && response.length > 0 && response[0] == 0x00;
-    }
-
-    private boolean img2Tz(byte bufferId) {
-        byte[] data = {CMD_IMG_2_TZ, bufferId};
-        byte[] response = sendCommand(data);
-        return response != null && response.length > 0 && response[0] == 0x00;
-    }
-
-    private int search() {
-        // Search entire library: start=0, count=1000
-        byte[] data = {CMD_SEARCH, 0x01, 0x00, 0x00, 0x03, (byte) 0xE8};
-        byte[] response = sendCommand(data);
-        if (response == null || response.length < 5 || response[0] != 0x00) {
-            return -1;
+        try {
+            sendLine("SCAN");
+            // Wait for final result (SCAN_OK or SCAN_FAIL), up to 15s
+            long deadline = System.currentTimeMillis() + 15000;
+            while (System.currentTimeMillis() < deadline) {
+                String line = readLineWithTimeout(15000);
+                if (line == null) return -1;
+                if (line.startsWith("SCAN_OK:")) {
+                    // Format: SCAN_OK:<id>,<confidence>
+                    String[] parts = line.substring(8).split(",");
+                    return Integer.parseInt(parts[0].trim());
+                }
+                if (line.startsWith("SCAN_FAIL")) return -1;
+                // Ignore intermediate messages like SCAN_WAITING
+            }
+        } catch (Exception e) {
+            System.err.println("Scan error: " + e.getMessage());
         }
-        // response[1..2] = finger ID (big-endian), response[3..4] = confidence
-        int fingerId = ((response[1] & 0xFF) << 8) | (response[2] & 0xFF);
-        return fingerId;
+        return -1;
     }
 
     /**
-     * Sends a command packet and reads the acknowledgement packet.
+     * Get the number of stored fingerprint templates on the R307.
      */
-    private byte[] sendCommand(byte[] instruction) {
+    public int getTemplateCount() {
+        if (!isConnected()) return -1;
         try {
-            // Build packet: HEADER(2) + ADDR(4) + PKT_TYPE(1) + LENGTH(2) + DATA(N) + CHECKSUM(2)
-            int length = instruction.length + 2; // data + checksum(2)
-            byte[] packet = new byte[2 + 4 + 1 + 2 + instruction.length + 2];
-            int i = 0;
-            packet[i++] = HEADER[0];
-            packet[i++] = HEADER[1];
-            packet[i++] = DEFAULT_ADDR[0];
-            packet[i++] = DEFAULT_ADDR[1];
-            packet[i++] = DEFAULT_ADDR[2];
-            packet[i++] = DEFAULT_ADDR[3];
-            packet[i++] = PKT_COMMAND;
-            packet[i++] = (byte) ((length >> 8) & 0xFF);
-            packet[i++] = (byte) (length & 0xFF);
-            System.arraycopy(instruction, 0, packet, i, instruction.length);
-            i += instruction.length;
-
-            // Checksum = PKT_TYPE + LENGTH(2) + DATA(N)
-            int checksum = PKT_COMMAND + ((length >> 8) & 0xFF) + (length & 0xFF);
-            for (byte b : instruction) checksum += (b & 0xFF);
-            packet[i++] = (byte) ((checksum >> 8) & 0xFF);
-            packet[i++] = (byte) (checksum & 0xFF);
-
-            // Send
-            port.writeBytes(packet, packet.length);
-
-            // Read response header (9 bytes: HEADER(2) + ADDR(4) + PKT_TYPE(1) + LENGTH(2))
-            byte[] respHeader = new byte[9];
-            int read = port.readBytes(respHeader, 9);
-            if (read < 9) return null;
-
-            // Verify it's an ACK packet
-            if (respHeader[6] != PKT_ACK) return null;
-
-            int respLen = ((respHeader[7] & 0xFF) << 8) | (respHeader[8] & 0xFF);
-            // Read data + checksum
-            byte[] respData = new byte[respLen];
-            read = port.readBytes(respData, respLen);
-            if (read < respLen) return null;
-
-            // Return data without checksum (last 2 bytes)
-            byte[] result = new byte[respLen - 2];
-            System.arraycopy(respData, 0, result, 0, result.length);
-            return result;
-
+            sendLine("TEMPLATE_COUNT");
+            String resp = waitForResponse("TEMPLATE_COUNT:", 5000);
+            if (resp != null) {
+                return Integer.parseInt(resp.substring("TEMPLATE_COUNT:".length()).trim());
+            }
         } catch (Exception e) {
-            System.err.println("R307 communication error: " + e.getMessage());
+            System.err.println("Template count error: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    /**
+     * Enroll a new fingerprint at the given slot. Two scans required.
+     * The callback receives progress messages from the ESP32.
+     */
+    public boolean enroll(int slotId, EnrollCallback callback) {
+        if (!isConnected()) return false;
+        try {
+            sendLine("ENROLL:" + slotId);
+
+            long deadline = System.currentTimeMillis() + 45000; // Enrollment can take up to 45s
+            while (System.currentTimeMillis() < deadline) {
+                String line = readLineWithTimeout(15000);
+                if (line == null) {
+                    if (callback != null) callback.onStatus("Timed out waiting for response.");
+                    return false;
+                }
+
+                if (line.startsWith("ENROLL_OK:")) {
+                    if (callback != null) callback.onStatus("Fingerprint enrolled (ID: " + slotId + ")");
+                    return true;
+                }
+                if (line.startsWith("ENROLL_FAIL:")) {
+                    String reason = line.substring("ENROLL_FAIL:".length());
+                    if (callback != null) callback.onStatus("Enrollment failed: " + reason);
+                    return false;
+                }
+
+                // Progress messages from ESP32
+                if (line.equals("ENROLL_PLACE1")) {
+                    if (callback != null) callback.onStatus("Place your finger on the sensor...");
+                } else if (line.equals("ENROLL_REMOVE")) {
+                    if (callback != null) callback.onStatus("Remove your finger...");
+                } else if (line.equals("ENROLL_PLACE2")) {
+                    if (callback != null) callback.onStatus("Place the SAME finger again...");
+                }
+            }
+            if (callback != null) callback.onStatus("Enrollment timed out.");
+        } catch (Exception e) {
+            if (callback != null) callback.onStatus("Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    private void sendLine(String command) throws Exception {
+        writer.write((command + "\n").getBytes(StandardCharsets.UTF_8));
+        writer.flush();
+    }
+
+    /**
+     * Read a line from the serial port with a timeout.
+     */
+    private String readLineWithTimeout(long timeoutMs) {
+        try {
+            port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, (int) timeoutMs, 0);
+            String line = reader.readLine();
+            if (line != null) line = line.trim();
+            return line;
+        } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Wait for a specific response prefix within timeout.
+     */
+    private String waitForResponse(String prefix, long timeoutMs) {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            long remaining = deadline - System.currentTimeMillis();
+            if (remaining <= 0) break;
+            String line = readLineWithTimeout(remaining);
+            if (line == null) break;
+            if (line.startsWith(prefix)) return line;
+        }
+        return null;
     }
 
     /**

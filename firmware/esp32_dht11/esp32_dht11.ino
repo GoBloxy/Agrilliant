@@ -150,6 +150,13 @@ void setup() {
 }
 
 void loop() {
+    // Handle serial commands from desktop app (ESP32 as R307 bridge)
+    if (Serial.available()) {
+        String cmd = Serial.readStringUntil('\n');
+        cmd.trim();
+        handleSerialCommand(cmd);
+    }
+
     // Check fingerprint scanner (non-blocking, every 500ms)
     if (fingerprintDetected && millis() - lastFpCheck >= FP_CHECK_INTERVAL) {
         lastFpCheck = millis();
@@ -285,4 +292,111 @@ void checkFingerprint() {
     }
 
     delay(2000);  // Debounce — prevent multiple reads of same finger
+}
+
+// ═══════════════ SERIAL BRIDGE COMMANDS ═══════════════
+// The Java desktop app sends commands over USB serial.
+// ESP32 relays to R307 and responds with results.
+//
+// Commands:
+//   SCAN            → scan finger, respond: SCAN_OK:<id>,<confidence> or SCAN_FAIL
+//   ENROLL:<slot>   → enroll finger at slot (two scans), respond: ENROLL_OK:<slot> or ENROLL_FAIL:<reason>
+//   TEMPLATE_COUNT  → respond: TEMPLATE_COUNT:<n>
+//   PING            → respond: PONG (connection test)
+
+void handleSerialCommand(String cmd) {
+    if (!fingerprintDetected) {
+        Serial.println("FP_ERROR:No sensor");
+        return;
+    }
+
+    if (cmd == "PING") {
+        Serial.println("PONG");
+    }
+    else if (cmd == "SCAN") {
+        handleScan();
+    }
+    else if (cmd.startsWith("ENROLL:")) {
+        int slot = cmd.substring(7).toInt();
+        if (slot <= 0) {
+            Serial.println("ENROLL_FAIL:Invalid slot");
+            return;
+        }
+        handleEnroll(slot);
+    }
+    else if (cmd == "TEMPLATE_COUNT") {
+        finger.getTemplateCount();
+        Serial.println("TEMPLATE_COUNT:" + String(finger.templateCount));
+    }
+}
+
+void handleScan() {
+    Serial.println("SCAN_WAITING");
+
+    // Wait up to 10 seconds for a finger
+    unsigned long start = millis();
+    uint8_t p = FINGERPRINT_NOFINGER;
+    while (millis() - start < 10000) {
+        p = finger.getImage();
+        if (p == FINGERPRINT_OK) break;
+        delay(100);
+    }
+    if (p != FINGERPRINT_OK) { Serial.println("SCAN_FAIL:No finger"); return; }
+
+    p = finger.image2Tz();
+    if (p != FINGERPRINT_OK) { Serial.println("SCAN_FAIL:Image error"); return; }
+
+    p = finger.fingerSearch();
+    if (p != FINGERPRINT_OK) { Serial.println("SCAN_FAIL:Not recognized"); return; }
+
+    Serial.println("SCAN_OK:" + String(finger.fingerID) + "," + String(finger.confidence));
+}
+
+void handleEnroll(int slot) {
+    uint8_t p;
+
+    // ── First scan ──
+    Serial.println("ENROLL_PLACE1");
+    unsigned long start = millis();
+    while (millis() - start < 15000) {
+        p = finger.getImage();
+        if (p == FINGERPRINT_OK) break;
+        delay(100);
+    }
+    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:No finger (scan 1)"); return; }
+
+    p = finger.image2Tz(1);
+    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:Image error (scan 1)"); return; }
+
+    // ── Remove finger ──
+    Serial.println("ENROLL_REMOVE");
+    start = millis();
+    while (millis() - start < 5000) {
+        p = finger.getImage();
+        if (p == FINGERPRINT_NOFINGER) break;
+        delay(100);
+    }
+
+    // ── Second scan ──
+    Serial.println("ENROLL_PLACE2");
+    start = millis();
+    while (millis() - start < 15000) {
+        p = finger.getImage();
+        if (p == FINGERPRINT_OK) break;
+        delay(100);
+    }
+    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:No finger (scan 2)"); return; }
+
+    p = finger.image2Tz(2);
+    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:Image error (scan 2)"); return; }
+
+    // ── Create model ──
+    p = finger.createModel();
+    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:Prints did not match"); return; }
+
+    // ── Store ──
+    p = finger.storeModel(slot);
+    if (p != FINGERPRINT_OK) { Serial.println("ENROLL_FAIL:Store failed"); return; }
+
+    Serial.println("ENROLL_OK:" + String(slot));
 }
