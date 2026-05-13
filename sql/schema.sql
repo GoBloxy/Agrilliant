@@ -152,6 +152,24 @@ CREATE TABLE harvest_records (
     FOREIGN KEY (crop_id) REFERENCES crops(crop_id) ON DELETE CASCADE
 );
 
+-- ═══════════════ DISEASE DETECTION (plant.id) ═══════════════
+CREATE TABLE disease_detection (
+    detection_id    INT AUTO_INCREMENT PRIMARY KEY,
+    plot_id         INT          NOT NULL,
+    crop_id         INT          NOT NULL,
+    image_path      VARCHAR(500) NOT NULL,
+    disease_name    VARCHAR(200) NOT NULL,
+    confidence      ENUM('HIGH','MEDIUM','LOW') NOT NULL DEFAULT 'MEDIUM',
+    probability     DOUBLE       NOT NULL DEFAULT 0,
+    recommendation  TEXT,
+    status          ENUM('PENDING','CONFIRMED','DISMISSED') NOT NULL DEFAULT 'PENDING',
+    detected_by     INT          NULL,
+    detected_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (plot_id)     REFERENCES plots(plot_id)   ON DELETE CASCADE,
+    FOREIGN KEY (crop_id)     REFERENCES crops(crop_id)   ON DELETE CASCADE,
+    FOREIGN KEY (detected_by) REFERENCES worker(worker_id) ON DELETE SET NULL
+);
+
 -- ═══════════════ ATTENDANCE (R307 Fingerprint) ═══════════════
 CREATE TABLE attendance (
     attendance_id INT AUTO_INCREMENT PRIMARY KEY,

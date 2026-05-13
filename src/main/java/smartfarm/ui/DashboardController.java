@@ -86,7 +86,7 @@ public class DashboardController {
     @FXML private StackPane pageContainer;
     @FXML private VBox dashboardPage;
     @FXML private VBox cropsSubmenu;
-    @FXML private Button btnDashboard, btnMonitoring, btnAlerts, btnCrops, btnWorkers,
+    @FXML private Button btnDashboard, btnMonitoring, btnDisease, btnAlerts, btnCrops, btnWorkers,
                           btnAttendance, btnTasks, btnHarvests, btnReports, btnSettings,
                           btnUsers, btnLogs, btnCropsCrops, btnCropsPlots;
 
@@ -851,6 +851,7 @@ public class DashboardController {
     // ═══════════════ NAVIGATION HANDLERS ═══════════════
     @FXML private void onNavDashboard()  { showPage(dashboardPage,  btnDashboard); }
     @FXML private void onNavMonitoring() { loadFxmlPage("/fxml/monitoring.fxml", btnMonitoring); }
+    @FXML private void onNavDisease()    { showPage(new DiseaseDetectionPage(), btnDisease); }
     @FXML private void onNavAlerts()     { loadFxmlPage("/fxml/alerts.fxml", btnAlerts); }
     @FXML private void onNavCropsList()  { loadFxmlPage("/fxml/crops.fxml", btnCropsCrops); }
     @FXML private void onNavPlotsList()  { loadFxmlPage("/fxml/plots.fxml", btnCropsPlots); }
