@@ -7,7 +7,32 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * DAO for {@link smartfarm.model.Task} rows.
+ *
+ * <h2>Thread-safety (post-Android-migration H4 / H5)</h2>
+ *
+ * All public methods on this class are safe to call from a
+ * background thread. JDBC is blocking, so callers must invoke
+ * them from
+ * {@link smartfarm.util.DBConnection#runAsync(java.util.concurrent.Callable)}
+ * (or a controller {@code Task<T>}) — never from the JavaFX UI
+ * thread, otherwise the UI freezes for the duration of the
+ * round-trip.
+ *
+ * <p>None of the methods log to {@link System#out} /
+ * {@link System#err} in a hot loop (Android logcat noise).
+ * Exceptions are propagated via {@code throws SQLException} so
+ * the caller decides whether to surface them in the UI (typically
+ * by calling {@link smartfarm.util.Logger#e(String, String, Throwable)}).
+ */
 public class TaskDAO implements GenericDAO<Task> {
+    // TODO(phase-2): consider replacing this cached field with a
+    //   private Connection conn() { return DBConnection.getInstance(); }
+    // method so a torn connection auto-recovers via H4's getInstance()
+    // re-create logic. Currently if this handle dies the DAO needs to
+    // be re-instantiated; that's acceptable for now since DAOs are
+    // typically short-lived (controller scope).
     private final Connection conn = DBConnection.getInstance();
 
     @Override

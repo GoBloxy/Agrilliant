@@ -395,7 +395,71 @@ is reachable.
   picks them up next launch. 3bdelbary owns this screen.
 
 ### H5. DAO sweep (logger, thread-safety doc)
-> Status: **pending**.
+> Status: **done**, 2026-05-13.
+
+The literal "replace `e.printStackTrace()` with `Logger.e(...)`"
+sweep is a no-op on this codebase — none of the 11 active DAOs catch
+exceptions; they all propagate via `throws SQLException` so the
+caller decides what to do. No `System.out.println` in hot loops
+either. So H5's behaviour is unchanged; what landed is documentation
+plus an explicit TODO about the cached `Connection` field.
+
+#### 1. Logger upgrade
+`util/Logger.java` rewritten with an Android-style API:
+```
+Logger.d(tag, msg)
+Logger.i(tag, msg)
+Logger.w(tag, msg)            Logger.w(tag, msg, t)
+Logger.e(tag, msg)            Logger.e(tag, msg, t)
+```
+Initial impl prints `"<LEVEL>/<tag>: <msg>"` to stdout (info/debug)
+or stderr (warn/error). H10 will overlay an `android.util.Log` delegate
+through reflection so the same call sites go through logcat on a
+device.
+
+The old `Logger.logger(Runnable)` method had zero callers — safe to
+drop.
+
+#### 2. DAO sweep
+Applied via the one-shot script `/tmp/h5_sweep.py` (recorded here
+because it's a one-time helper, not project code). For every DAO
+except `GenericDAO.java` (interface) and `UserDAO.java` (deprecated):
+- Prepended a uniform class-level javadoc block declaring thread
+  safety + the "never from the FX UI thread" rule + the recommended
+  routing through `DBConnection.runAsync(...)`.
+- Inserted a `// TODO(phase-2)` comment above the cached
+  `private final Connection conn = DBConnection.getInstance();`
+  field, noting the recommended switch to a per-method
+  `private Connection conn() { return DBConnection.getInstance(); }`
+  call so H4's auto-reconnect logic actually fires.
+
+Files touched:
+```
+AdminDAO.java       AlertDAO.java        AttendanceDAO.java
+CropDAO.java        DeviceDAO.java       HarvestDAO.java
+ManagerDAO.java     PlotDAO.java         SensorDAO.java
+TaskDAO.java        WorkerDAO.java
+```
+
+Public method signatures: unchanged. SQL: unchanged. Behaviour:
+unchanged.
+
+#### Verification (run 2026-05-13)
+| Gate                                            | Result |
+|-------------------------------------------------|--------|
+| `mvn -Pdesktop compile` (all 13 DAOs compile)   | BUILD SUCCESS |
+| `grep printStackTrace src/main/java/smartfarm/dao` | (no matches) |
+
+#### TODOs for the merge phase
+
+- `// TODO(phase-2)`: act on the per-DAO cached-conn-field TODOs once
+  3bdelbary's controllers are wrapping calls in async — the field-
+  to-method-call refactor is mechanical but ~90 touches and should
+  be one self-contained merge-phase commit.
+- `// TODO(phase-2)`: when controllers start using `Logger.e(...)`
+  the captured exceptions in DAOs may want to be wrapped in a custom
+  `DataAccessException` so the UI layer doesn't need to import
+  `SQLException`. Out of scope for Phase 1.
 
 ### H6. SessionManager — Gluon Settings + desktop fallback
 > Status: **pending**.
