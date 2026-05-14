@@ -8,7 +8,7 @@
 <?import javafx.scene.shape.Circle?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.PlotController"
-      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+      spacing="14" styleClass="content-pane">
     <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
     <!-- Summary Cards -->
@@ -104,13 +104,14 @@
                         <graphic><FontIcon iconLiteral="fth-crosshair" iconSize="14"/></graphic>
                     </Button>
                     <Region prefHeight="6"/>
+                    <!-- Tooltips removed for touch: hover doesn't exist on phone.
+                         If hint text becomes important, a long-press handler can
+                         be added in PlotController (Gluon gestures). -->
                     <ToggleButton fx:id="btnDrawMode" style="-fx-background-color: white; -fx-background-radius: 4; -fx-padding: 6; -fx-cursor: hand;">
                         <graphic><FontIcon iconLiteral="fth-edit-3" iconSize="14"/></graphic>
-                        <tooltip><Tooltip text="Draw Plot: click to add points, double-click to finish"/></tooltip>
                     </ToggleButton>
                     <Button fx:id="btnDeletePlot" style="-fx-background-color: white; -fx-background-radius: 4; -fx-padding: 6; -fx-cursor: hand;">
                         <graphic><FontIcon iconLiteral="fth-trash-2" iconSize="14"/></graphic>
-                        <tooltip><Tooltip text="Delete last drawn plot"/></tooltip>
                     </Button>
                 </VBox>
             </StackPane>
