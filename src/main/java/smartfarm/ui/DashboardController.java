@@ -131,12 +131,15 @@ public class DashboardController {
             WorkerController.setCurrentManagerId(user.getId());
             PlotController.setCurrentManagerId(user.getId());
             applyRolePermissions(user.getRole());
+            AlertController.setCurrentManagerId(user.getId());
             if (user.getRole() == smartfarm.model.User.Role.WORKER) {
                 lblTasksTitle.setText("My Tasks");
                 TaskController.setWorkerMode(user.getId());
+                AlertController.setWorkerMode(user.getId());
                 loadTasks(); // reload filtered for this worker
             } else {
                 TaskController.clearWorkerMode();
+                AlertController.clearWorkerMode();
             }
         }
     }

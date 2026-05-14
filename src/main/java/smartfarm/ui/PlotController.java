@@ -865,8 +865,8 @@ public class PlotController {
 
     // ═══════════════ CRUD OPERATIONS ═══════════════
 
-    // Tracks the crop selected in the dialog so we can re-assign after save
-    private String dialogSelectedCrop = null;
+    // Tracks the crops selected in the dialog so we can re-assign after save
+    private List<String> dialogSelectedCrops = new ArrayList<>();
 
     @FXML
     private void onAddPlot() {
@@ -875,9 +875,9 @@ public class PlotController {
             PlotDAO plotDAO = new PlotDAO();
             try {
                 plotDAO.save(plot);
-                // If a crop was selected, assign it to this new plot
-                if (dialogSelectedCrop != null && !dialogSelectedCrop.equals("None")) {
-                    reassignCropToPlot(dialogSelectedCrop, plot.getPlotId());
+                // If crops were selected, assign them to this new plot
+                for (String cropName : dialogSelectedCrops) {
+                    reassignCropToPlot(cropName, plot.getPlotId());
                 }
                 SystemLogManager.getInstance().info("PlotController",
                         "Plot '" + plot.getName() + "' created (" + plot.getSizeAcres() + " acres)", "manager");
@@ -901,12 +901,8 @@ public class PlotController {
             try {
                 updated.setPlotId(dbPlot.getPlotId());
                 plotDAO.update(updated);
-                // Only reassign crop if user selected a DIFFERENT one
-                if (dialogSelectedCrop != null
-                        && !dialogSelectedCrop.equals("None")
-                        && !dialogSelectedCrop.equals(currentCrop)) {
-                    reassignCropToPlot(dialogSelectedCrop, dbPlot.getPlotId());
-                }
+                // Reassign crops: unassign old ones, assign new ones
+                reassignCropsToPlot(dialogSelectedCrops, dbPlot.getPlotId());
                 SystemLogManager.getInstance().info("PlotController",
                         "Plot '" + updated.getName() + "' updated", "manager");
                 loadPlotData();
@@ -931,6 +927,28 @@ public class PlotController {
             }
         } catch (SQLException e) {
             System.err.println("Failed to reassign crop: " + e.getMessage());
+        }
+    }
+
+    private void reassignCropsToPlot(List<String> selectedCropNames, int plotId) {
+        CropDAO cropDAO = new CropDAO();
+        try {
+            List<Crop> all = cropDAO.getAll();
+            for (Crop c : all) {
+                if (c.getGrowthStage() == Crop.GrowthStage.HARVESTED) continue;
+                if (c.getPlotId() == plotId && !selectedCropNames.contains(c.getCropName())) {
+                    // Unassign crops that were removed
+                    c.setPlotId(0);
+                    cropDAO.update(c);
+                }
+                if (selectedCropNames.contains(c.getCropName()) && c.getPlotId() != plotId) {
+                    // Assign newly selected crops
+                    c.setPlotId(plotId);
+                    cropDAO.update(c);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to reassign crops: " + e.getMessage());
         }
     }
 
@@ -997,10 +1015,7 @@ public class PlotController {
             try {
                 updated.setPlotId(selectedDetailPlot.getPlotId());
                 plotDAO.update(updated);
-                if (dialogSelectedCrop != null && !dialogSelectedCrop.equals("None")
-                        && !dialogSelectedCrop.equals(currentCrop)) {
-                    reassignCropToPlot(dialogSelectedCrop, selectedDetailPlot.getPlotId());
-                }
+                reassignCropsToPlot(dialogSelectedCrops, selectedDetailPlot.getPlotId());
                 // Reload data and refresh detail
                 loadPlotData();
                 selectedDetailPlot = findPlotById(selectedDetailPlot.getPlotId());
@@ -1262,17 +1277,23 @@ public class PlotController {
         }
         soilCombo.setPromptText("Select Soil Type");
 
-        // Crop selection — list all active (non-harvested) crops
-        ComboBox<String> cropCombo = new ComboBox<>();
-        cropCombo.setMaxWidth(Double.MAX_VALUE);
-        cropCombo.getItems().add("None");
+        // Crop selection — multi-select checkboxes for active (non-harvested) crops
+        VBox cropCheckboxes = new VBox(4);
+        cropCheckboxes.setStyle("-fx-padding: 6; -fx-border-color: #d1d5db; -fx-border-radius: 4; -fx-background-color: white; -fx-background-radius: 4;");
+        List<CheckBox> cropChecks = new ArrayList<>();
+        List<String> currentCropNames = currentCropName != null
+                ? List.of(currentCropName.split(",\\s*")) : List.of();
         for (Crop c : dbCrops) {
             if (c.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
-                cropCombo.getItems().add(c.getCropName());
+                CheckBox cb = new CheckBox(c.getCropName());
+                cb.setSelected(currentCropNames.contains(c.getCropName()));
+                cropChecks.add(cb);
+                cropCheckboxes.getChildren().add(cb);
             }
         }
-        cropCombo.setValue(currentCropName != null ? currentCropName : "None");
-        cropCombo.setPromptText("Select Crop");
+        if (cropCheckboxes.getChildren().isEmpty()) {
+            cropCheckboxes.getChildren().add(new Label("No active crops available"));
+        }
 
         // Irrigation type
         ComboBox<String> irrigationCombo = new ComboBox<>();
@@ -1301,7 +1322,7 @@ public class PlotController {
                 new Label("Location / Field:"), locationField,
                 new Label("Size (acres):"), sizeField,
                 new Label("Soil Type:"), soilCombo,
-                new Label("Crop:"), cropCombo,
+                new Label("Crop(s):"), cropCheckboxes,
                 new Label("Status:"), statusCombo,
                 new Label("Irrigation:"), irrigationCombo);
         form.setPadding(new Insets(20));
@@ -1326,8 +1347,11 @@ public class PlotController {
                 String soil = soilCombo.getValue();
                 if (soil == null || soil.isEmpty()) { showAlert("Validation", "Please select a soil type"); return null; }
 
-                // Store crop selection for post-save handling
-                dialogSelectedCrop = cropCombo.getValue();
+                // Store crop selections for post-save handling
+                dialogSelectedCrops = cropChecks.stream()
+                        .filter(CheckBox::isSelected)
+                        .map(CheckBox::getText)
+                        .collect(Collectors.toList());
 
                 Plot plot = new Plot(name, location, size, soil, currentManagerId);
                 String irr = irrigationCombo.getValue();

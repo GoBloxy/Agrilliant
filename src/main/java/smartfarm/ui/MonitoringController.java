@@ -10,7 +10,11 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.scene.layout.Pane;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import smartfarm.dao.SensorDAO;
 import javafx.util.Duration;
 import smartfarm.dao.PlotDAO;
 import smartfarm.model.Plot;
@@ -42,7 +46,8 @@ public class MonitoringController {
     @FXML private LineChart<String, Number> trendChart;
 
     @FXML private ComboBox<String> cmbMapSensors;
-    @FXML private Pane mapPane;
+    @FXML private Canvas mapCanvas;
+    @FXML private StackPane mapCanvasPane;
 
     @FXML private TableView<SensorRow> sensorTable;
     @FXML private TableColumn<SensorRow, String> colPlot;
@@ -56,6 +61,19 @@ public class MonitoringController {
     @FXML private PieChart statusChart;
     @FXML private Label lblNormalCount, lblWarningCount, lblCriticalCount, lblOfflineCount;
     @FXML private Label lblTotalSensors;
+
+    // ── Sensor-map canvas ──
+    private static final double[][][] FIELDS = {
+        {{0.03, 0.47, 0.46, 0.03}, {0.03, 0.04, 0.31, 0.30}},
+        {{0.53, 0.97, 0.97, 0.54}, {0.04, 0.03, 0.30, 0.31}},
+        {{0.04, 0.46, 0.44, 0.03}, {0.34, 0.36, 0.64, 0.62}},
+        {{0.54, 0.96, 0.97, 0.56}, {0.36, 0.34, 0.62, 0.64}},
+        {{0.03, 0.45, 0.47, 0.03}, {0.66, 0.68, 0.97, 0.97}},
+        {{0.55, 0.97, 0.97, 0.53}, {0.68, 0.66, 0.97, 0.97}},
+    };
+    private static final float[] DEMO_VALUES = {0.35f, 0.68f, 0.50f, 0.72f, 0.42f, 0.58f};
+    private float[] mapFieldValues = DEMO_VALUES.clone();
+    private String mapMode = "All Sensors";
 
     private static final int MAX_CHART_POINTS = 40;
     private XYChart.Series<String, Number> tempSeries;
@@ -77,6 +95,11 @@ public class MonitoringController {
 
         cmbMapSensors.setItems(FXCollections.observableArrayList("All Sensors", "Temperature", "Humidity", "Soil Moisture"));
         cmbMapSensors.getSelectionModel().selectFirst();
+        cmbMapSensors.setOnAction(e -> {
+            mapMode = cmbMapSensors.getValue() != null ? cmbMapSensors.getValue() : "All Sensors";
+            loadMapData();
+        });
+        initMapCanvas();
 
         // Filter change listeners
         cmbFields.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
@@ -164,6 +187,7 @@ public class MonitoringController {
             lblSoil.setText(String.format("%.0f", s));
             lblSoilSub.setText(s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal");
             addChartPoint(soilSeries, s);
+            loadMapData();
         });
 
         // Show current values immediately
@@ -422,6 +446,170 @@ public class MonitoringController {
         autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
         autoRefreshTimeline.play();
     }
+
+    // ═══════════════ SENSOR MAP CANVAS ═══════════════
+
+    private void initMapCanvas() {
+        if (mapCanvas == null || mapCanvasPane == null) return;
+        mapCanvas.widthProperty().bind(mapCanvasPane.widthProperty());
+        mapCanvas.heightProperty().bind(mapCanvasPane.heightProperty());
+        mapCanvas.widthProperty().addListener(obs -> drawMap());
+        mapCanvas.heightProperty().addListener(obs -> drawMap());
+        loadMapData();
+    }
+
+    private void loadMapData() {
+        Thread t = new Thread(() -> {
+            try {
+                PlotDAO dao = new PlotDAO();
+                List<Plot> plots = dao.getAll();
+                SensorDAO sDao = new SensorDAO();
+                Map<Integer, float[]> readings = new HashMap<>();
+                for (Plot p : plots) {
+                    List<SensorReading> rs = sDao.getRecentForPlot(p.getPlotId(), 1);
+                    if (!rs.isEmpty()) {
+                        SensorReading r = rs.get(0);
+                        readings.put(p.getPlotId(), new float[]{r.getTemperature(), r.getHumidity(), r.getSoilMoisture()});
+                    }
+                }
+                float[] vals = computeFieldValues(plots, readings);
+                javafx.application.Platform.runLater(() -> {
+                    mapFieldValues = vals;
+                    drawMap();
+                });
+            } catch (Exception ex) {
+                javafx.application.Platform.runLater(this::drawMap);
+            }
+        }, "map-loader");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private float[] computeFieldValues(List<Plot> plots, Map<Integer, float[]> readings) {
+        if (readings.isEmpty()) return DEMO_VALUES.clone();
+        float[] out = new float[FIELDS.length];
+        for (int i = 0; i < FIELDS.length; i++) {
+            if (plots.isEmpty()) { out[i] = DEMO_VALUES[i]; continue; }
+            Plot p = plots.get(i % plots.size());
+            float[] r = readings.get(p.getPlotId());
+            if (r == null) { out[i] = DEMO_VALUES[i]; continue; }
+            out[i] = switch (mapMode) {
+                case "Temperature"    -> norm(r[0], 0, 50);
+                case "Humidity"       -> norm(r[1], 0, 100);
+                case "Soil Moisture"  -> norm(r[2], 0, 100);
+                default               -> allScore(r[0], r[1], r[2]);
+            };
+        }
+        return out;
+    }
+
+    private float norm(float v, float min, float max) {
+        if (Float.isNaN(v)) return 0.5f;
+        return Math.max(0f, Math.min(1f, (v - min) / (max - min)));
+    }
+
+    private float allScore(float t, float h, float s) {
+        float ts = Math.abs(norm(t, 0, 50) - 0.5f) * 2;
+        float hs = Math.abs(norm(h, 0, 100) - 0.6f) * 2;
+        float ss = Float.isNaN(s) ? 0 : Math.abs(norm(s, 0, 100) - 0.55f) * 2;
+        return Math.max(0f, Math.min(1f, (ts + hs + ss) / 3f));
+    }
+
+    private void drawMap() {
+        if (mapCanvas == null) return;
+        double w = mapCanvas.getWidth(), h = mapCanvas.getHeight();
+        if (w <= 0 || h <= 0) return;
+        GraphicsContext gc = mapCanvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, w, h);
+
+        drawForest(gc, w, h);
+
+        Color[] palette = switch (mapMode) {
+            case "Temperature"   -> new Color[]{Color.web("#ffffb2"), Color.web("#fd8d3c"), Color.web("#bd0026")};
+            case "Humidity"      -> new Color[]{Color.web("#d0e8ff"), Color.web("#4a9fd4"), Color.web("#083d77")};
+            case "Soil Moisture" -> new Color[]{Color.web("#f5deb3"), Color.web("#8b6914"), Color.web("#3b1a00")};
+            default              -> new Color[]{Color.web("#4caf50"), Color.web("#ff9800"), Color.web("#f44336")};
+        };
+
+        float[] vals = mapFieldValues != null ? mapFieldValues : DEMO_VALUES;
+        long seed = 42;
+        for (int i = 0; i < FIELDS.length; i++) {
+            float v = i < vals.length ? vals[i] : DEMO_VALUES[i % DEMO_VALUES.length];
+            Color c = lerp(v, palette[0], palette[1], palette[2]);
+            double[] xs = scalePts(FIELDS[i][0], w);
+            double[] ys = scalePts(FIELDS[i][1], h);
+            drawField(gc, xs, ys, c, seed += 7);
+        }
+
+        drawRoads(gc, w, h);
+        drawVignette(gc, w, h);
+    }
+
+    private double[] scalePts(double[] norm, double size) {
+        double[] out = new double[norm.length];
+        for (int i = 0; i < norm.length; i++) out[i] = norm[i] * size;
+        return out;
+    }
+
+    private void drawField(GraphicsContext gc, double[] xs, double[] ys, Color base, long seed) {
+        gc.setFill(base);
+        gc.fillPolygon(xs, ys, xs.length);
+        java.util.Random rng = new java.util.Random(seed);
+        for (int k = 0; k < 18; k++) {
+            double bx = minOf(xs) + rng.nextDouble() * (maxOf(xs) - minOf(xs));
+            double by = minOf(ys) + rng.nextDouble() * (maxOf(ys) - minOf(ys));
+            double r2 = 3 + rng.nextDouble() * 7;
+            gc.setFill(base.deriveColor(0, 0.9 + rng.nextDouble() * 0.2, 0.85 + rng.nextDouble() * 0.25, 0.35));
+            gc.fillOval(bx - r2, by - r2, r2 * 2, r2 * 2);
+        }
+        gc.setStroke(Color.color(0, 0, 0, 0.3));
+        gc.setLineWidth(1.5);
+        gc.strokePolygon(xs, ys, xs.length);
+    }
+
+    private void drawForest(GraphicsContext gc, double w, double h) {
+        gc.setFill(Color.web("#1a3a1a"));
+        gc.fillRect(0, 0, w, h);
+        java.util.Random rng = new java.util.Random(99L);
+        for (int k = 0; k < 120; k++) {
+            double x = rng.nextDouble() * w;
+            double y = rng.nextDouble() * h;
+            double r = 6 + rng.nextDouble() * 12;
+            if (x > w * 0.1 && x < w * 0.9 && y > h * 0.1 && y < h * 0.9) continue;
+            gc.setFill(Color.color(0.1, 0.28 + rng.nextDouble() * 0.12, 0.1, 0.55));
+            gc.fillOval(x - r, y - r, r * 2, r * 2);
+        }
+    }
+
+    private void drawRoads(GraphicsContext gc, double w, double h) {
+        gc.setStroke(Color.color(0.55, 0.5, 0.35, 0.6));
+        gc.setLineWidth(4);
+        gc.strokeLine(w * 0.5, 0, w * 0.5, h);
+        gc.strokeLine(0, h * 0.33, w, h * 0.33);
+        gc.strokeLine(0, h * 0.66, w, h * 0.66);
+        gc.setStroke(Color.color(0.65, 0.6, 0.45, 0.3));
+        gc.setLineWidth(2);
+        gc.strokeLine(w * 0.5, 0, w * 0.5, h);
+        gc.strokeLine(0, h * 0.33, w, h * 0.33);
+        gc.strokeLine(0, h * 0.66, w, h * 0.66);
+    }
+
+    private void drawVignette(GraphicsContext gc, double w, double h) {
+        int b = 16;
+        gc.setFill(Color.color(0, 0, 0, 0.45));
+        gc.fillRect(0, 0, w, b);
+        gc.fillRect(0, h - b, w, b);
+        gc.fillRect(0, 0, b, h);
+        gc.fillRect(w - b, 0, b, h);
+    }
+
+    private Color lerp(float t, Color lo, Color mid, Color hi) {
+        if (t <= 0.5f) return lo.interpolate(mid, t * 2);
+        return mid.interpolate(hi, (t - 0.5f) * 2);
+    }
+
+    private double minOf(double[] a) { double m = a[0]; for (double v : a) if (v < m) m = v; return m; }
+    private double maxOf(double[] a) { double m = a[0]; for (double v : a) if (v > m) m = v; return m; }
 
     // ═══════════════ TABLE ROW MODEL ═══════════════
 

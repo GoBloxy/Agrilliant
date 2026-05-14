@@ -4,6 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.chart.*?>
 <?import javafx.scene.shape.*?>
+<?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
@@ -111,31 +112,10 @@
                 <Region HBox.hgrow="ALWAYS"/>
                 <ComboBox fx:id="cmbMapSensors" promptText="All Sensors" styleClass="filter-combo"/>
             </HBox>
-            <StackPane styleClass="sensor-map-container" prefHeight="260" maxHeight="260">
-                <!-- Fallback to a plain dark green background if image fails -->
-                <Pane style="-fx-background-color: #2e4a2d; -fx-background-radius: 8;"/>
-                <Pane fx:id="mapPane">
-                    <!-- Sensor Pins overlay -->
-                    <!-- Green -->
-                    <StackPane layoutX="60" layoutY="50" styleClass="map-pin,pin-normal">
-                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
-                    </StackPane>
-                    <StackPane layoutX="260" layoutY="90" styleClass="map-pin,pin-info">
-                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
-                    </StackPane>
-                    <!-- Red -->
-                    <StackPane layoutX="180" layoutY="130" styleClass="map-pin,pin-critical">
-                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
-                    </StackPane>
-                    <!-- Orange -->
-                    <StackPane layoutX="110" layoutY="180" styleClass="map-pin,pin-warning">
-                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
-                    </StackPane>
-                    <!-- Blue -->
-                    <StackPane layoutX="210" layoutY="210" styleClass="map-pin,pin-info">
-                        <FontIcon iconLiteral="fth-plus" iconSize="12"/>
-                    </StackPane>
-                </Pane>
+            <StackPane fx:id="mapCanvasPane" VBox.vgrow="ALWAYS"
+                       style="-fx-background-color:#1a3a1a;-fx-background-radius:8;"
+                       prefHeight="260" maxHeight="Infinity">
+                <Canvas fx:id="mapCanvas"/>
             </StackPane>
         </VBox>
     </HBox>

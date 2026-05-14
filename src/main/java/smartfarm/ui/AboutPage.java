@@ -29,7 +29,7 @@ public class AboutPage extends VBox {
     }
 
     private VBox buildLogoSection() {
-        ImageView logo = new ImageView(new Image(getClass().getResourceAsStream("/images/logo.png")));
+        ImageView logo = new ImageView(new Image(getClass().getResourceAsStream("/images/nobackgroundlogo.png")));
         logo.setFitWidth(80);
         logo.setFitHeight(80);
         logo.setPreserveRatio(true);

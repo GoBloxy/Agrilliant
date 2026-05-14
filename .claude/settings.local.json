@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk find *)",
+      "Bash(dir \"D:\\\\University\\\\Agrilliant\\\\src\\\\main\\\\java\\\\smartfarm\\\\ui\")"
+    ]
+  }
+}

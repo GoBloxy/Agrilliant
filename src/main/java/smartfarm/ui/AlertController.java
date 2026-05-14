@@ -17,9 +17,11 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import smartfarm.dao.SensorDAO;
 import smartfarm.dao.TaskDAO;
+import smartfarm.dao.WorkerDAO;
 import smartfarm.model.Alert;
 import smartfarm.model.SensorReading;
 import smartfarm.model.Task;
+import smartfarm.model.Worker;
 import smartfarm.service.AlertService;
 import smartfarm.service.SystemLogManager;
 import smartfarm.util.ThresholdConfig;
@@ -97,12 +99,24 @@ public class AlertController {
     private static final DateTimeFormatter TIME_FMT =
             DateTimeFormatter.ofPattern("MMM d, yyyy  hh:mm a");
 
+    private static int workerModeId = -1;
+    private static int currentManagerId = 1;
+    public static void setWorkerMode(int workerId) { workerModeId = workerId; }
+    public static void clearWorkerMode() { workerModeId = -1; }
+    public static void setCurrentManagerId(int id) { currentManagerId = id; }
+
     // ═══════════════ INITIALIZATION ═══════════════
 
     @FXML
     public void initialize() {
         detailPane.setVisible(false);
         detailPane.setManaged(false);
+
+        // Workers cannot create tasks
+        if (workerModeId > 0 && btnDetailCreateTask != null) {
+            btnDetailCreateTask.setVisible(false);
+            btnDetailCreateTask.setManaged(false);
+        }
 
         setupFilters();
         setupColumns();
@@ -535,6 +549,26 @@ public class AlertController {
         grid.add(duePicker, 1, 1);
         grid.add(new Label("Plot:"), 0, 2);
         grid.add(new Label(String.valueOf(alert.getPlotId())), 1, 2);
+
+        // Worker assignment dropdown
+        ComboBox<String> workerCombo = new ComboBox<>();
+        workerCombo.setPromptText("Select Worker");
+        workerCombo.setMaxWidth(Double.MAX_VALUE);
+        java.util.Map<String, Integer> workerNameToId = new java.util.LinkedHashMap<>();
+        try {
+            WorkerDAO workerDAO = new WorkerDAO();
+            List<Worker> workers = workerDAO.getAll();
+            for (Worker w : workers) {
+                String label = w.getFullName() + " (" + w.getJobTitle() + ")";
+                workerCombo.getItems().add(label);
+                workerNameToId.put(label, w.getWorkerId());
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to load workers: " + e.getMessage());
+        }
+        grid.add(new Label("Assign to:"), 0, 3);
+        grid.add(workerCombo, 1, 3);
+
         dp.setContent(grid);
 
         Button okBtn = (Button) dp.lookupButton(ButtonType.OK);
@@ -556,9 +590,14 @@ public class AlertController {
                             duePicker.getValue(),
                             alert.getPlotId(),
                             alert.getAlertId() > 0 ? alert.getAlertId() : null,
-                            1,
+                            currentManagerId,
                             alert.getAlertType()
                     );
+                    // Assign selected worker
+                    String selectedWorker = workerCombo.getValue();
+                    if (selectedWorker != null && workerNameToId.containsKey(selectedWorker)) {
+                        task.setWorkerIds(List.of(workerNameToId.get(selectedWorker)));
+                    }
                     taskDAO.save(task);
                     loadRelatedTask(alert.getAlertId());
                 } catch (SQLException e) {
