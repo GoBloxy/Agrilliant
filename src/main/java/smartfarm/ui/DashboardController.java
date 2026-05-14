@@ -9,14 +9,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -730,13 +728,8 @@ public class DashboardController {
 
     private void onLogout() {
         smartfarm.service.SessionManager.clearSession();
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
-            Stage stage = (Stage) lblUserName.getScene().getWindow();
-            stage.getScene().setRoot(root);
-        } catch (Exception e) {
-            System.err.println("Logout navigation error: " + e.getMessage());
-        }
+        smartfarm.ui.nav.NavContext.get().clear();
+        smartfarm.ui.nav.AppView.SIGNIN.switchTo();
     }
 
     // ═══════════════ SIDEBAR STATUS ═══════════════
