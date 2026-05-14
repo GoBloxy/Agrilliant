@@ -196,6 +196,59 @@ Two non-fatal Glisten log lines also appear during boot — `LicenseManager` / `
 mvn -Pdesktop gluonfx:run
 ```
 
+### Real-desktop smoke results (2026-05-14, `DISPLAY=:0` on Linux/X11)
+
+Re-ran `BootSmokeReal` (target/fxml-smoke/BootSmokeReal.java) against the real
+X server. **Boot sequence runs end-to-end cleanly.** Logger.d lifecycle hooks
+added to all 4 Views captured the full expected trace:
+
+```
+D/SplashView: showing
+I/FarmServer: Farm Server started on port 8080
+D/SplashView: no session → SIGNIN
+W/DBConnection: No DB credentials on env/Settings/properties — DB features disabled until configured.
+D/SplashView: hiding
+D/SignInView: showing
+[8003ms] [BootSmokeReal] 8s budget elapsed — forcing JVM exit.
+Exit code: 0
+```
+
+Confirms:
+- Splash view mounts at startup (HOME_VIEW factory hit) — visual splash with logo + spinner
+- `Main.postInit` runs: FarmServer TCP listener thread spawns
+- `SplashView.kickOffSessionRestore` runs on its daemon thread, finds no session, sleeps 800ms min-time, then `Platform.runLater → AppView.SIGNIN.switchTo()`
+- Splash hides, SignIn shows — transition completes without an exception
+- DBConnection lazy init also works — no DB creds → "DB features disabled" log line, no crash
+
+**Headless-monocle bonus check:** even under headless Monocle (no display)
+the splash now mounts (`D/SplashView: showing`) — but Glisten's NagScreenPresenter
+(triggered by the missing license file) calls `enterNestedEventLoop`, which
+Monocle's strict event-thread check rejects. That's a pure Glisten+headless+
+missing-license issue, not a code bug. On a real display the nag dialog can
+fire cleanly without crashing.
+
+### Bug found and fixed during the real-desktop smoke
+
+The first real-desktop smoke run produced no `D/SplashView: showing` line.
+Investigation via `javap` of Glisten 6.2.3's `AppManager.class` showed
+`continueInit()` literally calls `switchView("home")` to mount the startup
+View. The `AppView.SPLASH` factory was registered under `.name() = "SPLASH"`,
+which did not match — so no view was ever mounted, and the JFX thread sat
+idle for the entire 5-second smoke budget.
+
+**Fix landed as commit `a0c06d5 [3bdelbary] B2.7`:** `AppView` constants now
+carry an explicit `registeredName`. `SPLASH` maps to
+`MobileApplication.HOME_VIEW` (`"home"`); the others use their uppercase
+enum names. `Main.init()` switched to `AppView.X.registeredName()`. This
+is the contract Glisten requires.
+
+**Lifecycle logging added as commit `45e4b47 [3bdelbary] B2.8`:**
+`Logger.d` calls on `setOnShowing` / `setOnHiding` for all 4 Views, plus
+the `SHELL` vs `SIGNIN` branch decision inside `SplashView`. Routes through
+the H10 facade → `adb logcat` on Android (verbose level, filtered out in
+release builds), `System.out` on desktop. Makes Phase 2 navigation issues
+observable without a debugger.
+
 ---
 
 ## Status of B3–B10
