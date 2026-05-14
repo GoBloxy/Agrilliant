@@ -1,9 +1,15 @@
 package smartfarm.ui;
 
+import com.gluonhq.charm.glisten.control.CharmListCell;
+import com.gluonhq.charm.glisten.control.CharmListView;
+import com.gluonhq.charm.glisten.control.ListTile;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import org.kordamp.ikonli.javafx.FontIcon;
 import smartfarm.model.SystemLog;
 import smartfarm.service.SystemLogManager;
 
@@ -20,56 +26,73 @@ public class LogsController {
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbType;
     @FXML private DatePicker dpFrom, dpTo;
-    @FXML private TableView<SystemLog> logTable;
-    @FXML private TableColumn<SystemLog, String> colTimestamp, colType, colSource, colMessage, colUser;
+    @FXML private CharmListView<SystemLog, String> logList;
     @FXML private Button btnExport, btnClear;
 
     private final SystemLogManager logManager = SystemLogManager.getInstance();
 
     @FXML
     public void initialize() {
-        setupTableColumns();
+        setupCellFactory();
         setupFilters();
         refresh();
     }
 
-    private void setupTableColumns() {
-        logTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colTimestamp.setResizable(false);
-        colType.setResizable(false);
-        colSource.setResizable(false);
-        colMessage.setResizable(false);
-        colUser.setResizable(false);
+    /**
+     * Builds each list row as a Gluon {@link ListTile}: a severity-coloured
+     * icon badge on the left (info / warning / error palette), three text
+     * lines (message, timestamp + user, source). No trailing actions —
+     * logs are read-only.
+     */
+    private void setupCellFactory() {
+        logList.setCellFactory(view -> new LogListCell());
+    }
 
-        colTimestamp.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getFormattedTimestamp()));
-        colType.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getType().name()));
-        colSource.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getSource()));
-        colMessage.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getMessage()));
-        colUser.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getUser()));
+    private static final class LogListCell extends CharmListCell<SystemLog> {
+        private final ListTile tile = new ListTile();
+        private final FontIcon badgeIcon = new FontIcon();
+        private final StackPane badge = new StackPane(badgeIcon);
 
-        colType.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    String color = switch (item) {
-                        case "INFO" -> "#1d4ed8";
-                        case "WARNING" -> "#d97706";
-                        default -> "#dc2626";
-                    };
-                    setStyle("-fx-text-fill:" + color + ";-fx-font-weight:bold;");
-                }
+        LogListCell() {
+            badgeIcon.setIconSize(20);
+            badge.setStyle(
+                    "-fx-min-width:42;-fx-min-height:42;-fx-pref-width:42;-fx-pref-height:42;"
+                    + "-fx-background-radius:10;");
+            tile.setPrimaryGraphic(badge);
+        }
+
+        @Override
+        public void updateItem(SystemLog l, boolean empty) {
+            super.updateItem(l, empty);
+            if (empty || l == null) {
+                setText(null);
+                setGraphic(null);
+                return;
             }
-        });
+            String bg, fg, icon;
+            switch (l.getType()) {
+                case INFO    -> { bg = "#dbeafe"; fg = "#1d4ed8"; icon = "fth-info"; }
+                case WARNING -> { bg = "#fef3c7"; fg = "#d97706"; icon = "fth-alert-triangle"; }
+                case ERROR   -> { bg = "#fee2e2"; fg = "#dc2626"; icon = "fth-x-circle"; }
+                default      -> { bg = "#e8f5e9"; fg = "#2e7d32"; icon = "fth-file-text"; }
+            }
+            badge.setStyle(
+                    "-fx-min-width:42;-fx-min-height:42;-fx-pref-width:42;-fx-pref-height:42;"
+                    + "-fx-background-radius:10;-fx-background-color:" + bg + ";");
+            badgeIcon.setIconLiteral(icon);
+            badgeIcon.setIconColor(Color.web(fg));
+
+            tile.setTextLine(0, l.getMessage());
+            tile.setTextLine(1, l.getFormattedTimestamp() + "  ·  " + safe(l.getUser()));
+            tile.setTextLine(2, "Source: " + safe(l.getSource()) + "  ·  " + l.getType().name());
+
+            setText(null);
+            setGraphic(tile);
+        }
+
+        private static String safe(String s) {
+            return s != null && !s.isEmpty() ? s : "--";
+        }
     }
 
     private void setupFilters() {
@@ -99,7 +122,7 @@ public class LogsController {
                 .filter(l -> to == null || !l.getTimestamp().toLocalDate().isAfter(to))
                 .collect(Collectors.toList());
 
-        logTable.setItems(FXCollections.observableArrayList(filtered));
+        logList.setItems(FXCollections.observableArrayList(filtered));
 
         long infoCount = logs.stream().filter(l -> l.getType() == SystemLog.LogType.INFO).count();
         long warnCount = logs.stream().filter(l -> l.getType() == SystemLog.LogType.WARNING).count();
@@ -123,7 +146,7 @@ public class LogsController {
 
         try (FileWriter writer = new FileWriter(file)) {
             writer.write("Timestamp,Type,Source,Message,User\n");
-            for (SystemLog log : logTable.getItems()) {
+            for (SystemLog log : logList.itemsProperty().get()) {
                 writer.write(String.format("%s,%s,%s,\"%s\",%s\n",
                         log.getFormattedTimestamp(), log.getType(),
                         log.getSource(), log.getMessage(), log.getUser()));
