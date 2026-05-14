@@ -9,7 +9,7 @@
 
 <!-- Alerts Page — display, filter, and resolve alerts with colour-coded severity -->
 <HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.AlertController"
-      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="800">
+      spacing="14" styleClass="content-pane">
 
     <!-- ═══════════════ LEFT CONTENT (Filters, Cards, Table) ═══════════════ -->
     <VBox spacing="14" HBox.hgrow="ALWAYS">

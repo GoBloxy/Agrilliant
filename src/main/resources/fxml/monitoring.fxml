@@ -10,7 +10,7 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.MonitoringController"
-      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+      spacing="14" styleClass="content-pane">
     <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
     <!-- Filters Bar -->
