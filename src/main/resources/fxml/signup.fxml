@@ -23,7 +23,7 @@
     </VBox>
 
     <!-- Form column -->
-    <VBox alignment="TOP_CENTER" spacing="12" maxWidth="480" VBox.vgrow="ALWAYS">
+    <VBox alignment="TOP_CENTER" spacing="12" maxWidth="480" VBox.vgrow="ALWAYS" styleClass="auth-card">
         <VBox spacing="4" alignment="CENTER">
             <Label text="Create Account" styleClass="auth-title"/>
             <Label text="Join Agrilliant to manage your farm" styleClass="auth-subtitle"/>

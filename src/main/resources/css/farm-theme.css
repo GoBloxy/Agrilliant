@@ -1370,6 +1370,50 @@
     -fx-effect: dropshadow(gaussian, rgba(25,29,23,0.08), 10, 0, 0, 2);
 }
 .auth-footer {
-    -fx-text-fill: #9ca3af;
+    -fx-text-fill: -ag-on-surface-variant;
     -fx-font-size: 11;
+}
+
+.auth-root {
+    -fx-background-color: -ag-background;
+}
+
+.auth-card {
+    -fx-padding: 20;
+}
+
+.auth-app-name {
+    -fx-text-fill: -ag-on-surface;
+    -fx-font-size: 28;
+    -fx-font-weight: 700;
+}
+
+.auth-tagline,
+.auth-subtitle {
+    -fx-text-fill: -ag-on-surface-variant;
+}
+
+.auth-field,
+.auth-combo {
+    -fx-pref-height: 56;
+    -fx-min-height: 56;
+    -fx-padding: 14 16 14 16;
+}
+
+.auth-btn,
+.auth-btn-secondary {
+    -fx-pref-height: 56;
+    -fx-min-height: 56;
+}
+
+.auth-divider-line {
+    -fx-border-color: -ag-outline-variant;
+    -fx-border-width: 0 0 1 0;
+}
+
+.auth-error {
+    -fx-text-fill: -ag-error;
+    -fx-background-color: -ag-error-container;
+    -fx-background-radius: 14;
+    -fx-padding: 8 12 8 12;
 }
