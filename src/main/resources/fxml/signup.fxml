@@ -7,9 +7,9 @@
 <?import javafx.geometry.Insets?>
 
 <HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.SignUpController"
-      styleClass="auth-root" prefWidth="1000" prefHeight="700">
+      styleClass="auth-root">
 
-    <VBox styleClass="auth-left" prefWidth="420" alignment="CENTER" spacing="16">
+    <VBox styleClass="auth-left" maxWidth="420" minWidth="0" alignment="CENTER" spacing="16">
         <padding><Insets top="60" right="40" bottom="60" left="40"/></padding>
         <ImageView styleClass="auth-logo" fitWidth="80" fitHeight="80">
             <Image url="@/images/logo.png"/>
