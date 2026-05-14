@@ -40,8 +40,13 @@
         <gluonfx.target>host</gluonfx.target>
 
         <!-- Gluon Attach — mobile/desktop service abstractions
-             (Settings, Storage, Lifecycle, ...). -->
+             (Settings, Storage, Lifecycle, Pictures, ...). -->
         <attach.version>4.0.23</attach.version>
+
+        <!-- Gluon Glisten — Material-style mobile UI toolkit
+             (MobileApplication, View, AppManager, CharmListView).
+             6.2.3 (2023-04) is current. -->
+        <charm.version>6.2.3</charm.version>
     </properties>
 
     <repositories>
@@ -118,10 +123,23 @@
             <version>2.11.0</version>
         </dependency>
 
+        <!-- Gluon Glisten — mobile-shaped JavaFX UI toolkit. Used by:
+               smartfarm.Main          (MobileApplication entry point — B1)
+               smartfarm.ui.*           (CharmListView, View, AppManager,
+                                         NavigationDrawer — B2/B3/B5)
+             Hosted on Gluon's nexus (declared in <repositories>), not
+             on Maven Central. -->
+        <dependency>
+            <groupId>com.gluonhq</groupId>
+            <artifactId>charm-glisten</artifactId>
+            <version>${charm.version}</version>
+        </dependency>
+
         <!-- Gluon Attach — mobile/desktop service abstractions. Used by:
-               util.DBConnection      (Settings  — DB creds layer)
-               service.SessionManager (Settings  — H6, session token)
-               util.CSVExporter       (Storage   — H8, SAF on Android)
+               util.DBConnection         (Settings  — DB creds layer)
+               service.SessionManager    (Settings  — H6, session token)
+               util.CSVExporter          (Storage   — H8, SAF on Android)
+               ui.DiseaseDetectionPage   (Pictures  — B8, image picker)
              API jars are on the compile classpath for desktop too;
              GluonFX plugin's <attachList> picks the right runtime impl. -->
         <dependency>
@@ -142,6 +160,11 @@
         <dependency>
             <groupId>com.gluonhq.attach</groupId>
             <artifactId>lifecycle</artifactId>
+            <version>${attach.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gluonhq.attach</groupId>
+            <artifactId>pictures</artifactId>
             <version>${attach.version}</version>
         </dependency>
     </dependencies>
@@ -180,6 +203,7 @@
                         <list>settings</list>
                         <list>storage</list>
                         <list>lifecycle</list>
+                        <list>pictures</list>
                     </attachList>
                 </configuration>
             </plugin>
