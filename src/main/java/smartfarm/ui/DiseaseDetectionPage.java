@@ -9,13 +9,14 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.stage.FileChooser;
 import org.kordamp.ikonli.javafx.FontIcon;
 import smartfarm.service.PlantIdService;
 import smartfarm.service.PlantIdService.CropHealthResult;
 import smartfarm.service.PlantIdService.DiseaseSuggestion;
+import smartfarm.ui.platform.PlatformPickers;
 
 import java.io.File;
+import java.util.Optional;
 
 public class DiseaseDetectionPage extends VBox {
 
@@ -256,15 +257,8 @@ public class DiseaseDetectionPage extends VBox {
     // ACTIONS
     // ═══════════════════════════════════════════════════════════════════
     private void selectImage() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Select Crop Image");
-        chooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Image Files", "*.jpg", "*.jpeg", "*.png", "*.bmp", "*.webp"),
-                new FileChooser.ExtensionFilter("All Files", "*.*")
-        );
-
-        File file = chooser.showOpenDialog(getScene().getWindow());
-        if (file != null) {
+        Optional<File> picked = PlatformPickers.pickImage(getScene().getWindow());
+        picked.ifPresent(file -> {
             selectedFile = file;
             lblFileName.setText(file.getName() + "  (" + (file.length() / 1024) + " KB)");
             imagePreview.setImage(new Image(file.toURI().toString()));
@@ -273,7 +267,7 @@ public class DiseaseDetectionPage extends VBox {
             btnAnalyze.setDisable(false);
             resultsContainer.setVisible(false);
             resultsContainer.setManaged(false);
-        }
+        });
     }
 
     private void runAnalysis() {

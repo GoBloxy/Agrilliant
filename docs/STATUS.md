@@ -10,7 +10,7 @@
 The Agrilliant desktop JavaFX app is being migrated to Android via Gluon Mobile (Glisten + Attach + GluonFX native-image). Both Phase 1 tracks have made substantial progress:
 
 - **Hagag's track (H1–H11):** Complete. All build, data, and infrastructure tasks are done.
-- **3bdelbary's track (B1–B3X):** Complete through B3X. B4–B10 remain.
+- **3bdelbary's track (B1–B8 done, B9 + B10 pending):** Complete through B3X plus B4 (FileChooser sweep), B5 (`mobile.css` for Android), B6 (JFreeChart audit — zero references in `src/`), B7 (launcher icons — 10 PNGs generated and committed), and B8 (`PlatformPickers`). B9 and B10 remain. A small `pom.xml` cleanup remains on Hagag's side to drop the now-unused JFreeChart deps from the desktop profile.
 
 The app compiles cleanly on both profiles and boots through Splash → SignIn on desktop. No Android APK has been built yet (needs GraalVM + Android SDK toolchain).
 
@@ -35,7 +35,7 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 | H11 | Migration documentation | Done |
 | Review | Post-review fixes: race condition, perf caching, doc corrections, RFC-4180 CSV quoting | Done |
 
-### 3bdelbary Track (UI / Navigation / Resources) — B1 through B3X DONE
+### 3bdelbary Track (UI / Navigation / Resources) — B1–B8 DONE
 
 | Task | Description | Status |
 |------|-------------|--------|
@@ -43,6 +43,12 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 | B2 | Replace `Stage` navigation with `AppManager.switchView()` across SignIn/SignUp/Dashboard/Shell | Done |
 | B3 | Make every FXML mobile-friendly: drop hardcoded sizes, TableView → CharmListView, remove hover-only tooltips | Done |
 | B3X | UX rework: vertical auth forms, FlowPane summary/filters, NavigationDrawer + AppBar, alerts stacked layout | Done |
+| Fix | `CropController.colVariety` NPE — dropped dead `@FXML` field + its 2 references (column had no backing model field) | Done |
+| B4 | Replace 8 `FileChooser` call sites: 7 CSV exports → `CSVExporter.saveCsv()`, 1 image picker → `PlatformPickers.pickImage()` | Done |
+| B5 | `css/mobile.css` with ≥48dp touch targets, 16 px base font, `CharmListView`/drawer row bumps. Loaded only on Android via `Constants.IS_ANDROID` branch in `Main.postInit` | Done |
+| B6 | JFreeChart audit — 0 references in `src/`; FX-thread safety of `MonitoringController.subscribeLiveSensor` confirmed via `LiveSensorData.update` → `Platform.runLater`; defensive `TODO(phase-2)` added in `setupTrendChart` for bounded-series rule | Done |
+| B7 | 10 Android launcher PNGs (5 densities mdpi → xxxhdpi × square + round variants) generated from `images/logo.png` and committed under `src/android/res/mipmap-*/`. Two side-by-side generators ship: Java (`smartfarm.ui.tools.LauncherIconGenerator`) and PowerShell (`generate-launcher-icons.ps1`). Both use the shared `smartfarm.ui.platform.PngEncoder` / `System.Drawing` to produce byte-equivalent layouts — `#2e7d32` background, logo at 72% edge, circular clip on round variant. | Done |
+| B8 | `smartfarm.ui.platform.PlatformPickers` with Gluon `PicturesService` on Android, `FileChooser` on desktop, pure-Java PNG encoder for Substrate-safe persistence | Done |
 
 #### B1 Key Deliverables
 - `AppView.java` — 4-value enum mapping to Gluon View names (SPLASH → HOME_VIEW)
@@ -71,6 +77,40 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 - `DashboardController`: new `navigate(NavTarget)` public API + `NavTarget` enum (14 targets)
 - Sidebar/topbar hidden via `visible="false" managed="false"` (preserves existing controller logic)
 
+#### B4 + B8 Key Deliverables
+- `PlatformPickers.pickImage(Window) → Optional<File>` in new package `smartfarm.ui.platform` — Gluon `PicturesService` on Android (with pure-Java PNG encoder for Substrate-safe persistence to private storage), `FileChooser` on desktop
+- 7 CSV exports rewritten to build `StringBuilder` content then `CSVExporter.saveCsv(content, name)` — `DashboardController` ×4 (`onExportReport`, `onExportSensorCSV`, `onExportHarvestCSV`, `onExportAlertCSV`), `LogsController.onExport`, `ReportsController.onExport`, `CropController.onExport`. Column layouts preserved verbatim.
+- `DiseaseDetectionPage.selectImage` now uses `PlatformPickers.pickImage(getScene().getWindow())` with `Optional.ifPresent`. Downstream `PlantIdService.analyzeImage(String)` unchanged — `PlatformPickers` always returns a real file path on both platforms.
+- `javafx.stage.FileChooser` references in `ui/`: **0** (only the legitimate desktop fallback inside `PlatformPickers` itself)
+- `FileWriter` references in `src/`: **0** (all replaced with `CSVExporter.saveCsv()`)
+
+#### B5 Key Deliverables
+- New stylesheet `src/main/resources/css/mobile.css` (~110 lines, ~25 selectors). Bumps base font to 16 px on `.root`, enforces 48dp min-height on every tappable control (`.button`, `.text-field`, `.combo-box`, `.date-picker`, `.menu-button`, dialog buttons), bumps `.list-tile` / `.charm-list-cell` to 84dp (fits a 3-line tile with 48dp action buttons), drawer rows to 56dp (Material spec).
+- **Loaded only on Android** — `Main.postInit` now branches on `Constants.IS_ANDROID`: Android picks up `mobile.css` after `farm-theme.css`; desktop keeps its dashboard-optimized sizing untouched. Avoids the "desktop UI suddenly looks like the phone" failure mode flagged in §8.B5's verification gate.
+- The width-based dashboard sidebar toggle mentioned in the B3X follow-ups is deferred to Phase 2 — not implementable in pure JavaFX CSS (no media queries). Needs a `Scene.widthProperty()` listener instead.
+
+#### B6 Key Deliverables
+- Verified `src/` has zero JFreeChart references (`jfree`, `JFreeChart`, `ChartFactory`, `ChartPanel`, `XYPlot`, `JFreeChart-FX`). The B3-era survey had already moved away from it; B6 is the formal sign-off.
+- Verified `MonitoringController.subscribeLiveSensor` fires UI setters on the FX thread — the indirection runs through `LiveSensorData.update(...)`, which wraps its property mutations in `Platform.runLater`.
+- Added defensive `TODO(phase-2)` block comment in `MonitoringController.setupTrendChart()` documenting the bounded-series rule for the next engineer wiring real live data (cap series at N, trim from head before append). The current chart is mock-only so unbounded growth doesn't manifest, but the comment captures the gotcha.
+- **Hagag follow-up:** `pom.xml` desktop profile still declares `org.jfree:jfreechart:1.5.4` + `org.jfree:jfreechart-fx:1.0.1` with a comment waiting on exactly this audit. Safe to drop now — trims ~3 MB from the desktop fat-jar.
+
+#### B7 Key Deliverables
+- New `smartfarm.ui.platform.PngEncoder` — PNG encoder extracted from `PlatformPickers` (B8) into a reusable utility. RGBA, filter type 0, single IDAT, deflate via `java.util.zip`. Substrate-safe (no `java.desktop`/`javafx.swing`). Single public method `encode(Image) → byte[]`.
+- `PlatformPickers` refactored to delegate to `PngEncoder` — ~60 fewer lines, identical behaviour.
+- New `smartfarm.ui.tools.LauncherIconGenerator` (JavaFX `Application`) — reads `images/logo.png`, renders 5 densities (mdpi 48 → xxxhdpi 192) × 2 variants (square + round), writes via `PngEncoder` to `src/android/res/mipmap-*/ic_launcher{,_round}.png`. Run via `mvn -Pdesktop compile exec:java`.
+- New `src/main/java/smartfarm/ui/tools/generate-launcher-icons.ps1` — PowerShell mirror using `System.Drawing` for environments without the full Maven toolchain. Used to produce the committed PNGs.
+- **10 launcher PNG bitmaps generated and committed** at:
+  ```
+  src/android/res/mipmap-mdpi/ic_launcher.png        (48×48)
+  src/android/res/mipmap-mdpi/ic_launcher_round.png  (48×48)
+  src/android/res/mipmap-hdpi/...                    (72×72)
+  src/android/res/mipmap-xhdpi/...                   (96×96)
+  src/android/res/mipmap-xxhdpi/...                  (144×144)
+  src/android/res/mipmap-xxxhdpi/...                 (192×192)
+  ```
+  Each icon is the `#2e7d32` brand-green background with the bird logo centred at 72% of the edge. Round variants use an antialiased circular background with a clip path so the logo can't bleed outside the disc.
+
 ### Build Verification
 
 | Gate | Result |
@@ -83,37 +123,26 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 
 ---
 
-## What Is Missing (B4–B10)
+## What Is Missing (B9, B10)
 
-These are 3bdelbary's remaining Phase 1 tasks, none started yet:
+These are 3bdelbary's remaining Phase 1 tasks:
 
 | Task | Description | Scope | Impact |
 |------|-------------|-------|--------|
-| **B4** | Replace `FileChooser` with `CSVExporter.saveCsv()` + `PlatformPickers.pickImage()` | 5 controllers: `DashboardController` (4 CSV exports), `LogsController`, `ReportsController`, `CropController`, `DiseaseDetectionPage` (image picker) | **High** — `FileChooser` uses `javafx.stage.Stage` which doesn't exist on Android; these features crash on mobile |
-| **B5** | Add `css/mobile.css` with touch-target enforcement (≥48dp), width-based sidebar toggle, phone-specific overrides | New CSS file + `Main.postInit` stylesheet registration | **Medium** — app works without it but touch targets may be small; sidebar won't auto-show on desktop-width screens |
-| **B6** | Drop any remaining JFreeChart use | Dashboard/monitoring controllers — verify no leftover imports | **Low** — JFreeChart already excluded from Android profile; just cleanup |
-| **B7** | Android launcher icons (mdpi → xxxhdpi) | `src/android/res/mipmap-*/ic_launcher*.png` | **High** — manifest references `@mipmap/ic_launcher` and `@mipmap/ic_launcher_round`; APK build fails without them |
-| **B8** | Image picker via Gluon Attach `Pictures` | New `smartfarm.ui.platform.PlatformPickers` class with `pickImage()` returning `File` | **Medium** — DiseaseDetectionPage needs this for Android; B4 wires it in |
 | **B9** | Lifecycle hooks sweep | Replace any remaining "set up on stage shown" patterns with `View#setOnShown`/`setOnHidden` | **Low** — SplashView and ShellView already follow this; other views likely fine |
 | **B10** | Keep migration docs current | Ongoing bookkeeping | **Low** — documentation maintenance |
 
-### FileChooser Usage (B4 must replace these)
-
-| Controller | Lines | Type |
-|------------|-------|------|
-| `DashboardController` | 4 instances (lines 536, 584, 608, 632) | CSV export |
-| `LogsController` | 1 instance (line 139) | CSV export |
-| `ReportsController` | 1 instance (line 142) | CSV export |
-| `CropController` | 1 instance (line 768) | CSV export |
-| `DiseaseDetectionPage` | 1 instance (line 259) | Image open |
+### Cross-track item for Hagag
+- **`pom.xml` JFreeChart cleanup** — B6 audit confirmed `src/` has zero JFreeChart references. The desktop profile still declares `org.jfree:jfreechart:1.5.4` + `org.jfree:jfreechart-fx:1.0.1` with a comment explicitly waiting on this audit. Safe to drop now. Trims ~3 MB from the desktop fat-jar.
+- **`exec-maven-plugin` for the launcher generator (optional)** — if the team wants `LauncherIconGenerator` invokable via `mvn exec:java`, Hagag adds the plugin to the desktop profile's `<plugins>` block. The PowerShell variant (`generate-launcher-icons.ps1`) is already a working alternative that needs no Maven plumbing.
 
 ---
 
 ## Known Errors and Issues
 
-### 1. FXML Load Failures (3/12) — Retested 2026-05-14 with real DB
+### 1. FXML Load Failures (2/12) — Retested 2026-05-14 with real DB
 
-Retested with `db.properties` pointing to the real MySQL at `139.59.153.80`. DB connection now succeeds, which changed the failure profile: `monitoring.fxml` now passes (was failing with DB NPE before). Three FXMLs still fail, but with different root causes than the previous "no DB" NPEs.
+Retested with `db.properties` pointing to the real MySQL at `139.59.153.80`. DB connection now succeeds, which changed the failure profile: `monitoring.fxml` now passes (was failing with DB NPE before), and `crops.fxml` now passes after the `colVariety` dead-code removal. Two FXMLs still fail — both with the `Crop.GrowthStage.GROWING` enum mismatch, not the previous "no DB" NPEs.
 
 **Full smoke results:**
 
@@ -122,7 +151,7 @@ Retested with `db.properties` pointing to the real MySQL at `139.59.153.80`. DB 
 | `signin.fxml` | PASS | |
 | `signup.fxml` | PASS | |
 | `dashboard.fxml` | **FAIL** | `IllegalArgumentException: No enum constant smartfarm.model.Crop.GrowthStage.GROWING` — DB has `growth_stage='GROWING'` but the Java enum only defines `SEED, SEEDLING, VEGETATIVE, FLOWERING, FRUITING, HARVESTED` |
-| `crops.fxml` | **FAIL** | `NullPointerException: Cannot invoke "javafx.scene.control.TableColumn.setResizable(boolean)" because "this.colVariety" is null` — `CropController` declares `@FXML colVariety` but `crops.fxml` has no `<TableColumn fx:id="colVariety">` |
+| `crops.fxml` | PASS | (was failing on `colVariety` NPE; fixed by dropping the dead field from `CropController`) |
 | `plots.fxml` | PASS | (logs `IllegalArgumentException: No enum constant Crop.GrowthStage.GROWING` but catches it — `PlotController.initialize` has a try/catch guard) |
 | `workers.fxml` | PASS | |
 | `tasks.fxml` | PASS | |
@@ -140,17 +169,11 @@ public enum GrowthStage { SEED, SEEDLING, VEGETATIVE, FLOWERING, FRUITING, HARVE
 ```
 `CropDAO.extractCrop()` calls `Crop.GrowthStage.valueOf(rs.getString("growth_stage"))` which throws `IllegalArgumentException` for any value not in the enum. This crashes `dashboard.fxml` and `reports.fxml` during `initialize()`. `plots.fxml` survives because `PlotController.initialize()` wraps the call in a try/catch.
 
-**Fix options:** (a) Add `GROWING` to the enum (if the DB value is intentional), (b) UPDATE the DB rows to use a valid enum value like `VEGETATIVE`, or (c) Make `CropDAO.extractCrop()` handle unknown enum values gracefully (e.g. default to `VEGETATIVE`).
-
-**Root cause #2 — `CropController.colVariety` FXML mismatch:**
-
-`CropController` declares `@FXML private TableColumn<Crop, String> colVariety` and calls `colVariety.setResizable(false)` in `initialize()`, but `crops.fxml` has never had a `<TableColumn fx:id="colVariety">` element. The `@FXML` injection leaves the field `null`, and the subsequent method call NPEs.
-
-**Fix:** Either add the column to `crops.fxml` or remove the `colVariety` field + its references from `CropController`.
+**Fix options:** (a) Add `GROWING` to the enum (if the DB value is intentional), (b) UPDATE the DB rows to use a valid enum value like `VEGETATIVE`, or (c) Make `CropDAO.extractCrop()` handle unknown enum values gracefully (e.g. default to `VEGETATIVE`). Options (a) and (c) touch `smartfarm/model/` and `smartfarm/dao/` — Hagag's lane / frozen for Phase 1 — so the immediate workaround is option (b) via SQL.
 
 **Previous (no-DB) smoke for comparison:**
 
-Before the env files were added (no DB credentials), the smoke was 8/12 pass. The 4 failures were all `NullPointerException: Cannot invoke "...Connection.createStatement()" because "this.conn" is null` in `dashboard`, `crops`, `monitoring`, `reports`. With the real DB connected, `monitoring` now passes and the 3 remaining failures surface their real root causes (enum mismatch + FXML field mismatch) instead of the generic "no DB" NPE.
+Before the env files were added (no DB credentials), the smoke was 8/12 pass. The 4 failures were all `NullPointerException: Cannot invoke "...Connection.createStatement()" because "this.conn" is null` in `dashboard`, `crops`, `monitoring`, `reports`. With the real DB connected, `monitoring` now passes and (after the `colVariety` dead-code removal) `crops` also passes. The 2 remaining failures (`dashboard` + `reports`) surface their real root cause — the `Crop.GrowthStage.GROWING` enum mismatch — instead of the generic "no DB" NPE.
 
 ### 2. Headless Monocle NagScreen Crash — Glisten + headless-only
 
@@ -225,10 +248,7 @@ a0c06d5 [3bdelbary] B2.7 fix: SPLASH registers under HOME_VIEW so Glisten mounts
 
 ## Recommended Next Steps
 
-1. **Fix `Crop.GrowthStage` enum mismatch** — Add `GROWING` to the enum or UPDATE DB rows (blocks dashboard + reports FXML loading)
-2. **Fix `CropController.colVariety` NPE** — Add column to `crops.fxml` or remove field from controller (blocks crops FXML loading)
-3. **B4** — Replace `FileChooser` with `CSVExporter.saveCsv()` (highest migration impact; these features crash on Android)
-4. **B7** — Add launcher icons (required for APK build)
-5. **B8** — Create `PlatformPickers` for image picking (needed by DiseaseDetectionPage)
-6. **B5** — Add `mobile.css` for touch targets and responsive sidebar
-7. Run first `mvn -Pandroid gluonfx:build` to produce an APK
+1. Run first `mvn -Pandroid gluonfx:build` to produce an APK — all required assets (icons, manifest, resources, GraalVM config) are now in place.
+2. **Fix `Crop.GrowthStage` enum mismatch** — UPDATE the DB rows to a valid enum value (e.g. `VEGETATIVE`) so `dashboard` + `reports` FXMLs load. Enum or DAO fix paths cross into Hagag's lane / frozen `model/`.
+3. **Hagag:** drop JFreeChart deps from `pom.xml` desktop profile (B6 audit complete); optionally add `exec-maven-plugin` to make the Java icon generator invokable via `mvn exec:java`.
+4. **B9** — Lifecycle hooks sweep across remaining controllers (low impact).

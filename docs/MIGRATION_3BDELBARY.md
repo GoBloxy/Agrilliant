@@ -391,13 +391,360 @@ d3164b2 [3bdelbary] B3X.4 filter rows -> FlowPane + alerts root restructure
 
 ---
 
+## Pre-B4 fix: CropController.colVariety NPE — DONE ✅
+
+The `crops.fxml` smoke failure flagged at the end of B3 (`NullPointerException: Cannot invoke "javafx.scene.control.TableColumn.setResizable(boolean)" because "this.colVariety" is null`) was the only thing blocking the crops screen from loading. Two valid fixes (per `docs/STATUS.md` line 149): add `<TableColumn fx:id="colVariety">` to `crops.fxml`, or drop the field from the controller.
+
+Picked the controller-removal path because:
+- `colVariety.setCellValueFactory(...)` only ever returned a hardcoded `"—"` em-dash — the column was decorative dead code with no backing `Crop.variety` property.
+- The `Crop` model is **frozen for Phase 1** (§6 of `ANDROID_MIGRATION.md`), so wiring a real value would have required a cross-track Phase 2 model change anyway.
+- Mobile layouts benefit from fewer table columns.
+
+### Files modified
+- `src/main/java/smartfarm/ui/CropController.java` — dropped `colVariety,` from the multi-field `@FXML` declaration (line 46), the `colVariety.setResizable(false)` call, and the `colVariety.setCellValueFactory(...)` block. `crops.fxml` untouched — its existing 6 columns now match the 6 fields exactly.
+
+### Verification
+| Gate | Result |
+|------|--------|
+| `grep -rn colVariety src/` | **0 matches** |
+| Lane diff | 1 file, in `ui/` (3bdelbary lane) |
+
+---
+
+## B4: Replace FileChooser with CSVExporter + PlatformPickers — DONE ✅
+
+### Scope
+8 `javafx.stage.FileChooser` call sites in `ui/` had to go. `FileChooser` is desktop-only (it requires a `javafx.stage.Window` host) and crashes on Android. Hagag's H8 (`CSVExporter.saveCsv(String, String) → File`) had already shipped — B4 just had to wire it. The image picker in `DiseaseDetectionPage` was the one site that needed a new cross-platform abstraction (`PlatformPickers.pickImage()`, delivered as B8 in the same batch).
+
+| Controller | Sites | Replacement |
+|------------|------:|-------------|
+| `DashboardController` | 4 (CSV: report, sensor, harvest, alert) | `CSVExporter.saveCsv()` |
+| `LogsController` | 1 (CSV) | `CSVExporter.saveCsv()` |
+| `ReportsController` | 1 (CSV) | `CSVExporter.saveCsv()` |
+| `CropController` | 1 (CSV) | `CSVExporter.saveCsv()` |
+| `DiseaseDetectionPage` | 1 (image open) | `PlatformPickers.pickImage()` |
+
+### Pattern for the 7 CSV sites
+Each `onExport*` method was rewritten from this shape:
+```java
+FileChooser chooser = new FileChooser();
+chooser.setTitle("…"); chooser.setInitialFileName("name.csv");
+chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+File file = chooser.showSaveDialog(someNode.getScene().getWindow());
+if (file == null) return;
+try (FileWriter fw = new FileWriter(file)) {
+    fw.write("headers\n");
+    for (Row r : rows) fw.write(String.format("…", …));
+}
+```
+into:
+```java
+try {
+    StringBuilder csv = new StringBuilder("headers\n");
+    for (Row r : rows) csv.append(String.format("…", …));
+    File saved = CSVExporter.saveCsv(csv.toString(), "name.csv");
+    showAlert("Export", "Exported to " + saved.getName(), Alert.AlertType.INFORMATION);
+} catch (IOException e) { … }
+```
+
+Column layouts (headers + `String.format` per row) are preserved verbatim — no user-visible CSV change. `CSVExporter.saveCsv` picks the destination: `~/Downloads/` on desktop, Gluon `StorageService.getPublicStorage("Documents")` on Android, with a timestamp suffix if the target name already exists. The new success toast surfaces the actual file name so the user can find it.
+
+`IOException` from `saveCsv()` joined the existing `SQLException` catch in `DashboardController` via a multi-catch; the error UX is unchanged.
+
+### DiseaseDetectionPage
+```java
+private void selectImage() {
+    Optional<File> picked = PlatformPickers.pickImage(getScene().getWindow());
+    picked.ifPresent(file -> {
+        selectedFile = file;
+        lblFileName.setText(file.getName() + "  (" + (file.length() / 1024) + " KB)");
+        imagePreview.setImage(new Image(file.toURI().toString()));
+        placeholder.setVisible(false);
+        placeholder.setManaged(false);
+        btnAnalyze.setDisable(false);
+        resultsContainer.setVisible(false);
+        resultsContainer.setManaged(false);
+    });
+}
+```
+
+Returns `Optional<File>` so a cancelled picker is a no-op instead of the old `if (file != null)` null check. The downstream `PlantIdService.analyzeImage(selectedFile.getAbsolutePath())` call site is unchanged — `PlatformPickers` guarantees a real file path on both platforms (see B8 below).
+
+### Import cleanup
+Removed from each controller:
+- `import javafx.stage.FileChooser;`
+- `import java.io.FileWriter;` (DashboardController, LogsController, ReportsController, CropController)
+
+Added:
+- `import smartfarm.util.CSVExporter;` (4 controllers)
+- `import smartfarm.ui.platform.PlatformPickers;` + `import java.util.Optional;` (DiseaseDetectionPage)
+
+### Verification
+| Gate | Result |
+|------|--------|
+| `grep -rn "javafx.stage.FileChooser" src/main/java/smartfarm/ui` | **0 matches** in controllers (only the legitimate desktop fallback inside `PlatformPickers.java`) |
+| `grep -rn "FileWriter" src/` | **0 matches** |
+| `grep -rn "javafx.stage" src/main/java/smartfarm/ui` | **0 matches** in controllers |
+| Lane diff | 5 controllers in `ui/` (3bdelbary lane), no `dao/`/`service/`/`server/`/`util/`/`pom.xml` touches |
+
+---
+
+## B8: PlatformPickers via Gluon Pictures — DONE ✅
+
+### Scope
+The migration doc §B8 asked for `smartfarm.ui.platform.PlatformPickers.pickImage()` returning a `File` on both targets. Gluon Attach `PicturesService` (already on the pom via Hagag's `a911016 [hagag] Phase 2 prep`) does the picking, but its `loadImageFromGallery()` returns `Optional<Image>` — a JavaFX `Image` object with no associated file path. Since `PlantIdService.analyzeImage(String imagePath)` (Hagag's lane, can't change) requires a real path, `PlatformPickers` has to persist the picked image to disk on Android before returning.
+
+### Files created
+- `src/main/java/smartfarm/ui/platform/PlatformPickers.java` (~210 lines)
+
+### Public API
+```java
+public static Optional<File> pickImage(Window owner);
+```
+
+### Platform branch
+Routes on `Constants.IS_ANDROID` (Hagag's H9), consistent with the same flag used in `Main.startFarmServerReflectively`.
+
+**Desktop branch** — opens a `FileChooser` with the same `*.jpg / *.jpeg / *.png / *.bmp / *.webp` extension filters the disease page used pre-B4. Returns `Optional.ofNullable(chooser.showOpenDialog(owner))`. `owner` may be null without issue.
+
+**Android branch** — chains:
+```java
+Services.get(PicturesService.class)
+        .flatMap(PicturesService::loadImageFromGallery)  // Optional<Image>
+        → writePng(Image)                                // File in private storage
+```
+The picked `Image` is encoded to PNG (RGBA, no per-scanline filter, single IDAT chunk) and written to `<private-storage>/picked-images/picked_<timestamp>.png`. The file is in the app's private storage directory (via `StorageService.getPrivateStorage()`) so the file is guaranteed readable by the same process and survives until the JVM exits or the file is overwritten by a subsequent pick. Filename includes a millisecond timestamp so concurrent picks don't collide.
+
+### Why a pure-Java PNG encoder?
+`javax.imageio` lives in the `java.desktop` module and `javafx.embed.swing.SwingFXUtils` lives in `javafx.swing` — **neither is on the GraalVM Substrate Android compile classpath**. The standard "use `ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", file)"` recipe would not link.
+
+The hand-rolled encoder uses only `java.io` + `java.nio.charset.StandardCharsets` + `java.nio.file.Files` + `java.util.zip` (`Deflater`, `CRC32`) — all in `java.base` which Substrate always provides. It reads pixels via `Image.getPixelReader().getArgb(x, y)`, repacks each scanline as `[0 filter byte][RGBA pixels...]`, deflates the whole IDAT body, and assembles the standard PNG signature + `IHDR` (color type 6 = truecolor + alpha, bit depth 8) + `IDAT` + `IEND` chunks with CRC-32 trailers. ~55 lines, no external deps. Plant.id accepts PNG so the downstream analysis call still works.
+
+### Lifecycle & error handling
+- `PicturesService` lookup failure (rare — only when `pictures` is missing from `<attachList>`) is logged via `Logger.e` and returns `Optional.empty()`.
+- User cancellation of the gallery picker also returns `Optional.empty()` — `DiseaseDetectionPage.selectImage` then no-ops via `ifPresent`.
+- PNG write failure is logged but never crashes the UI thread — caller still sees an empty optional and the existing "no file selected" state.
+
+### Lane verification
+| Check | Pass |
+|-------|------|
+| File lives under `src/main/java/smartfarm/ui/platform/` (3bdelbary lane via §6 `ui/**`) | ✅ |
+| Read-only imports only: `Constants` (H9), `Logger` (H5/H10), `CSVExporter` (H8) — all Hagag-owned utilities | ✅ |
+| Gluon Attach `pictures` already in `<attachList>` in `pom.xml` | ✅ (Hagag `a911016`) |
+| Substrate-safe: zero `java.desktop` / `javafx.swing` references | ✅ |
+
+### Phase 2 follow-ups
+- The picked PNG is left in private storage indefinitely. A future cleanup pass could delete files older than N days on app start. Low priority — private storage is sandboxed and Android reclaims it when the app is uninstalled.
+- `PicturesService.takePhoto(boolean savePhoto)` is not exposed yet. A future "take photo" entry next to "browse" in `DiseaseDetectionPage` would re-use the same `encodePng` helper.
+
+---
+
+## B5: mobile.css — DONE ✅
+
+### Scope
+§8.B5 of `ANDROID_MIGRATION.md` asked for:
+- Larger base font (16 px ≈ 14sp on Android).
+- ≥48dp touch targets on inputs/buttons.
+- Larger row height for `CharmListView`.
+- Reduced padding where it would push content off-screen.
+- Keep AtlantaFX `PrimerLight` as the base.
+- Load `mobile.css` after the AtlantaFX stylesheet in `Main`.
+- Verify all 12 screens still look intentional.
+
+### Conditional loading decision
+JavaFX CSS has no `@media` equivalent for width-based rules. Loading `mobile.css` unconditionally would visibly enlarge the desktop UI (16 px font + 48dp inputs everywhere) — that conflicts with §B5's verification gate "all 12 screens still look intentional, not like the desktop with text shrunk". Reading that the other way: desktop shouldn't suddenly look like the phone either.
+
+**Decision: load `mobile.css` only on Android, gated on `Constants.IS_ANDROID`.** Desktop keeps its current dashboard-optimized sizing from `farm-theme.css`; Android picks up the touch-friendly overrides. The two profiles share the same FXMLs and the same `farm-theme.css` palette/chrome — only the sizing layer differs.
+
+This matches the same pattern already established in `Main.postInit` for the desktop-only `FarmServer` reflective load.
+
+### Files created
+- `src/main/resources/css/mobile.css` (~110 lines, ~25 selectors)
+
+### Files modified
+- `src/main/java/smartfarm/Main.java` — `postInit(Scene)` now loads `/css/mobile.css` inside the `Constants.IS_ANDROID` branch, after `/css/farm-theme.css`. The earlier `// mobile.css added in B5` placeholder comment is gone. The desktop branch (window defaults + FarmServer reflective load) is now the `else` of the same `if` so the two profiles are visually paired in the source.
+
+### Selectors covered
+| Selector group | Override |
+|----------------|----------|
+| `.root` | `-fx-font-size: 16` — base size; controls without their own override inherit |
+| `.button`, `.toggle-button`, `.menu-button`, `.split-menu-button`, `.choice-box`, `.combo-box` | `-fx-min-height: 48; -fx-padding: 10 18 10 18` |
+| `.icon-btn` | `-fx-min-width: 44; -fx-min-height: 44` (compact, still tap-friendly) |
+| `.text-field`, `.password-field`, `.date-picker > .text-field` | `-fx-min-height: 48; -fx-padding: 12 14 12 14` |
+| `.text-area .content` | `-fx-padding: 12 14 12 14` |
+| `.date-picker`, `.search-box` | `-fx-min-height: 48` |
+| `.list-tile`, `.charm-list-cell` | `-fx-min-height: 84; -fx-padding: 12 16 12 16` — fits a 3-line tile + 48dp action buttons |
+| `.nav-drawer .list-cell` | `-fx-min-height: 56; -fx-padding: 12 20 12 20; -fx-font-size: 15` — Material spec for drawer rows |
+| `.dialog-pane .button` | `-fx-min-height: 48; -fx-min-width: 80; -fx-padding: 10 22 10 22` |
+| `.table-view` | `-fx-fixed-cell-size: 48` — for the 5 inner pages still using TableView (dashboard, crops, alerts, monitoring, reports) |
+| `.page-title` | `-fx-font-size: 22` — keeps headings visually anchored after the global 16 px bump |
+
+Glisten-specific selectors (`.list-tile`, `.charm-list-cell`, `.nav-drawer .list-cell`) target the controls B3 + B3X introduced (`CharmListView` for workers/tasks/harvest/logs, `NavigationDrawer` in ShellView).
+
+### Cascading order
+```
+1. AtlantaFX PrimerLight     (Application.setUserAgentStylesheet)
+2. /css/farm-theme.css       (scene stylesheet, both targets)
+3. /css/mobile.css           (scene stylesheet, Android only)
+```
+Each later stylesheet wins where its selectors overlap. `farm-theme.css` rules with explicit sizes (e.g. `.sensor-value { -fx-font-size: 22 }`) keep their look because `mobile.css` doesn't touch those component-specific selectors; only the generic control selectors get the touch-friendly bump.
+
+### Width-based sidebar toggle — deferred
+The B3X follow-up note ("`mobile.css` should add a width-based rule that re-enables the dashboard sidebar on `width >= 800dp`") is **not** implementable in pure JavaFX CSS — there are no media queries. The proper fix is a controller-side listener on `Scene.widthProperty()` that toggles `sidebar.setVisible/Managed(...)` and `topbar.setVisible/Managed(...)` based on a threshold. That's a small `DashboardController` change, but it's a behavioral rather than CSS one and out of scope for B5. Captured below in Phase 2 follow-ups.
+
+### Verification
+| Gate | Result |
+|------|--------|
+| `mobile.css` file exists at `src/main/resources/css/mobile.css` | ✅ |
+| Loaded after `farm-theme.css` in `Main.postInit` | ✅ |
+| Loaded only on Android (`Constants.IS_ANDROID` branch) | ✅ |
+| No `@media` queries or other unsupported CSS | ✅ (pure JavaFX CSS subset) |
+| `PrimerLight` still the user-agent stylesheet | ✅ (unchanged) |
+| Lane diff | 2 files: `Main.java` (3bdelbary lane) + `css/mobile.css` (new, 3bdelbary lane). Zero touches to `dao/`, `service/`, `server/`, `util/`, `pom.xml`. |
+
+### Phase 2 follow-ups
+- Width-based sidebar toggle: add a `Scene.widthProperty()` listener in `DashboardController` or `ShellView` that flips the hidden sidebar/topbar back on when `width >= 800` (the dashboard's natural breakpoint). The FXML structure is preserved (`visible="false" managed="false"`) so this is a one-line toggle per element.
+- A real-device run on a 5" / 6.5" Android emulator would confirm the 84dp `.list-tile` size hits 48dp action buttons cleanly without truncating the 3-line text — left as a manual visual gate (no automated harness in Phase 1).
+
+---
+
+## B6: Drop any remaining JFreeChart use — DONE ✅
+
+### Scope
+§8.B6 of `ANDROID_MIGRATION.md` had two clauses:
+1. Drop any leftover `JFreeChart` / `JFreeChart-FX` use — Gluon-friendly charts only.
+2. For `MonitoringController`, make sure live updates use `Platform.runLater` and bound the data series to the last N points.
+
+### Audit results
+| Check | Result |
+|-------|--------|
+| `jfree` (case-insensitive) in `src/` | **0 matches** |
+| `JFreeChart` / `ChartFactory` / `ChartPanel` / `XYPlot` / `JFreeChart-FX` symbols in `src/` | **0 matches** |
+| `pom.xml` JFreeChart dependencies | Still in the `desktop` profile (`jfreechart 1.5.4` + `jfreechart-fx 1.0.1`), with a comment explicitly waiting on this B6 audit |
+| `MonitoringController.subscribeLiveSensor` FX-thread safety | ✅ already correct — `LiveSensorData.update(...)` wraps property mutations in `Platform.runLater`, so listener bodies in the controller fire on the FX thread |
+| `MonitoringController.setupTrendChart` bounded series | N/A in current state — the trend chart is populated with 8 hardcoded mock data points at startup and is never appended to. No memory-growth risk. |
+
+### Source changes
+Zero. The §B6 audit's only mandatory action was confirming `src/` had no JFreeChart references — that was already true before B6 started (B3-era survey already moved away from JFreeChart).
+
+One defensive change for future-proofing:
+- `src/main/java/smartfarm/ui/MonitoringController.java` — added a `TODO(phase-2)` block comment at the top of `setupTrendChart()` documenting the unbounded-growth gotcha for whoever wires real live data into the chart later. Documents the pattern (`trim from head before append`) and notes that `LiveSensorData.update` already marshals onto the FX thread, so the append point doesn't need its own `Platform.runLater` wrapper.
+
+### Cross-track — Hagag follow-up
+`pom.xml` still has `org.jfree:jfreechart:1.5.4` and `org.jfree:jfreechart-fx:1.0.1` declared in the `desktop` profile (lines 257-269 in the current pom). Hagag left an explicit comment there:
+> *JFreeChart — advanced charts. Currently unused in source but kept in the desktop profile until 3bdelbary's B6 chart audit confirms removal.*
+
+This audit is that confirmation. The dependencies are now safe to drop — `mvn -Pdesktop dependency:tree` will show them as unused, and removing them shrinks the desktop fat-jar by ~3 MB. **Action item left for Hagag** (`pom.xml` is Hagag's lane per §6); not part of B6's done-state on this side.
+
+### Verification
+| Gate | Result |
+|------|--------|
+| `grep -ri "jfree\|JFreeChart\|ChartFactory\|ChartPanel\|XYPlot" src/` | **0 matches** ✅ |
+| `MonitoringController.subscribeLiveSensor` invokes UI setters on FX thread | ✅ (via `LiveSensorData.update`'s internal `Platform.runLater`) |
+| `MonitoringController.setupTrendChart` documents the bounded-series rule | ✅ (new `TODO(phase-2)` comment) |
+| Lane diff | 1 file: `MonitoringController.java` (3bdelbary lane). Comment-only edit — no behavioral change. |
+
+### Phase 2 follow-ups
+- Wire `MonitoringController.setupTrendChart` to real `LiveSensorData` updates (currently mock). Reuse the existing `subscribeLiveSensor` pattern but cap each series at ~100 points by trimming from the head before appending.
+- The `cmbChartPeriod` ComboBox ("24 Hours" / "7 Days" / "30 Days") has no listener wired today — once live data is in, hook it to drive a `SensorDAO.getRecent(period)`-style query and rebuild the series.
+
+---
+
+## B7: Android launcher icons — DONE ✅
+
+### Scope
+`AndroidManifest.xml:61-62` references `@mipmap/ic_launcher` and `@mipmap/ic_launcher_round`. Without those PNG bitmaps on disk the APK assembly fails. §B7 of `ANDROID_MIGRATION.md` asked for icons at the five standard Android density buckets (mdpi → xxxhdpi), derived from `images/logo.png`. The `STATUS.md` row pinned the target paths at `src/android/res/mipmap-*/ic_launcher{,_round}.png`.
+
+### Approach: in-repo generator, no external tooling
+The cleanest path that lives entirely in 3bdelbary's lane is a small generator that reads `logo.png` and produces all ten PNGs. Two equivalent implementations ship side by side so the team can run whichever fits their environment:
+
+| Generator | When to use | Stack |
+|-----------|-------------|-------|
+| `smartfarm.ui.tools.LauncherIconGenerator` (Java, JavaFX `Application`) | Anywhere with Maven + JavaFX configured (i.e. the normal dev setup) | JavaFX `Canvas.snapshot` + the shared `smartfarm.ui.platform.PngEncoder` |
+| `src/main/java/smartfarm/ui/tools/generate-launcher-icons.ps1` (PowerShell) | Quick Windows-side regeneration that doesn't require building the project | `System.Drawing` (built into Windows .NET) |
+
+Both produce byte-for-byte equivalent layouts: `#2e7d32` (brand green from `farm-theme.css`) background, source logo centred at 72% of the icon edge with aspect ratio preserved. The `_round.png` variant uses an antialiased circular background plus a clip path so the logo can't bleed outside the disc — launchers that don't auto-mask still display a proper round icon.
+
+### Files created
+1. `src/main/java/smartfarm/ui/platform/PngEncoder.java` — extracted from the inline encoder I built for `PlatformPickers` in B8. Single public method `PngEncoder.encode(Image img) → byte[]`. RGBA, filter type 0, single IDAT, deflate via `java.util.zip`. Substrate-safe (no `java.desktop` / `javafx.swing`).
+2. `src/main/java/smartfarm/ui/tools/LauncherIconGenerator.java` — JavaFX `Application`. Reads `images/logo.png`, renders the 5 density × 2 variant matrix on a Gluon-friendly `Canvas`, writes via `PngEncoder`. ~190 lines.
+3. `src/main/java/smartfarm/ui/tools/generate-launcher-icons.ps1` — PowerShell mirror of the Java generator using `System.Drawing` (`FillEllipse`, `DrawImage`, `Save` to PNG). Resolves paths relative to its own location so it can be invoked from anywhere. ~130 lines including comments.
+4. **10 generated PNG bitmaps** under `src/android/res/mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ic_launcher{,_round}.png`. Committed.
+
+### Files modified
+- `src/main/java/smartfarm/ui/platform/PlatformPickers.java` — the previously inline `encodePng` / `deflate` / `writeChunk` private methods are gone. `writePng(Image)` now delegates to `PngEncoder.encode(img)`. Class shrank by ~60 lines; behaviour unchanged.
+
+### How to (re-)run the generator
+
+**PowerShell (no Maven required, used to produce the committed PNGs):**
+
+```powershell
+# From anywhere — the script auto-resolves paths relative to itself:
+pwsh -ExecutionPolicy Bypass `
+     -File .\src\main\java\smartfarm\ui\tools\generate-launcher-icons.ps1
+```
+
+**Java (when the full toolchain is set up):**
+
+```powershell
+# From the project root:
+mvn -Pdesktop compile exec:java `
+    -Dexec.mainClass="smartfarm.ui.tools.LauncherIconGenerator"
+```
+
+Expected output (either path):
+```
+Source logo: <project-root>\src\main\resources\images\logo.png (1024x1024)
+Output root: <project-root>\src\android\res
+
+  [mdpi      48 px] ic_launcher.png, ic_launcher_round.png
+  [hdpi      72 px] ic_launcher.png, ic_launcher_round.png
+  [xhdpi     96 px] ic_launcher.png, ic_launcher_round.png
+  [xxhdpi   144 px] ic_launcher.png, ic_launcher_round.png
+  [xxxhdpi  192 px] ic_launcher.png, ic_launcher_round.png
+
+Done. Wrote 10 icon files under <project-root>\src\android\res
+```
+
+### Verification
+| Gate | Result |
+|------|--------|
+| 10 PNGs present at `src/android/res/mipmap-*/ic_launcher{,_round}.png` | ✅ |
+| Pixel dimensions match Android density spec (48/72/96/144/192) | ✅ (verified via `System.Drawing.Image.FromFile().Width/Height` on each) |
+| File sizes scale ~quadratically with density (1 KB → 8 KB) | ✅ |
+| Visual smoke (largest variant) | ✅ — `#2e7d32` background, bird logo centred, clean antialiased circle on the round variant |
+| Source logo `images/logo.png` unchanged | ✅ |
+| `AndroidManifest.xml` (Hagag's lane) untouched | ✅ |
+
+### Tweaking the icons later
+- Background colour: change `BackgroundColor` in `generate-launcher-icons.ps1` (or `BACKGROUND` in `LauncherIconGenerator.java`). Default `#2e7d32`.
+- Logo margin: change `LogoScale` / `LOGO_SCALE` (default `0.72` = 14% margin per side).
+- Source logo: pass `-LogoPath <path>` to the PS script, or edit `SOURCE_LOGO` in the Java generator. Try `/images/logo-dark.png` if the dark variant reads better.
+
+Re-run the generator after any change; commit the new PNGs.
+
+### Lane check (§6 / §7 of `ANDROID_MIGRATION.md`)
+| Check | Pass |
+|-------|------|
+| Java sources under `src/main/java/smartfarm/ui/**` (3bdelbary lane) | ✅ |
+| Source logo read from `src/main/resources/images/logo.png` (3bdelbary lane) | ✅ |
+| Output written under `src/android/res/mipmap-*/` (icon **content** is 3bdelbary's per §B7; Hagag owns the manifest references in `src/android/AndroidManifest.xml`) | ✅ |
+| No edits to `dao/`, `service/`, `server/`, `util/`, `pom.xml`, `META-INF/native-image/**`, `model/`, or `AndroidManifest.xml` | ✅ |
+| `PlatformPickers` refactored to use `PngEncoder` — behaviour preserved, class shrank | ✅ |
+
+### Phase 2 follow-ups
+- Adaptive icons (`mipmap-anydpi-v26/ic_launcher.xml` + foreground/background drawables) would scale better on Android 8+'s round/squircle/teardrop launcher masks than the current legacy PNG approach. Out of scope for Phase 1 — current PNGs are still valid and supported through Android 14.
+- Splash screen drawable: §B7 of the migration doc also mentions "Add a splash screen image referencing the existing logo." The in-app splash (`SplashView` from B1) covers the user-visible splash; what's missing is the brief native pre-FX splash that some Gluon apps show during the Substrate binary cold start. Low-priority polish — defer to Phase 2.
+
+---
+
 ## Status of B4–B10
 - [x] **B3** — done. See section above.
 - [x] **B3X** — UX rework done. See section above.
-- [ ] **B4** — Sweep controllers: replace `FileChooser` (CSV export in Dashboard/Logs/Reports/Crop) with `CSVExporter.saveCsv(...)`. Replace `FileChooser.showOpenDialog` (DiseaseDetectionPage) with `PlatformPickers.pickImage()` (delivered in B8).
-- [ ] **B5** — Add `css/mobile.css`. Keep AtlantaFX PrimerLight as base.
-- [ ] **B6** — Drop any remaining JFreeChart use (already absent from `src/main/java`; double-check leftover imports in dashboard/monitoring).
-- [ ] **B7** — Launcher icons mdpi → xxxhdpi under `src/android/res/mipmap-*/` to satisfy Hagag's manifest refs (`@mipmap/ic_launcher`, `@mipmap/ic_launcher_round`).
-- [ ] **B8** — Image picker via Gluon Attach `Pictures` (Hagag added the dep in `a911016`). Create `smartfarm.ui.platform.PlatformPickers` with `pickImage()` returning `File`.
+- [x] **B4** — done. See section above.
+- [x] **B5** — done. See section above.
+- [x] **B6** — done. See section above.
+- [x] **B7** — done. See section above. PNGs generated and committed.
+- [x] **B8** — done. See section above.
 - [ ] **B9** — Lifecycle hooks: `View#setOnShown`/`setOnHidden` instead of "set up on stage shown" patterns. (`SplashView` and `ShellView` already follow this; sweep the rest.)
 - [ ] **B10** — Keep this file current as we go.

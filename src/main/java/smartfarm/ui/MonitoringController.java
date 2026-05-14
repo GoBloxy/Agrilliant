@@ -89,6 +89,13 @@ public class MonitoringController {
     }
 
     private void setupTrendChart() {
+        // TODO(phase-2): currently static mock data. When wiring live sensor
+        // updates here, cap each XYChart.Series.getData().size() at N (e.g.
+        // 100) by trimming from the head before appending — JavaFX charts
+        // hold strong refs to every data node so unbounded growth blows up
+        // memory on long-running monitoring sessions. LiveSensorData.update
+        // already marshals onto the FX thread via Platform.runLater, so the
+        // append itself is thread-safe.
         XYChart.Series<String, Number> tempSeries = new XYChart.Series<>();
         tempSeries.setName("Temperature (°C)");
         tempSeries.getData().add(new XYChart.Data<>("12:00 AM", 22));

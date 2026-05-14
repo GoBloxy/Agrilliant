@@ -8,13 +8,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
 import org.kordamp.ikonli.javafx.FontIcon;
 import smartfarm.model.SystemLog;
 import smartfarm.service.SystemLogManager;
+import smartfarm.util.CSVExporter;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
@@ -136,22 +135,15 @@ public class LogsController {
 
     @FXML
     private void onExport() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Export Logs");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        chooser.setInitialFileName("system_logs.csv");
-
-        File file = chooser.showSaveDialog(btnExport.getScene().getWindow());
-        if (file == null) return;
-
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write("Timestamp,Type,Source,Message,User\n");
+        try {
+            StringBuilder csv = new StringBuilder("Timestamp,Type,Source,Message,User\n");
             for (SystemLog log : logList.itemsProperty().get()) {
-                writer.write(String.format("%s,%s,%s,\"%s\",%s\n",
+                csv.append(String.format("%s,%s,%s,\"%s\",%s\n",
                         log.getFormattedTimestamp(), log.getType(),
                         log.getSource(), log.getMessage(), log.getUser()));
             }
-            showAlert("Export", "Exported to " + file.getName(), Alert.AlertType.INFORMATION);
+            File saved = CSVExporter.saveCsv(csv.toString(), "system_logs.csv");
+            showAlert("Export", "Exported to " + saved.getName(), Alert.AlertType.INFORMATION);
         } catch (IOException e) {
             showAlert("Error", e.getMessage(), Alert.AlertType.ERROR);
         }

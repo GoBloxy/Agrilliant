@@ -6,14 +6,13 @@ import javafx.fxml.FXML;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.stage.FileChooser;
 import smartfarm.dao.CropDAO;
 import smartfarm.dao.HarvestDAO;
 import smartfarm.model.Crop;
 import smartfarm.model.HarvestRecord;
+import smartfarm.util.CSVExporter;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -139,18 +138,10 @@ public class ReportsController {
 
     @FXML
     private void onExport() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Export Harvest Report");
-        chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        chooser.setInitialFileName("harvest_report.csv");
-        File file = chooser.showSaveDialog(btnExport.getScene().getWindow());
-        if (file == null) return;
-
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
+        try {
+            StringBuilder csv = new StringBuilder("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
             for (HarvestRecord hr : allHarvests) {
-                writer.write(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
+                csv.append(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
                         hr.getHarvestDate(),
                         getCropName(hr.getCropId()),
                         getPlotName(hr.getCropId()),
@@ -158,7 +149,8 @@ public class ReportsController {
                         hr.getGrade().name(),
                         hr.getQuantityKg() * PRICE_PER_KG));
             }
-            showAlert("Export", "Report exported to " + file.getName(), Alert.AlertType.INFORMATION);
+            File saved = CSVExporter.saveCsv(csv.toString(), "harvest_report.csv");
+            showAlert("Export", "Report exported to " + saved.getName(), Alert.AlertType.INFORMATION);
         } catch (IOException e) {
             showAlert("Error", "Failed to export: " + e.getMessage(), Alert.AlertType.ERROR);
         }

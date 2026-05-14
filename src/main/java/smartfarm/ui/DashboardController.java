@@ -14,7 +14,6 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.stage.FileChooser;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -31,10 +30,10 @@ import smartfarm.model.SensorReading;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
 import smartfarm.service.LiveSensorData;
+import smartfarm.util.CSVExporter;
 import smartfarm.util.DBConnection;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -533,13 +532,6 @@ public class DashboardController {
 
     @FXML
     private void onExportReport() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Export Harvest Report");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        chooser.setInitialFileName("harvest_report.csv");
-        File file = chooser.showSaveDialog(chartContainer.getScene().getWindow());
-        if (file == null) return;
-
         try {
             List<HarvestRecord> harvests = harvestDAO.getAll();
             List<Crop> crops = (allCrops != null) ? allCrops : cropDAO.getAll();
@@ -551,19 +543,18 @@ public class DashboardController {
             for (Plot p : plots) plotMap.put(p.getPlotId(), p.getName());
 
             double pricePerKg = 2.50;
-            try (FileWriter writer = new FileWriter(file)) {
-                writer.write("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
-                for (HarvestRecord hr : harvests) {
-                    Crop c = cropMap.get(hr.getCropId());
-                    String cropName = (c != null) ? c.getCropName() : "Crop #" + hr.getCropId();
-                    String plotName = (c != null) ? plotMap.getOrDefault(c.getPlotId(), "—") : "—";
-                    writer.write(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
-                            hr.getHarvestDate(), cropName, plotName,
-                            hr.getQuantityKg(), hr.getGrade().name(),
-                            hr.getQuantityKg() * pricePerKg));
-                }
+            StringBuilder csv = new StringBuilder("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
+            for (HarvestRecord hr : harvests) {
+                Crop c = cropMap.get(hr.getCropId());
+                String cropName = (c != null) ? c.getCropName() : "Crop #" + hr.getCropId();
+                String plotName = (c != null) ? plotMap.getOrDefault(c.getPlotId(), "—") : "—";
+                csv.append(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
+                        hr.getHarvestDate(), cropName, plotName,
+                        hr.getQuantityKg(), hr.getGrade().name(),
+                        hr.getQuantityKg() * pricePerKg));
             }
-            showExportSuccess("Report exported successfully!");
+            File saved = CSVExporter.saveCsv(csv.toString(), "harvest_report.csv");
+            showExportSuccess("Report exported to " + saved.getName());
         } catch (SQLException | IOException e) {
             showExportError("Failed to export: " + e.getMessage());
         }
@@ -581,23 +572,16 @@ public class DashboardController {
 
     @FXML
     private void onExportSensorCSV() {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Export Sensor Logs");
-        fc.setInitialFileName("sensor_logs.csv");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fc.showSaveDialog(chartContainer.getScene().getWindow());
-        if (file == null) return;
         try {
             List<SensorReading> readings = sensorDAO.getRecent(500);
-            try (FileWriter fw = new FileWriter(file)) {
-                fw.write("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,Timestamp\n");
-                for (SensorReading r : readings) {
-                    fw.write(String.format("%d,%d,%.2f,%.2f,%.2f,%s\n",
+            StringBuilder csv = new StringBuilder("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,Timestamp\n");
+            for (SensorReading r : readings) {
+                csv.append(String.format("%d,%d,%.2f,%.2f,%.2f,%s\n",
                         r.getReadingId(), r.getDeviceId(), r.getTemperature(),
                         r.getHumidity(), r.getSoilMoisture(), r.getTimestamp()));
-                }
             }
-            showExportSuccess("Sensor logs exported successfully!");
+            File saved = CSVExporter.saveCsv(csv.toString(), "sensor_logs.csv");
+            showExportSuccess("Sensor logs exported to " + saved.getName());
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export sensor logs: " + ex.getMessage());
         }
@@ -605,23 +589,16 @@ public class DashboardController {
 
     @FXML
     private void onExportHarvestCSV() {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Export Harvest Summary");
-        fc.setInitialFileName("harvest_summary.csv");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fc.showSaveDialog(chartContainer.getScene().getWindow());
-        if (file == null) return;
         try {
             List<HarvestRecord> records = harvestDAO.getAll();
-            try (FileWriter fw = new FileWriter(file)) {
-                fw.write("RecordID,CropID,HarvestDate,QuantityKg,Grade\n");
-                for (HarvestRecord r : records) {
-                    fw.write(String.format("%d,%d,%s,%.2f,%s\n",
+            StringBuilder csv = new StringBuilder("RecordID,CropID,HarvestDate,QuantityKg,Grade\n");
+            for (HarvestRecord r : records) {
+                csv.append(String.format("%d,%d,%s,%.2f,%s\n",
                         r.getRecordId(), r.getCropId(), r.getHarvestDate(),
                         r.getQuantityKg(), r.getGrade().name()));
-                }
             }
-            showExportSuccess("Harvest summary exported successfully!");
+            File saved = CSVExporter.saveCsv(csv.toString(), "harvest_summary.csv");
+            showExportSuccess("Harvest summary exported to " + saved.getName());
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export harvest data: " + ex.getMessage());
         }
@@ -629,24 +606,17 @@ public class DashboardController {
 
     @FXML
     private void onExportAlertCSV() {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Export Alert History");
-        fc.setInitialFileName("alert_history.csv");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fc.showSaveDialog(chartContainer.getScene().getWindow());
-        if (file == null) return;
         try {
             List<Alert> alerts = alertDAO.getAll();
-            try (FileWriter fw = new FileWriter(file)) {
-                fw.write("AlertID,Type,Severity,Message,Resolved,Timestamp,PlotID\n");
-                for (Alert a : alerts) {
-                    fw.write(String.format("%d,%s,%s,\"%s\",%b,%s,%d\n",
+            StringBuilder csv = new StringBuilder("AlertID,Type,Severity,Message,Resolved,Timestamp,PlotID\n");
+            for (Alert a : alerts) {
+                csv.append(String.format("%d,%s,%s,\"%s\",%b,%s,%d\n",
                         a.getAlertId(), a.getAlertType(), a.getSeverity().name(),
                         a.getMessage().replace("\"", "\"\""), a.isResolved(),
                         a.getTimestamp(), a.getPlotId()));
-                }
             }
-            showExportSuccess("Alert history exported successfully!");
+            File saved = CSVExporter.saveCsv(csv.toString(), "alert_history.csv");
+            showExportSuccess("Alert history exported to " + saved.getName());
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export alert history: " + ex.getMessage());
         }

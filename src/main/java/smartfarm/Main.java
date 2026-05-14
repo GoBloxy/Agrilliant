@@ -55,10 +55,15 @@ public class Main extends MobileApplication {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         scene.getStylesheets().add(
                 getClass().getResource("/css/farm-theme.css").toExternalForm());
-        // mobile.css added in B5
 
-        // Desktop-only: window setup + FarmServer
-        if (!Constants.IS_ANDROID) {
+        if (Constants.IS_ANDROID) {
+            // Android-only: touch-target overrides + larger base font (B5).
+            // Loaded after farm-theme.css so its size rules win over the
+            // dashboard-optimized defaults without changing the desktop UX.
+            scene.getStylesheets().add(
+                    getClass().getResource("/css/mobile.css").toExternalForm());
+        } else {
+            // Desktop-only: window setup + FarmServer
             applyDesktopWindowDefaults(scene);
             startFarmServerReflectively();
         }
