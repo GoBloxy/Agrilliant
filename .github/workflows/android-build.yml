@@ -117,7 +117,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: |
+          packages: >
             platform-tools
             platforms;android-${{ env.ANDROID_SDK_PLATFORM }}
             build-tools;${{ env.ANDROID_BUILD_TOOLS }}
