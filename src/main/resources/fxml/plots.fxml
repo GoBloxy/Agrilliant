@@ -83,9 +83,9 @@
         </VBox>
     </FlowPane>
 
-    <!-- Filters Row -->
-    <HBox spacing="14" alignment="CENTER_LEFT">
-        <HBox alignment="CENTER_LEFT" styleClass="search-box">
+    <!-- Filter row: FlowPane wraps search box + combos onto multiple rows on narrow screens. -->
+    <FlowPane hgap="14" vgap="14">
+        <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="240" HBox.hgrow="NEVER">
             <padding><Insets right="8" left="8"/></padding>
             <TextField promptText="Search plots..." styleClass="search-field"/>
             <Region HBox.hgrow="ALWAYS"/>
@@ -94,7 +94,7 @@
         <ComboBox promptText="All Fields" styleClass="filter-combo"/>
         <ComboBox promptText="All Status" styleClass="filter-combo"/>
         <ComboBox promptText="All Crops" styleClass="filter-combo"/>
-    </HBox>
+    </FlowPane>
 
     <!-- Map + Overview -->
     <HBox spacing="14">

@@ -7,35 +7,46 @@
 <?import javafx.geometry.Insets?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<!-- Alerts Page — display, filter, and resolve alerts with colour-coded severity -->
-<HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.AlertController"
+<!--
+  Alerts Page — list of alerts on top, detail card below.
+
+  Stacks vertically so it works on phone width (was a side-by-side HBox
+  with a 380dp fixed-width detail pane that ate the screen on mobile).
+  On desktop the same vertical layout reads fine — detail is below the
+  list, both visible without scrolling on a typical 900dp window.
+
+  TODO(phase-2): consider a true master-detail mobile pattern where the
+  detail pane is a stacked View pushed onto AppManager when a row is
+  tapped, so phone users get a full-width detail screen instead of a
+  cramped section below the list. That requires AlertController changes.
+-->
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.AlertController"
       spacing="14" styleClass="content-pane">
 
-    <!-- ═══════════════ LEFT CONTENT (Filters, Cards, Table) ═══════════════ -->
-    <VBox spacing="14" HBox.hgrow="ALWAYS">
-        <padding><Insets top="14" right="0" bottom="14" left="18"/></padding>
+    <!-- ═══════════════ LIST SECTION (Filters, Cards, Table) ═══════════════ -->
+    <VBox spacing="14" VBox.vgrow="ALWAYS">
+        <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
-        <!-- Filters Bar -->
-        <HBox alignment="CENTER_LEFT" spacing="12">
+        <!-- Filters bar: FlowPane wraps controls onto multiple rows on narrow screens. -->
+        <FlowPane hgap="12" vgap="12">
             <ComboBox fx:id="cmbSeverity" promptText="All Severity" styleClass="filter-combo"/>
             <ComboBox fx:id="cmbStatus" promptText="All Status" styleClass="filter-combo"/>
-            
-            <HBox alignment="CENTER_LEFT" styleClass="search-box">
+            <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="240" HBox.hgrow="NEVER">
                 <padding><Insets right="8" left="8"/></padding>
                 <TextField fx:id="txtSearch" promptText="Search by plot or type..." styleClass="search-field"/>
                 <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
             </HBox>
-            
-            <Region HBox.hgrow="ALWAYS"/>
             <Button fx:id="btnMarkAllRead" text="Mark All as Read" styleClass="btn-secondary" graphicTextGap="6">
                 <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
             </Button>
-        </HBox>
+        </FlowPane>
 
-        <!-- Summary Cards -->
-        <HBox spacing="12">
+        <!--
+          Summary cards: FlowPane wraps to 1 / 2 / 4 columns by width.
+        -->
+        <FlowPane hgap="12" vgap="12">
             <!-- Critical -->
-            <VBox styleClass="card,summary-card-critical" HBox.hgrow="ALWAYS" spacing="8">
+            <VBox styleClass="card,summary-card-critical" minWidth="200" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                 <Label text="Critical Alerts" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
@@ -48,7 +59,7 @@
             </VBox>
 
             <!-- Warnings -->
-            <VBox styleClass="card,summary-card-warning" HBox.hgrow="ALWAYS" spacing="8">
+            <VBox styleClass="card,summary-card-warning" minWidth="200" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                 <Label text="Warnings" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
@@ -61,7 +72,7 @@
             </VBox>
 
             <!-- Resolved Today -->
-            <VBox styleClass="card,summary-card-resolved" HBox.hgrow="ALWAYS" spacing="8">
+            <VBox styleClass="card,summary-card-resolved" minWidth="200" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                 <Label text="Resolved Today" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
@@ -74,7 +85,7 @@
             </VBox>
 
             <!-- Active Alerts -->
-            <VBox styleClass="card,summary-card-active" HBox.hgrow="ALWAYS" spacing="8">
+            <VBox styleClass="card,summary-card-active" minWidth="200" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                 <Label text="Active Alerts" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
@@ -85,7 +96,7 @@
                     </VBox>
                 </HBox>
             </VBox>
-        </HBox>
+        </FlowPane>
 
         <!-- Table Card -->
         <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
@@ -119,8 +130,8 @@
         </VBox>
     </VBox>
 
-    <!-- ═══════════════ RIGHT PANEL (Alert Details) ═══════════════ -->
-    <VBox fx:id="detailPane" styleClass="card,detail-pane" prefWidth="380" minWidth="380" maxWidth="380" spacing="16">
+    <!-- ═══════════════ DETAIL PANEL (Alert Details) ═══════════════ -->
+    <VBox fx:id="detailPane" styleClass="card,detail-pane" minWidth="0" spacing="16">
         <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
 
         <HBox alignment="CENTER_LEFT">
@@ -251,8 +262,6 @@
                 <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
             </Button>
             <Button fx:id="btnDetailCreateTask" text="+ Create Task" styleClass="btn-primary"/>
-        </HBox>
+        </VBox>
 
     </VBox>
-
-</HBox>

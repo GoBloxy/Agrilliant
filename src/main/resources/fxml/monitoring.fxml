@@ -13,17 +13,13 @@
       spacing="14" styleClass="content-pane">
     <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
-    <!-- Filters Bar -->
-    <HBox alignment="CENTER_LEFT" spacing="12">
+    <!-- Filters bar: FlowPane wraps controls onto multiple rows on narrow screens. -->
+    <FlowPane hgap="12" vgap="12">
         <ComboBox fx:id="cmbFields" promptText="All Fields" styleClass="filter-combo"/>
         <ComboBox fx:id="cmbPlots" promptText="All Plots" styleClass="filter-combo"/>
-        
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="date-picker-box">
             <DatePicker fx:id="datePicker" promptText="May 21, 2025"/>
         </HBox>
-        
-        <Region HBox.hgrow="ALWAYS"/>
-        
         <MenuButton fx:id="btnAutoRefresh" text="Auto Refresh" styleClass="btn-secondary">
             <graphic><FontIcon iconLiteral="fth-refresh-cw" iconSize="14"/></graphic>
             <items>
@@ -33,7 +29,7 @@
                 <MenuItem text="Off"/>
             </items>
         </MenuButton>
-    </HBox>
+    </FlowPane>
 
     <!-- Top Section: Summary Cards -->
     <!--

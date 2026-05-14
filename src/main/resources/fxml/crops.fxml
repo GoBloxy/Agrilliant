@@ -22,9 +22,11 @@
             <Button fx:id="btnAddCrop" onAction="#onAddCrop" styleClass="btn-primary" text="+ Add Crop" />
         </HBox>
 
-        <!-- Summary Cards -->
-        <HBox spacing="16">
-            <VBox spacing="6" styleClass="card" HBox.hgrow="ALWAYS">
+        <!--
+          Summary cards: FlowPane wraps to 1 / 2 / 4 columns by width.
+        -->
+        <FlowPane hgap="16" vgap="16">
+            <VBox spacing="6" styleClass="card" minWidth="200">
                 <padding><Insets bottom="16" left="16" right="16" top="16" /></padding>
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <StackPane alignment="CENTER" prefHeight="42" prefWidth="42" style="-fx-background-color:#e8f5e9;-fx-background-radius:10;">
@@ -37,7 +39,7 @@
                     </VBox>
                 </HBox>
             </VBox>
-            <VBox spacing="6" styleClass="card" HBox.hgrow="ALWAYS">
+            <VBox spacing="6" styleClass="card" minWidth="200">
                 <padding><Insets bottom="16" left="16" right="16" top="16" /></padding>
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <StackPane alignment="CENTER" prefHeight="42" prefWidth="42" style="-fx-background-color:#dbeafe;-fx-background-radius:10;">
@@ -50,7 +52,7 @@
                     </VBox>
                 </HBox>
             </VBox>
-            <VBox spacing="6" styleClass="card" HBox.hgrow="ALWAYS">
+            <VBox spacing="6" styleClass="card" minWidth="200">
                 <padding><Insets bottom="16" left="16" right="16" top="16" /></padding>
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <StackPane alignment="CENTER" prefHeight="42" prefWidth="42" style="-fx-background-color:#fef3c7;-fx-background-radius:10;">
@@ -63,7 +65,7 @@
                     </VBox>
                 </HBox>
             </VBox>
-            <VBox spacing="6" styleClass="card" HBox.hgrow="ALWAYS">
+            <VBox spacing="6" styleClass="card" minWidth="200">
                 <padding><Insets bottom="16" left="16" right="16" top="16" /></padding>
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <StackPane alignment="CENTER" prefHeight="42" prefWidth="42" style="-fx-background-color:#fee2e2;-fx-background-radius:10;">
@@ -76,18 +78,18 @@
                     </VBox>
                 </HBox>
             </VBox>
-        </HBox>
+        </FlowPane>
 
-        <!-- Filters -->
-        <HBox alignment="CENTER_LEFT" spacing="12">
-            <HBox alignment="CENTER_LEFT" styleClass="search-box">
+        <!-- Filter row: FlowPane wraps search box + combos onto multiple rows on narrow screens. -->
+        <FlowPane hgap="12" vgap="12">
+            <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="240" HBox.hgrow="NEVER">
                 <padding><Insets left="8" right="8" /></padding>
                 <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon" />
                 <TextField fx:id="txtSearch" promptText="Search crops..." styleClass="search-field" />
             </HBox>
             <ComboBox fx:id="cmbPlot" promptText="All Plots" styleClass="filter-combo" />
             <ComboBox fx:id="cmbStage" promptText="All Stages" styleClass="filter-combo" />
-        </HBox>
+        </FlowPane>
 
         <!-- Table -->
         <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">

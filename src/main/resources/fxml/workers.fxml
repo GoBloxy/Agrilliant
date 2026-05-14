@@ -74,14 +74,15 @@
         </VBox>
     </FlowPane>
 
-    <HBox spacing="12" alignment="CENTER_LEFT">
-        <HBox alignment="CENTER_LEFT" styleClass="search-box">
+    <!-- Filter row: FlowPane wraps search box + combos onto multiple rows on narrow screens. -->
+    <FlowPane hgap="12" vgap="12">
+        <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="240" HBox.hgrow="NEVER">
             <padding><Insets right="8" left="8"/></padding>
             <TextField fx:id="txtSearch" promptText="Search workers..." styleClass="search-field"/>
             <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
         </HBox>
         <ComboBox fx:id="cmbStatus" promptText="All Status" styleClass="filter-combo"/>
-    </HBox>
+    </FlowPane>
 
     <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
