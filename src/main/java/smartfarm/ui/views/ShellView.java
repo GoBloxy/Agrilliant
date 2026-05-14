@@ -262,13 +262,11 @@ public class ShellView extends View {
         brandRow.setAlignment(Pos.CENTER_LEFT);
         FontIcon brandIcon = new FontIcon("fth-feather");
         brandIcon.setIconSize(22);
-        brandIcon.setIconColor(javafx.scene.paint.Color.web("#2e7d32"));
+        brandIcon.getStyleClass().add("drawer-brand-icon");
         StackPane brandBadge = new StackPane(brandIcon);
-        brandBadge.setStyle("-fx-background-color:#e8f5e9;-fx-background-radius:100;"
-                + "-fx-min-width:40;-fx-min-height:40;-fx-pref-width:40;-fx-pref-height:40;");
+        brandBadge.getStyleClass().add("drawer-brand-badge");
         Label brand = new Label("Agrilliant");
-        brand.getStyleClass().add("drawer-header-brand");
-        brand.setStyle("-fx-font-size:18;-fx-font-weight:bold;");
+        brand.getStyleClass().add("drawer-title");
         brandRow.getChildren().addAll(brandBadge, brand);
 
         header.getChildren().add(brandRow);
@@ -279,9 +277,9 @@ public class ShellView extends View {
         if (u != null) {
             VBox userBox = new VBox(0);
             Label nameLbl = new Label(u.getFullName() != null ? u.getFullName() : "Signed in");
-            nameLbl.setStyle("-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#111827;");
+            nameLbl.getStyleClass().add("drawer-user-name");
             Label roleLbl = new Label(u.getRole() != null ? u.getRole().name() : "User");
-            roleLbl.setStyle("-fx-font-size:11;-fx-text-fill:#6b7280;");
+            roleLbl.getStyleClass().add("drawer-subtitle");
             userBox.getChildren().addAll(nameLbl, roleLbl);
             header.getChildren().add(userBox);
         }
@@ -302,7 +300,7 @@ public class ShellView extends View {
 
         VBox statusCard = new VBox(6);
         statusCard.setPadding(new Insets(10));
-        statusCard.setStyle("-fx-background-color:#f3f4f6;-fx-background-radius:8;");
+        statusCard.getStyleClass().add("drawer-status-card");
         statusCard.getChildren().addAll(
                 drawerStatusRow("System Status", drawerDotSystem, drawerSystemStatus),
                 drawerStatusRow("Database", drawerDotDb, drawerDbStatus),
@@ -315,7 +313,7 @@ public class ShellView extends View {
         signOut.setOnAction(ev -> signOut());
 
         Label version = new Label("Version 1.0.0");
-        version.setStyle("-fx-font-size:11;-fx-text-fill:#9ca3af;");
+        version.getStyleClass().add("drawer-subtitle");
         version.setMaxWidth(Double.MAX_VALUE);
         version.setAlignment(Pos.CENTER);
 
@@ -326,8 +324,8 @@ public class ShellView extends View {
     private Node drawerStatusRow(String title, Circle dot, Label value) {
         dot.getStyleClass().setAll("status-dot-offline");
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#374151;");
-        value.setStyle("-fx-font-size:10;-fx-text-fill:#2e7d32;");
+        titleLabel.getStyleClass().add("drawer-status-title");
+        value.getStyleClass().setAll("drawer-status-label", "drawer-status-offline");
         VBox text = new VBox(0, titleLabel, value);
         HBox row = new HBox(8, dot, text);
         row.setAlignment(Pos.CENTER_LEFT);
@@ -357,7 +355,8 @@ public class ShellView extends View {
     private void applyDrawerStatus(Circle dot, Label label, String text, boolean online) {
         dot.getStyleClass().setAll(online ? "status-dot-online" : "status-dot-offline");
         label.setText(text);
-        label.setStyle("-fx-font-size:10;-fx-text-fill:" + (online ? "#2e7d32" : "#dc2626") + ";");
+        label.getStyleClass().setAll("drawer-status-label",
+                online ? "drawer-status-online" : "drawer-status-offline");
     }
 
     private NavigationDrawer.Item drawerItem(String title, String iconLiteral, NavTarget target) {
