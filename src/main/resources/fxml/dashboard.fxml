@@ -9,7 +9,7 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.DashboardController"
-      prefWidth="1440" prefHeight="900" styleClass="dashboard-root">
+      styleClass="dashboard-root">
 
     <!-- ═══════════════ LEFT SIDEBAR ═══════════════ -->
         <VBox fx:id="sidebar" prefWidth="240" minWidth="240" maxWidth="240" spacing="3" styleClass="sidebar">
