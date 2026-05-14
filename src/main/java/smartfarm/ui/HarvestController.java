@@ -1,11 +1,16 @@
 package smartfarm.ui;
 
+import com.gluonhq.charm.glisten.control.CharmListCell;
+import com.gluonhq.charm.glisten.control.CharmListView;
+import com.gluonhq.charm.glisten.control.ListTile;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -29,8 +34,7 @@ public class HarvestController {
     @FXML private Label lblTotalHarvested, lblTotalRevenue, lblTotalCost, lblNetProfit;
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbQuality;
-    @FXML private TableView<HarvestRecord> harvestTable;
-    @FXML private TableColumn<HarvestRecord, String> colCrop, colPlot, colQuantity, colDate, colQuality, colRevenue, colActions;
+    @FXML private CharmListView<HarvestRecord, String> harvestList;
     @FXML private Button btnRecordHarvest;
 
     private final HarvestDAO harvestDAO = new HarvestDAO();
@@ -41,7 +45,7 @@ public class HarvestController {
     @FXML
     public void initialize() {
         loadCropCache();
-        setupTableColumns();
+        setupCellFactory();
         loadRecords();
         setupFilters();
         updateSummaryCards();
@@ -52,72 +56,85 @@ public class HarvestController {
             for (Crop c : cropDAO.getAll()) {
                 cropCache.put(c.getCropId(), c);
             }
-        } catch (SQLException e) {
-            // cache will be empty
+        } catch (SQLException | RuntimeException e) {
+            // cache stays empty if DB unreachable / not configured.
+            // RuntimeException catch covers the H5-pending DAOs whose
+            // getAll() can throw NullPointerException when DBConnection
+            // returns null (no creds). Matches the WorkerController
+            // pattern. TODO(phase-2 hagag-lane): drop RuntimeException
+            // once CropDAO has Hagag's null-guard sweep.
         }
     }
 
-    private void setupTableColumns() {
-        harvestTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colCrop.setResizable(false);
-        colPlot.setResizable(false);
-        colQuantity.setResizable(false);
-        colDate.setResizable(false);
-        colQuality.setResizable(false);
-        colRevenue.setResizable(false);
-        colActions.setResizable(false);
+    /**
+     * Builds each list row as a Gluon {@link ListTile}: a green-tinted
+     * package-icon badge on the left, three text lines (crop + plot,
+     * quantity + date, quality + revenue), and edit/delete icon buttons
+     * on the right.
+     */
+    private void setupCellFactory() {
+        harvestList.setCellFactory(view -> new HarvestListCell());
+    }
 
-        colCrop.setCellValueFactory(data -> {
-            Crop c = cropCache.get(data.getValue().getCropId());
-            return new javafx.beans.property.SimpleStringProperty(
-                    c != null ? c.getCropName() : "Crop #" + data.getValue().getCropId());
-        });
-        colPlot.setCellValueFactory(data -> {
-            Crop c = cropCache.get(data.getValue().getCropId());
-            return new javafx.beans.property.SimpleStringProperty(
-                    c != null ? "Plot " + c.getPlotId() : "--");
-        });
-        colQuantity.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        String.format("%.1f", data.getValue().getQuantityKg())));
-        colDate.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getHarvestDate().toString()));
-        colQuality.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getGrade().name()));
-        colRevenue.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        String.format("$%.2f", data.getValue().getQuantityKg() * PRICE_PER_KG)));
+    private final class HarvestListCell extends CharmListCell<HarvestRecord> {
+        private final ListTile tile = new ListTile();
+        private final Button editBtn = new Button("", new FontIcon("fth-edit-2"));
+        private final Button delBtn  = new Button("", new FontIcon("fth-trash-2"));
+        private final HBox actionBox = new HBox(6, editBtn, delBtn);
 
-        colActions.setCellFactory(col -> new TableCell<HarvestRecord, String>() {
-            private final Button editBtn = new Button("", new FontIcon("fth-edit-2"));
-            private final Button delBtn = new Button("", new FontIcon("fth-trash-2"));
-            private final HBox box = new HBox(6, editBtn, delBtn);
-            {
-                editBtn.getStyleClass().add("icon-btn");
-                delBtn.getStyleClass().add("icon-btn");
-                editBtn.setOnAction(e -> {
-                    HarvestRecord r = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (r != null) onEditRecord(r);
-                });
-                delBtn.setOnAction(e -> {
-                    HarvestRecord r = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (r != null) onDeleteRecord(r);
-                });
+        HarvestListCell() {
+            editBtn.getStyleClass().add("icon-btn");
+            delBtn.getStyleClass().add("icon-btn");
+            actionBox.setAlignment(Pos.CENTER);
+            editBtn.setOnAction(e -> {
+                HarvestRecord r = getItem();
+                if (r != null) onEditRecord(r);
+            });
+            delBtn.setOnAction(e -> {
+                HarvestRecord r = getItem();
+                if (r != null) onDeleteRecord(r);
+            });
+            tile.setSecondaryGraphic(actionBox);
+
+            FontIcon badgeIcon = new FontIcon("fth-package");
+            badgeIcon.setIconSize(20);
+            StackPane badge = new StackPane(badgeIcon);
+            badge.setStyle(
+                    "-fx-background-color:#e8f5e9;-fx-background-radius:10;"
+                    + "-fx-min-width:42;-fx-min-height:42;-fx-pref-width:42;-fx-pref-height:42;");
+            tile.setPrimaryGraphic(badge);
+        }
+
+        @Override
+        public void updateItem(HarvestRecord r, boolean empty) {
+            super.updateItem(r, empty);
+            if (empty || r == null) {
+                setText(null);
+                setGraphic(null);
+                return;
             }
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
-            }
-        });
+            Crop c = cropCache.get(r.getCropId());
+            String cropName = c != null ? c.getCropName() : "Crop #" + r.getCropId();
+            String plotLbl  = c != null ? "Plot " + c.getPlotId() : "--";
+            String qty      = String.format("%.1f kg", r.getQuantityKg());
+            String date     = r.getHarvestDate().toString();
+            String quality  = "Grade " + r.getGrade().name();
+            String revenue  = String.format("$%.2f", r.getQuantityKg() * PRICE_PER_KG);
+
+            tile.setTextLine(0, cropName + "  ·  " + plotLbl);
+            tile.setTextLine(1, qty + "  ·  " + date);
+            tile.setTextLine(2, quality + "  ·  " + revenue);
+
+            setText(null);
+            setGraphic(tile);
+        }
     }
 
     private void loadRecords() {
         try {
             allRecords.setAll(harvestDAO.getAll());
-        } catch (SQLException e) {
+        } catch (SQLException | RuntimeException e) {
+            // Same defensive guard as loadCropCache().
             allRecords.clear();
         }
         applyFilters();
@@ -142,7 +159,7 @@ public class HarvestController {
                 })
                 .filter(r -> "All".equals(quality) || r.getGrade().name().equals(quality))
                 .collect(Collectors.toList());
-        harvestTable.setItems(FXCollections.observableArrayList(filtered));
+        harvestList.setItems(FXCollections.observableArrayList(filtered));
     }
 
     private void updateSummaryCards() {
