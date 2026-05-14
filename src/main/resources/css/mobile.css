@@ -488,3 +488,17 @@
 .list-card .table-view {
     -fx-max-height: 260;
 }
+
+/* ───── Full redesign alert/report/log sizing ────────────────── */
+.summary-card-critical,
+.summary-card-warning,
+.summary-card-resolved,
+.summary-card-active {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+}
+
+.chart-card .chart,
+.list-card .charm-list-view {
+    -fx-max-height: 280;
+}

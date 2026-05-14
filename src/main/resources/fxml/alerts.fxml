@@ -21,9 +21,14 @@
     <!-- ═══════════════ LIST SECTION (Filters, Cards, Table) ═══════════════ -->
     <VBox fx:id="listSection" spacing="14" VBox.vgrow="ALWAYS">
         <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
+        <VBox styleClass="page-header">
+            <Label text="Risk center" styleClass="page-kicker"/>
+            <Label text="Alerts" styleClass="page-title"/>
+            <Label text="Prioritize critical field issues and follow-up actions" styleClass="page-subtitle" wrapText="true"/>
+        </VBox>
 
         <!-- Filters bar: FlowPane wraps controls onto multiple rows on narrow screens. -->
-        <FlowPane hgap="12" vgap="12">
+        <FlowPane hgap="12" vgap="12" styleClass="section-card">
             <ComboBox fx:id="cmbSeverity" promptText="All Severity" styleClass="filter-combo"/>
             <ComboBox fx:id="cmbStatus" promptText="All Status" styleClass="filter-combo"/>
             <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="240" HBox.hgrow="NEVER">
@@ -31,7 +36,7 @@
                 <TextField fx:id="txtSearch" promptText="Search by plot or type..." styleClass="search-field"/>
                 <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
             </HBox>
-            <Button fx:id="btnMarkAllRead" text="Mark All as Read" styleClass="btn-secondary" graphicTextGap="6">
+            <Button fx:id="btnMarkAllRead" text="Mark All as Read" styleClass="btn-secondary,btn-tonal" graphicTextGap="6">
                 <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
             </Button>
         </FlowPane>
@@ -41,7 +46,7 @@
         -->
         <FlowPane hgap="12" vgap="12">
             <!-- Critical -->
-            <VBox styleClass="card,summary-card-critical" minWidth="200" spacing="8">
+            <VBox styleClass="section-card,summary-card,summary-card-critical" minWidth="200" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                 <Label text="Critical Alerts" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
@@ -54,7 +59,7 @@
             </VBox>
 
             <!-- Warnings -->
-            <VBox styleClass="card,summary-card-warning" minWidth="200" spacing="8">
+            <VBox styleClass="section-card,summary-card,summary-card-warning" minWidth="200" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                 <Label text="Warnings" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
@@ -67,7 +72,7 @@
             </VBox>
 
             <!-- Resolved Today -->
-            <VBox styleClass="card,summary-card-resolved" minWidth="200" spacing="8">
+            <VBox styleClass="section-card,summary-card,summary-card-resolved" minWidth="200" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                 <Label text="Resolved Today" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
@@ -80,7 +85,7 @@
             </VBox>
 
             <!-- Active Alerts -->
-            <VBox styleClass="card,summary-card-active" minWidth="200" spacing="8">
+            <VBox styleClass="section-card,summary-card,summary-card-active" minWidth="200" spacing="8">
                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                 <Label text="Active Alerts" styleClass="summary-card-title"/>
                 <HBox alignment="CENTER_LEFT" spacing="12">
@@ -94,7 +99,7 @@
         </FlowPane>
 
         <!-- Table Card -->
-        <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
+        <VBox styleClass="list-card" VBox.vgrow="ALWAYS" spacing="10">
             <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
             <Label text="All Alerts" styleClass="card-title"/>
             
@@ -126,7 +131,7 @@
     </VBox>
 
     <!-- ═══════════════ DETAIL PANEL (Alert Details) ═══════════════ -->
-    <VBox fx:id="detailPane" styleClass="card,detail-pane" minWidth="0" spacing="16">
+    <VBox fx:id="detailPane" styleClass="section-card,detail-pane" minWidth="0" spacing="16">
         <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
 
         <HBox alignment="CENTER_LEFT">
@@ -253,7 +258,7 @@
 
         <!-- Bottom Actions -->
         <HBox spacing="10" alignment="CENTER_RIGHT">
-            <Button fx:id="btnDetailResolve" text="Mark as Resolved" styleClass="btn-secondary" graphicTextGap="6" onAction="#onDetailResolve">
+            <Button fx:id="btnDetailResolve" text="Mark as Resolved" styleClass="btn-secondary,btn-tonal" graphicTextGap="6" onAction="#onDetailResolve">
                 <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
             </Button>
             <Button fx:id="btnDetailCreateTask" text="+ Create Task" styleClass="btn-primary"/>

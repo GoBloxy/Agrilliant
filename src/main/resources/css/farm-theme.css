@@ -1771,3 +1771,43 @@ CharmListView,
 .charm-list-view {
     -fx-background-color: transparent;
 }
+
+/* ═══════════════ FULL REDESIGN ALERTS REPORTS LOGS ═══════════════ */
+.summary-card-critical,
+.alert-severity-critical {
+    -fx-background-color: -ag-error-container;
+    -fx-border-color: rgba(186, 26, 26, 0.18);
+}
+
+.summary-card-warning,
+.alert-severity-warning {
+    -fx-background-color: -ag-warning-container;
+    -fx-border-color: rgba(138, 81, 0, 0.18);
+}
+
+.summary-card-resolved,
+.summary-card-active {
+    -fx-background-color: -ag-primary-container;
+    -fx-border-color: rgba(47, 111, 62, 0.18);
+}
+
+.report-card,
+.logs-card,
+.alert-card {
+    -fx-background-color: -ag-surface;
+    -fx-background-radius: 22;
+    -fx-border-radius: 22;
+    -fx-border-color: -ag-outline-variant;
+    -fx-padding: 16;
+}
+
+.export-actions {
+    -fx-spacing: 8;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.log-row {
+    -fx-background-color: -ag-surface-container-low;
+    -fx-background-radius: 18;
+    -fx-padding: 12;
+}
