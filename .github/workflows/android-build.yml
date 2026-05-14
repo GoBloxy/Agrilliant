@@ -91,16 +91,25 @@ jobs:
             zlib1g-dev
 
       # -----------------------------------------------------------------
-      # 3. GraalVM CE (with native-image)
+      # 3. GraalVM CE (native-image is bundled in CE 21+, no `components`)
       # -----------------------------------------------------------------
       - name: Set up GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: ${{ env.GRAALVM_VERSION }}
           distribution: ${{ env.GRAALVM_DISTRIBUTION }}
-          components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: 'maven'
+
+      - name: Verify GraalVM toolchain
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME"
+          echo "GRAALVM_HOME=$GRAALVM_HOME"
+          # gluonfx-maven-plugin specifically reads GRAALVM_HOME; setup-graalvm
+          # sets it but pin it explicitly in case of action version drift.
+          echo "GRAALVM_HOME=${GRAALVM_HOME:-$JAVA_HOME}" >> $GITHUB_ENV
+          java -version
+          native-image --version
 
       # -----------------------------------------------------------------
       # 4. Android SDK
@@ -186,6 +195,48 @@ jobs:
       # -----------------------------------------------------------------
       - name: GluonFX build (AOT native-image)
         run: mvn -B -Pandroid gluonfx:build
+
+      # -----------------------------------------------------------------
+      # 7b. ON FAILURE: dump every gluonfx log inline (visible in Actions UI)
+      # -----------------------------------------------------------------
+      - name: Dump GluonFX process logs inline (on failure)
+        if: failure()
+        run: |
+          echo "::group::Directory listing of target/gluonfx"
+          find target/gluonfx -maxdepth 4 -type f 2>/dev/null | sort || true
+          echo "::endgroup::"
+
+          echo "::group::Last 200 lines of every *.log under target/gluonfx"
+          find target/gluonfx -name '*.log' 2>/dev/null | while read -r f; do
+            echo "────── $f ──────"
+            tail -n 200 "$f" 2>/dev/null || true
+            echo
+          done
+          echo "::endgroup::"
+
+          echo "::group::Last 100 lines of native-image text output (if any)"
+          find target/gluonfx -name 'native-image*' -type f 2>/dev/null | while read -r f; do
+            echo "────── $f ──────"
+            tail -n 100 "$f" 2>/dev/null || true
+            echo
+          done
+          echo "::endgroup::"
+
+      # -----------------------------------------------------------------
+      # 7c. ON FAILURE: upload the full log set as a debug artifact
+      # -----------------------------------------------------------------
+      - name: Upload GluonFX logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gluonfx-failure-logs
+          path: |
+            target/gluonfx/**/*.log
+            target/gluonfx/**/native-image*
+            target/gluonfx/**/svm_err_*
+            target/gluonfx/**/*.json
+          retention-days: 14
+          if-no-files-found: warn
 
       # -----------------------------------------------------------------
       # 8. Package APK
