@@ -1,19 +1,20 @@
 package smartfarm.ui;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
 import smartfarm.dao.WorkerDAO;
 import smartfarm.model.User;
 import smartfarm.model.Worker;
 import smartfarm.service.AuthService;
 import smartfarm.service.FingerprintService;
 import smartfarm.service.SessionManager;
+import smartfarm.ui.nav.AppView;
+import smartfarm.ui.nav.NavContext;
+import smartfarm.util.Logger;
 
 public class SignInController {
+
+    private static final String TAG = "SignInController";
 
     @FXML private TextField txtEmail;
     @FXML private PasswordField txtPassword;
@@ -115,7 +116,7 @@ public class SignInController {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error looking up worker by fingerprint: " + e.getMessage());
+            Logger.e(TAG, "Error looking up worker by fingerprint", e);
         }
         return null;
     }
@@ -131,29 +132,12 @@ public class SignInController {
 
     @FXML
     private void onGoToSignUp() {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/signup.fxml"));
-            Stage stage = (Stage) btnSignIn.getScene().getWindow();
-            stage.getScene().setRoot(root);
-        } catch (Exception e) {
-            showError("Navigation error: " + e.getMessage());
-        }
+        AppView.SIGNUP.switchTo();
     }
 
     private void navigateToDashboard(User user) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
-            Parent root = loader.load();
-            DashboardController controller = loader.getController();
-            controller.setCurrentUser(user);
-            Stage stage = (Stage) btnSignIn.getScene().getWindow();
-            Scene scene = stage.getScene();
-            scene.setRoot(root);
-            stage.setTitle("Agrilliant — Smart Farm Management System");
-            stage.setMaximized(true);
-        } catch (Exception e) {
-            showError("Failed to load dashboard: " + e.getMessage());
-        }
+        NavContext.get().setCurrentUser(user);
+        AppView.SHELL.switchTo();
     }
 
     private void showError(String msg) {
