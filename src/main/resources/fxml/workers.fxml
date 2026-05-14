@@ -4,9 +4,10 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import com.gluonhq.charm.glisten.control.CharmListView?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.WorkerController"
-      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+      spacing="14" styleClass="content-pane">
     <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
     <HBox alignment="CENTER_LEFT" spacing="12">
@@ -78,17 +79,6 @@
     <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
         <Label text="All Workers" styleClass="card-title"/>
-        <TableView fx:id="workerTable" VBox.vgrow="ALWAYS" prefHeight="400">
-            <columns>
-                <TableColumn fx:id="colName"     text="Name"       prefWidth="160"/>
-                <TableColumn fx:id="colPhone"    text="Phone"      prefWidth="130"/>
-                <TableColumn fx:id="colJobTitle" text="Job Title"  prefWidth="120"/>
-                <TableColumn fx:id="colSkills"       text="Skills"        prefWidth="150"/>
-                <TableColumn fx:id="colStatus"      text="Status"        prefWidth="90"/>
-                <TableColumn fx:id="colWorkload"    text="Workload"      prefWidth="90"/>
-                <TableColumn fx:id="colFingerprint" text="Fingerprint"   prefWidth="100"/>
-                <TableColumn fx:id="colActions"     text="Actions"       prefWidth="100"/>
-            </columns>
-        </TableView>
+        <CharmListView fx:id="workerList" VBox.vgrow="ALWAYS"/>
     </VBox>
 </VBox>
