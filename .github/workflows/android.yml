@@ -57,8 +57,16 @@ jobs:
       # GraalVM built by Gluon — guarantees the native-image / Substrate
       # version GluonFX expects. After this step JAVA_HOME and GRAALVM_HOME
       # both point at the installed GraalVM.
+      # Pin to 22.1.0.1-Final / java17 — the stable combination that
+      # GluonFX 1.0.28 expects.  The default (java23) removes the
+      # ForceNoROSectionRelocations native-image option that Substrate
+      # still passes, causing "Could not find option" build failures.
+      # See: https://github.com/gluonhq/hello-gluon-ci/blob/master/.github/workflows/linux.yml
       - name: Set up GraalVM (Gluon distribution)
         uses: gluonhq/setup-graalvm@master
+        with:
+          graalvm: '22.1.0.1-Final'
+          jdk: 'java17'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

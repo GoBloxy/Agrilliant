@@ -224,15 +224,11 @@
                         <list>statusbar</list>
                         <list>storage</list>
                     </attachList>
-                    <!-- Substrate 0.0.68 passes several native-image options
-                         (ForceNoROSectionRelocations, UseCAPCache, SpawnIsolates, …)
-                         that newer GraalVM builds have moved behind the
-                         experimental flag.  Unlock them so native-image
-                         accepts them instead of failing with
-                         "Could not find option … from 'user'". -->
-                    <nativeImageArgs>
-                        <arg>-H:+UnlockExperimentalVMOptions</arg>
-                    </nativeImageArgs>
+                    <!-- NOTE: GraalVM version must be pinned to 22.1.0.1-Final
+                         (java17) in CI.  Newer builds (java23) remove the
+                         ForceNoROSectionRelocations option that Substrate
+                         still passes, causing "Could not find option" errors.
+                         See .github/workflows/android.yml and android-build.yml. -->
                 </configuration>
             </plugin>
         </plugins>
