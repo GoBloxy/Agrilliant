@@ -18,7 +18,7 @@
             <!-- Logo + App Title -->
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <ImageView fitWidth="36" fitHeight="36" preserveRatio="true" smooth="true">
-                    <image><Image url="@../images/logo.png"/></image>
+                    <image><Image url="@../images/nobackgroundlogo.png"/></image>
                 </ImageView>
                 <VBox spacing="0">
                     <Label text="Agrilliant" styleClass="sidebar-title"/>
