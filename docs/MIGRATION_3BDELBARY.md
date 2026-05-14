@@ -324,8 +324,76 @@ f26a33f [3bdelbary] B3.13 harvest.fxml: TableView -> CharmListView + drop 1200x9
 
 ---
 
+## B3X: UX rework after the first B3 review — DONE ✅
+
+The first round of B3 (commits `9a53bc6..0932ebf`) did the spec-required mechanical changes — drop hardcoded sizes, swap `TableView`→`CharmListView` on list-shaped views, etc. — but a UX review afterwards found four screens that were still desktop-only despite "passing" B3:
+
+| Screen | What was still broken on a 360dp phone | Fix |
+|---|---|---|
+| `signin.fxml` / `signup.fxml` | Two-column HBox forced the form column to ~180dp wide; fields and buttons unreadable | Stack vertically: compact branding header on top, form column (capped at 480dp) full-width below |
+| Inner pages (`workers`, `tasks`, `harvest`, `logs`, `plots`, `monitoring`, `alerts`, `crops`) — summary card rows | 4-5 cards in an `HBox` with `hgrow=ALWAYS` → each ~80dp wide on phone, labels truncated, 24px values overflowed | Replace `HBox` with `FlowPane hgap=N vgap=N`; add `minWidth=200` to each card. Wraps to 1×N on phone, 2× on tablet, N×1 on desktop |
+| Filter rows on the same 8 inner pages | Search box + 1–3 ComboBoxes side-by-side overflowed horizontally on phone | Replace `HBox` with `FlowPane`; search-box gets `minWidth=240` so it claims its own row |
+| `dashboard.fxml` | Fixed 240dp sidebar took 67% of a 360dp screen, content area unusable | Replace with Gluon `NavigationDrawer` + `AppBar` (slide-in hamburger pattern). Sidebar + topbar in dashboard.fxml hidden via `visible="false" managed="false"` so DashboardController's existing logic still runs unchanged |
+| `alerts.fxml` root | `<HBox>` with a fixed-width 380dp `detailPane` ate the screen on phone | Restructure root to `<VBox>`: list section on top, detail panel below. Detail panel `minWidth=0` so it can shrink. Drop the 380dp lock |
+
+### B3X.5–B3X.7 — NavigationDrawer details
+
+Rather than gut `DashboardController` (~900 lines, wires up datetime / weather / status-dots / user-pill / chart / hyperlinks / DAO loaders), the sidebar VBox + topbar HBox stay in `dashboard.fxml` but are hidden:
+
+```xml
+<VBox fx:id="sidebar" ... visible="false" managed="false">
+```
+
+`@FXML` injection still works (the elements exist), so all of `DashboardController`'s sidebar/topbar update methods (`updateDateTime`, `setupUserMenu`, `updateSidebarStatus`, etc.) keep running on hidden nodes. Re-enabling the sidebar via a future `mobile.css` width-based toggle is a one-attribute change.
+
+The dispatch path is unified through one new public API on `DashboardController`:
+
+```java
+public enum NavTarget {
+    DASHBOARD, MONITORING, DISEASE, ALERTS, CROPS, PLOTS,
+    WORKERS, ATTENDANCE, TASKS, HARVESTS, REPORTS, SETTINGS, USERS, LOGS
+}
+public void navigate(NavTarget target) { ... }
+```
+
+The legacy `onNavXxx()` handlers (still wired to the hidden sidebar buttons) all delegate to `navigate(...)`. The new `ShellView` populates the Gluon NavigationDrawer with 14 items, each calling `controller.navigate(target)` then closing the drawer.
+
+`ShellView`'s lifecycle now also configures `AppManager.getInstance().getAppBar()`:
+- title: `"Agrilliant"`
+- navIcon: `MaterialDesignIcon.MENU.button(...)` that calls `drawer.open()`
+- actionItems: user name label + sign-out icon
+
+On hide, ShellView clears the AppBar (so SignIn / SignUp don't see leftover chrome).
+
+### Commits
+```
+0cea801 [3bdelbary] B3X.1+B3X.2 signin/signup: vertical stack for mobile
+724707b [3bdelbary] B3X.3 summary card rows -> FlowPane (responsive 1/2/4-column wrap)
+d3164b2 [3bdelbary] B3X.4 filter rows -> FlowPane + alerts root restructure
+50b9767 [3bdelbary] B3X.5-7 Gluon NavigationDrawer + AppBar replace dashboard sidebar
+```
+
+### Verification (B3X done state)
+| Gate | Result |
+|------|--------|
+| `mvn -Pdesktop clean compile` | BUILD SUCCESS |
+| `mvn -Pandroid clean compile` | BUILD SUCCESS |
+| FXML load smoke (12 files, no DB) | **8/12 PASS** — same set as post-B3 (signin, signup, plots, workers, tasks, alerts, harvest, logs). 4 fail with the H5-pending DB NPE in dashboard / crops / monitoring / reports — Hagag's lane to fix. **No new B3X regressions.** |
+| Boot smoke (`-Pdesktop`) | Splash → SignIn end-to-end, FarmServer thread starts on port 8080, lifecycle traces cleanly |
+| Boot smoke (`-Pandroid`) | Splash → SignIn end-to-end, FarmServer reflectively skipped (correct for Android profile) |
+| Lane diff (B3X only, `f4cc67d..HEAD`) | 13 files: 11 in `src/main/resources/fxml/`, 2 in `src/main/java/smartfarm/ui/`. Zero touches to `dao/`, `service/`, `server/`, `util/`, `pom.xml`. |
+
+### Phase 2 follow-ups left as TODOs
+- `mobile.css` (B5) should add a width-based rule that re-enables the dashboard sidebar on `width >= 800dp`. The hidden FXML structure is preserved so the change is one-line per element.
+- AlertController master-detail: push the detailPane as a stacked `View` onto AppManager when a row is tapped, so phone users get a full-width detail screen instead of a stacked section under the list.
+- Long-press / tap-handler on the AppBar user-name label → profile / sign-out menu (B9 lifecycle sweep).
+- Surface the system status (DB / sensors / online dots) in the NavigationDrawer footer instead of the current "Version 1.0.0" only.
+
+---
+
 ## Status of B4–B10
 - [x] **B3** — done. See section above.
+- [x] **B3X** — UX rework done. See section above.
 - [ ] **B4** — Sweep controllers: replace `FileChooser` (CSV export in Dashboard/Logs/Reports/Crop) with `CSVExporter.saveCsv(...)`. Replace `FileChooser.showOpenDialog` (DiseaseDetectionPage) with `PlatformPickers.pickImage()` (delivered in B8).
 - [ ] **B5** — Add `css/mobile.css`. Keep AtlantaFX PrimerLight as base.
 - [ ] **B6** — Drop any remaining JFreeChart use (already absent from `src/main/java`; double-check leftover imports in dashboard/monitoring).
