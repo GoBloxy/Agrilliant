@@ -8,6 +8,7 @@ target/
 .maven-bundled/
 gluonfx/
 gvm/
+.worktrees/
 
 # === IDE files ===
 .idea/
