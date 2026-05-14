@@ -36,9 +36,13 @@
     </HBox>
 
     <!-- Top Section: Summary Cards -->
-    <HBox spacing="14">
+    <!--
+      Sensor summary cards: FlowPane wraps to 1/2/3/5 columns by width.
+      Card minWidth=200 forces a wrap when (200*N + hgap*(N-1)) > available.
+    -->
+    <FlowPane hgap="14" vgap="14" prefWrapLength="200">
         <!-- Temperature -->
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+        <VBox styleClass="card" minWidth="200" spacing="10">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox alignment="CENTER_LEFT" spacing="14">
                 <FontIcon iconLiteral="fth-thermometer" iconSize="32" styleClass="icon-critical"/>
@@ -54,7 +58,7 @@
         </VBox>
 
         <!-- Humidity -->
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+        <VBox styleClass="card" minWidth="200" spacing="10">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox alignment="CENTER_LEFT" spacing="14">
                 <FontIcon iconLiteral="fth-droplet" iconSize="32" styleClass="icon-info"/>
@@ -70,7 +74,7 @@
         </VBox>
 
         <!-- Soil Moisture -->
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+        <VBox styleClass="card" minWidth="200" spacing="10">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox alignment="CENTER_LEFT" spacing="14">
                 <FontIcon iconLiteral="fth-droplet" iconSize="32" styleClass="icon-warning"/>
@@ -86,7 +90,7 @@
         </VBox>
 
         <!-- Light Intensity -->
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+        <VBox styleClass="card" minWidth="200" spacing="10">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox alignment="CENTER_LEFT" spacing="14">
                 <FontIcon iconLiteral="fth-sun" iconSize="32" styleClass="icon-warning"/>
@@ -102,7 +106,7 @@
         </VBox>
 
         <!-- Wind Speed -->
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+        <VBox styleClass="card" minWidth="200" spacing="10">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox alignment="CENTER_LEFT" spacing="14">
                 <FontIcon iconLiteral="fth-wind" iconSize="32" styleClass="icon-info"/>
@@ -116,7 +120,7 @@
                 </VBox>
             </HBox>
         </VBox>
-    </HBox>
+    </FlowPane>
 
     <!-- Middle Section: Trend Chart & Sensor Map -->
     <HBox spacing="14">

@@ -11,9 +11,25 @@
       spacing="14" styleClass="content-pane">
     <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
-    <!-- Summary Cards -->
-    <HBox spacing="14" alignment="CENTER_LEFT">
-        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+    <!-- Page title row with primary actions, matches the other inner pages. -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Plots" styleClass="page-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="+ Add New Plot" styleClass="btn-primary" style="-fx-padding: 10 18;"/>
+        <Button text="Export" styleClass="btn-secondary" style="-fx-padding: 10 18;">
+            <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
+        </Button>
+    </HBox>
+
+    <!--
+      Summary cards: FlowPane wraps to 1 / 2 / 4 columns depending on width.
+      Card minWidth=200 forces a wrap when (200*N + hgap*(N-1)) > available.
+        Phone (≤460dp):  1 column × 4
+        Tablet (~860dp): 2 columns × 2
+        Desktop ≥860dp:  4 columns × 1
+    -->
+    <FlowPane hgap="14" vgap="14" prefWrapLength="200">
+        <VBox styleClass="card" minWidth="200">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color: #e8f5e9; -fx-background-radius: 100;" prefWidth="44" prefHeight="44" minWidth="44">
@@ -26,7 +42,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+        <VBox styleClass="card" minWidth="200">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color: #e8f5e9; -fx-background-radius: 100;" prefWidth="44" prefHeight="44" minWidth="44">
@@ -39,7 +55,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+        <VBox styleClass="card" minWidth="200">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color: #fef3c7; -fx-background-radius: 100;" prefWidth="44" prefHeight="44" minWidth="44">
@@ -52,7 +68,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+        <VBox styleClass="card" minWidth="200">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color: #f3e8ff; -fx-background-radius: 100;" prefWidth="44" prefHeight="44" minWidth="44">
@@ -65,14 +81,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <Region HBox.hgrow="ALWAYS"/>
-        <HBox spacing="10" alignment="CENTER_RIGHT">
-            <Button text="+ Add New Plot" styleClass="btn-primary" style="-fx-padding: 10 18;"/>
-            <Button text="Export" styleClass="btn-secondary" style="-fx-padding: 10 18;">
-                <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
-            </Button>
-        </HBox>
-    </HBox>
+    </FlowPane>
 
     <!-- Filters Row -->
     <HBox spacing="14" alignment="CENTER_LEFT">

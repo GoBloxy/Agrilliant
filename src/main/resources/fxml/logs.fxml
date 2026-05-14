@@ -19,8 +19,15 @@
         <Button fx:id="btnClear" text="Clear Logs" styleClass="btn-danger" onAction="#onClear"/>
     </HBox>
 
-    <HBox spacing="16">
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+    <!--
+      Summary cards: FlowPane wraps to 1 / 2 / 4 columns depending on width.
+      Card minWidth=200 forces a wrap when (200*N + hgap*(N-1)) > available.
+        Phone (≤460dp):  1 column × 4
+        Tablet (~860dp): 2 columns × 2
+        Desktop ≥860dp:  4 columns × 1
+    -->
+    <FlowPane hgap="16" vgap="16" prefWrapLength="200">
+        <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
@@ -33,7 +40,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+        <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#dbeafe;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
@@ -46,7 +53,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+        <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
@@ -59,7 +66,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+        <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#fee2e2;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
@@ -72,7 +79,7 @@
                 </VBox>
             </HBox>
         </VBox>
-    </HBox>
+    </FlowPane>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
         <HBox alignment="CENTER_LEFT" styleClass="search-box">
