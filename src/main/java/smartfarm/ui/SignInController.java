@@ -20,7 +20,10 @@ public class SignInController {
     @FXML private PasswordField txtPassword;
     @FXML private Label lblError;
     @FXML private Button btnSignIn;
+    @FXML private Button btnTabSignIn;
+    @FXML private Button btnTabSignUp;
     @FXML private Button btnFingerprint;
+    @FXML private CheckBox chkRemember;
     @FXML private Label lblFpStatus;
 
     private final AuthService authService = new AuthService();
@@ -30,9 +33,13 @@ public class SignInController {
     @FXML
     public void initialize() {
         lblError.setVisible(false);
+        lblError.setManaged(false);
         txtEmail.setOnAction(e -> txtPassword.requestFocus());
         txtPassword.setOnAction(e -> onSignIn());
     }
+
+    @FXML
+    private void onTabSignIn() {}
 
     @FXML
     private void onSignIn() {
@@ -46,7 +53,9 @@ public class SignInController {
 
         try {
             User user = authService.signIn(email, password);
-            SessionManager.saveSession(email);
+            if (chkRemember != null && chkRemember.isSelected()) {
+                SessionManager.saveSession(email);
+            }
             SystemLogManager.getInstance().info("AuthService",
                     user.getFullName() + " logged in successfully", user.getFullName());
             navigateToDashboard(user);
@@ -59,9 +68,13 @@ public class SignInController {
 
     @FXML
     private void onFingerprintLogin() {
-        lblFpStatus.setVisible(true);
-        lblFpStatus.setText("Connecting to sensor...");
+        if (lblFpStatus != null) {
+            lblFpStatus.setVisible(true);
+            lblFpStatus.setManaged(true);
+            lblFpStatus.setText("Connecting to sensor...");
+        }
         lblError.setVisible(false);
+        lblError.setManaged(false);
         btnFingerprint.setDisable(true);
 
         new Thread(() -> {
@@ -80,14 +93,12 @@ public class SignInController {
                     return;
                 }
 
-                // Look up worker by fingerprint ID
                 Worker worker = findWorkerByFingerprint(fpId);
                 if (worker == null) {
                     updateFpStatus("No worker registered with this fingerprint (ID: " + fpId + ")");
                     return;
                 }
 
-                // Build User object with WORKER role and navigate
                 User user = new User(worker.getWorkerId(), worker.getFullName(),
                         worker.getEmail() != null ? worker.getEmail() : "",
                         worker.getFullName(), User.Role.WORKER);
@@ -95,7 +106,7 @@ public class SignInController {
                 SystemLogManager.getInstance().info("AuthService",
                         worker.getFullName() + " logged in via fingerprint", worker.getFullName());
                 javafx.application.Platform.runLater(() -> {
-                    lblFpStatus.setVisible(false);
+                    if (lblFpStatus != null) { lblFpStatus.setVisible(false); lblFpStatus.setManaged(false); }
                     navigateToDashboard(user);
                 });
 
@@ -109,8 +120,11 @@ public class SignInController {
 
     private void updateFpStatus(String msg) {
         javafx.application.Platform.runLater(() -> {
-            lblFpStatus.setText(msg);
-            lblFpStatus.setVisible(true);
+            if (lblFpStatus != null) {
+                lblFpStatus.setText(msg);
+                lblFpStatus.setVisible(true);
+                lblFpStatus.setManaged(true);
+            }
         });
     }
 
@@ -166,5 +180,6 @@ public class SignInController {
     private void showError(String msg) {
         lblError.setText(msg);
         lblError.setVisible(true);
+        lblError.setManaged(true);
     }
 }

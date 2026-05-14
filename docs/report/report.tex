@@ -1,0 +1,885 @@
+\documentclass[12pt, a4paper]{report}
+
+% ─── Packages ───────────────────────────────────────────────────────────────
+\usepackage[margin=2.5cm, headheight=25pt, top=2.8cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{titling}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{mdframed}
+\usepackage{hyperref}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{parskip}
+\usepackage[expansion=false]{microtype}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{float}
+
+\tcbuselibrary{skins, breakable, listings}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds}
+
+% ─── Colors ─────────────────────────────────────────────────────────────────
+\definecolor{farmgreen}{RGB}{34, 120, 60}
+\definecolor{soilbrown}{RGB}{101, 67, 33}
+\definecolor{skyblue}{RGB}{30, 100, 180}
+\definecolor{alertred}{RGB}{180, 30, 30}
+
+% Code Block Specific Colors (Matching the provided light theme)
+\definecolor{codebg}{RGB}{244, 244, 240}      % Light beige background
+\definecolor{codepink}{RGB}{233, 30, 99}      % Pink for keywords (const, new, null, false)
+\definecolor{codepurple}{RGB}{156, 39, 176}   % Purple for strings
+\definecolor{codegray}{RGB}{150, 150, 150}    % Gray for line numbers and comments
+\definecolor{codetext}{RGB}{0, 0, 0}          % Black for standard code text
+
+% ─── Hyperref Setup ──────────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=farmgreen,
+    urlcolor=skyblue,
+    citecolor=farmgreen,
+    pdfauthor={OOP II Project Team},
+    pdftitle={Smart Farm Management System — Project Report},
+    pdfsubject={College Project Documentation}
+}
+
+% ─── Header & Footer ─────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{farmgreen}{\textbf{Smart Farm Management System}}}
+\fancyhead[R]{\textcolor{gray}{\small OOP II Project Report}}
+\fancyfoot[C]{\textcolor{gray}{\thepage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{farmgreen}\leaders\hrule height \headrulewidth\hfill}}
+
+% ─── Section Title Styling ───────────────────────────────────────────────────
+\titleformat{\chapter}[block]
+  {\normalfont\LARGE\bfseries\color{farmgreen}}
+  {\thechapter.}{12pt}{}
+  [\vspace{2pt}{\color{farmgreen}\titlerule[1.5pt]}]
+
+\titlespacing*{\chapter}{0pt}{-25pt}{20pt}
+
+\titleformat{\section}
+  {\normalfont\large\bfseries\color{soilbrown}}
+  {\thesection}{10pt}{}
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries\color{skyblue}}
+  {\thesubsection}{8pt}{}
+
+% ─── Code Listing Style ──────────────────────────────────────────────────────
+\lstdefinestyle{javaStyle}{
+    basicstyle=\color{codetext}\ttfamily\footnotesize,
+    identifierstyle=\color{codetext},
+    keywordstyle=\color{codepink},
+    stringstyle=\color{codepurple},
+    commentstyle=\color{codegray}\itshape,
+    numberstyle=\tiny\color{codegray},
+    numbers=left,
+    numbersep=12pt,
+    breaklines=true,
+    frame=none,
+    xleftmargin=24pt,
+    xrightmargin=6pt,
+    showstringspaces=false,
+    tabsize=4,
+    language=Java,
+    morekeywords={String, Thread, Socket, ServerSocket, Runnable, var, record, SensorHandler, IOException, SQLException, PreparedStatement, ResultSet, Connection, List, ArrayList, LocalDateTime, LocalDate, Date, HashMap, Map, Alert, Crop, Task, Worker, SensorReading, HarvestRecord, Platform, DashboardController, FXCollections, SimpleStringProperty, true, false, null, Stage, Scene, VBox, HBox, Label, Button, GridPane, TextField, Spinner, ComboBox, ToggleButton, Insets, Font, FontWeight, Image, FXMLLoader, Parent, Application, DriverManager, Properties, InputStream, ExecutorService, Executors, BufferedReader, InputStreamReader, GenericDAO},
+}
+
+\lstdefinestyle{cppStyle}{
+    basicstyle=\color{codetext}\ttfamily\footnotesize,
+    identifierstyle=\color{codetext},
+    keywordstyle=\color{codepink},
+    stringstyle=\color{codepurple},
+    commentstyle=\color{codegray}\itshape,
+    numberstyle=\tiny\color{codegray},
+    numbers=left,
+    numbersep=12pt,
+    breaklines=true,
+    frame=none,
+    xleftmargin=24pt,
+    xrightmargin=6pt,
+    showstringspaces=false,
+    tabsize=4,
+    language=C++,
+    morekeywords={WiFiClient, DHT, String, Serial, true, false, null}
+}
+
+\lstdefinestyle{sqlStyle}{
+    basicstyle=\color{codetext}\ttfamily\footnotesize,
+    identifierstyle=\color{codetext},
+    keywordstyle=\color{codepink},
+    stringstyle=\color{codepurple},
+    commentstyle=\color{codegray}\itshape,
+    numberstyle=\tiny\color{codegray},
+    numbers=left,
+    numbersep=12pt,
+    breaklines=true,
+    frame=none,
+    xleftmargin=24pt,
+    xrightmargin=6pt,
+    showstringspaces=false,
+    tabsize=4,
+    language=SQL,
+}
+
+% ─── Custom Boxes ─────────────────────────────────────────────────────────────
+\tcbset{
+  notebox/.style={
+    enhanced, breakable,
+    colback=farmgreen!8,
+    colframe=farmgreen,
+    fonttitle=\bfseries,
+    coltitle=white,
+    attach boxed title to top left={yshift=-2mm, xshift=6mm},
+    boxed title style={colback=farmgreen, rounded corners}
+  },
+  warnbox/.style={
+    enhanced,
+    colback=alertred!8,
+    colframe=alertred,
+    fonttitle=\bfseries,
+    coltitle=white,
+    attach boxed title to top left={yshift=-2mm, xshift=6mm},
+    boxed title style={colback=alertred, rounded corners}
+  },
+  infobox/.style={
+    enhanced, breakable,
+    colback=skyblue!8,
+    colframe=skyblue,
+    fonttitle=\bfseries,
+    coltitle=white,
+    attach boxed title to top left={yshift=-2mm, xshift=6mm},
+    boxed title style={colback=skyblue, rounded corners}
+  }
+}
+
+% Custom tcblisting for exact match to the light-themed code blocks
+\newtcblisting[auto counter, number within=chapter]{codeblock}[2]{
+    listing only,
+    breakable,
+    pad at break=2mm,
+    bottomsep at break=5pt,
+    topsep at break=5pt,
+    colback=codebg,
+    colframe=codebg,
+    coltext=codetext,
+    boxrule=0pt,
+    arc=0pt,
+    outer arc=0pt,
+    top=8pt,
+    bottom=8pt,
+    left=0pt,
+    right=8pt,
+    listing options={style=#1},
+    after={\par\vspace{4pt}\begin{center}Listing \thetcbcounter: #2\end{center}\vspace{16pt}}
+}
+
+% ─── Document ─────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ══════════════════════════════════════════════════════════════════════════════
+%  TITLE PAGE
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{titlepage}
+\begin{tikzpicture}[remember picture, overlay]
+    \fill[farmgreen] (current page.north west) rectangle ([yshift=-14cm]current page.north east);
+    \fill[soilbrown] (current page.south west) rectangle ([yshift=1.8cm]current page.south east);
+    \fill[farmgreen!30, opacity=0.4] ([xshift=12cm, yshift=-4cm]current page.north west) circle (5cm);
+\end{tikzpicture}
+
+\vspace*{1.5cm}
+\begin{center}
+    {\color{white}\fontsize{28}{34}\selectfont\bfseries Smart Farm}\\[4pt]
+    {\color{white}\fontsize{22}{28}\selectfont\bfseries Management System}\\[10pt]
+    {\color{white!80}\large Project Report}
+
+    \vspace{3.5cm}
+
+    {\color{white}\rule{10cm}{1pt}}\\[18pt]
+    {\large\bfseries\color{white} OOP II Module --- Project Report}\\[10pt]
+    {\color{white!90} Errors \& Debugging $\cdot$ UML Diagrams $\cdot$ Code Snippets}\\[30pt]
+    {\color{white}\rule{10cm}{1pt}}
+
+    \vfill
+
+    \begin{tabular}{rl}
+        \textbf{Module:}   & Object-Oriented Programming II \\[4pt]
+        \textbf{Hardware:} & ESP32 + DHT11 Sensor + FC-28 + R307 \\[4pt]
+        \textbf{Stack:}    & Java, MySQL, JavaFX, Arduino C++ \\[4pt]
+        \textbf{Year:}     & 2025 / 2026 \\[12pt]
+    \end{tabular}
+
+    \vspace{8pt}
+    {\small
+    \begin{tabular}{ll}
+        Mostafa Mahmoud Aborehab        & 241008538 \\
+        Jouiria Mohammed Hassan         & 241008818 \\
+        Ahmed Hagag Abdelhamed          & 241002485 \\
+        Mohamed Ahmed Mahmoud Abdelbary & 241009209 \\
+        Mariam Yasser Dahab             & 241008888 \\
+    \end{tabular}}
+\end{center}
+\end{titlepage}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\tableofcontents
+\newpage
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Project Information}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\section{Group Members}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{Name} & \textbf{ID} & \textbf{Role} \\
+\midrule
+Mostafa Mahmoud Aborehab        & 241008538 & Team Lead, Backend \& IoT \\
+Jouiria Mohammed Hassan         & 241008818 & Frontend \& UI \\
+Ahmed Hagag Abdelhamed          & 241002485 & Android \& Integration \\
+Mohamed Ahmed Mahmoud Abdelbary & 241009209 & Backend \& Database \\
+Mariam Yasser Dahab             & 241008888 & UI/UX \& Testing \\
+\bottomrule
+\end{tabularx}
+\caption{Group members and IDs}
+\end{table}
+
+\section{Selected Business Domain}
+
+\textbf{Agriculture / Smart Farming.} The system manages a real farm operation --- monitoring field conditions with IoT sensors, tracking crops and plots, assigning workers to tasks, logging harvests, and generating reports. The domain was chosen because it naturally requires every OOP~II concept: multithreading (concurrent sensor data), networking (TCP sockets), database (JDBC/MySQL), GUI (JavaFX), and file I/O (CSV export).
+
+\section{Steps to Run the Project}
+
+\begin{enumerate}[leftmargin=*, label=\textbf{\arabic*.}]
+    \item \textbf{Prerequisites:} Install Java~17+, Maven, and MySQL~8.
+    \item \textbf{Clone the repository:}
+\begin{tcolorbox}[colback=codebg, colframe=codebg, boxrule=0pt, arc=0pt, left=8pt, right=8pt, top=4pt, bottom=4pt]
+\texttt{git clone https://github.com/GoBloxy/Agrilliant.git}
+\end{tcolorbox}
+    \item \textbf{Configure the database} (see Section~\ref{sec:dbsetup} below).
+    \item \textbf{Build and run:}
+\begin{tcolorbox}[colback=codebg, colframe=codebg, boxrule=0pt, arc=0pt, left=8pt, right=8pt, top=4pt, bottom=4pt]
+\texttt{cd Agrilliant}\\
+\texttt{mvn clean javafx:run}
+\end{tcolorbox}
+    \item The application opens the sign-in screen. Log in with your credentials or use fingerprint scan for worker access.
+    \item The TCP sensor server starts automatically on port \textbf{8080} (see Section~\ref{sec:socket}).
+\end{enumerate}
+
+\section{Database Setup}\label{sec:dbsetup}
+
+The project uses a \textbf{MySQL~8} database. Connection details are stored in \texttt{src/main/resources/db.properties}:
+
+\begin{tcolorbox}[colback=codebg, colframe=codebg, boxrule=0pt, arc=0pt, left=8pt, right=8pt, top=6pt, bottom=6pt]
+\ttfamily\small
+db.url=jdbc:mysql://\textit{<host>}:3306/agrilliant\\
+db.user=\textit{<username>}\\
+db.password=\textit{<password>}
+\end{tcolorbox}
+
+\textbf{Setup steps:}
+\begin{enumerate}[noitemsep]
+    \item Create a MySQL database named \texttt{agrilliant}.
+    \item The application uses a cloud-hosted MySQL instance by default. To use a local database, update \texttt{db.properties} with your local MySQL credentials.
+    \item Tables are created automatically by the application on first run, or you can run the schema script from the project documentation.
+\end{enumerate}
+
+\section{Socket Port Number}\label{sec:socket}
+
+The TCP sensor server listens on port \textbf{8080}. ESP32 devices connect to this port to send live sensor data.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{Service} & \textbf{Port} & \textbf{Description} \\
+\midrule
+TCP Sensor Server & 8080 & Receives live data from ESP32 devices \\
+MQTT Broker       & 1883 & Distributes sensor data to all clients (HiveMQ public broker) \\
+MySQL Database    & 3306 & Persistent storage for all farm data \\
+\bottomrule
+\end{tabularx}
+\caption{Network ports used by the system}
+\end{table}
+
+\begin{tcolorbox}[warnbox, title={Important}]
+Port 8080 must be available on the machine running the server. If another application is using this port, the TCP server will print a warning but the application will still function --- MQTT will deliver sensor data independently.
+\end{tcolorbox}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Errors \& Debugging}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% TODO: For EACH error include:
+%   - Error description
+%   - Screenshot of the error
+%   - Cause of the error
+%   - Solution
+%   - Related code snippet
+
+\textit{This section will document errors encountered during development, their root causes, and how they were resolved.}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{UML Diagrams}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% TODO: Class Diagram (REQUIRED)
+
+\textit{This section will contain the UML class diagram for the system.}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Code Snippets}
+% ══════════════════════════════════════════════════════════════════════════════
+
+This chapter presents representative code snippets from the Smart Farm system, each demonstrating a core OOP~II concept.
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Class, Constructor \& Methods}
+% ──────────────────────────────────────────────────────────────────────────────
+
+The \texttt{Alert} class models a farm alert triggered by sensor readings. It demonstrates:
+
+\begin{itemize}[noitemsep]
+    \item An \textbf{inner enum} (\texttt{Severity}) to restrict field values
+    \item \textbf{Multiple constructors} (overloading) for different creation contexts
+    \item \textbf{Instance methods} that encapsulate behaviour (\texttt{resolve()}, \texttt{isCritical()})
+    \item \textbf{Encapsulation} with private fields and public getters/setters
+\end{itemize}
+
+\begin{codeblock}{javaStyle}{Alert --- class with enum, constructors, and methods}
+public class Alert {
+    public enum Severity { INFO, WARNING, CRITICAL }
+
+    private int           alertId;
+    private String        alertType;
+    private Severity      severity;
+    private String        message;
+    private boolean       resolved;
+    private LocalDateTime timestamp;
+    private int           plotId;
+
+    // Full constructor (used when loading from database)
+    public Alert(int alertId, String alertType, Severity severity,
+                 String message, boolean resolved,
+                 LocalDateTime timestamp, int plotId) {
+        this.alertId   = alertId;
+        this.alertType = alertType;
+        this.severity  = severity;
+        this.message   = message;
+        this.resolved  = resolved;
+        this.timestamp = timestamp;
+        this.plotId    = plotId;
+    }
+
+    // Convenience constructor (used when creating a new alert)
+    public Alert(String alertType, Severity severity,
+                 String message, int plotId) {
+        this.alertId   = -1;
+        this.alertType = alertType;
+        this.severity  = severity;
+        this.message   = message;
+        this.resolved  = false;
+        this.timestamp = LocalDateTime.now();
+        this.plotId    = plotId;
+    }
+
+    // Behaviour methods
+    public void    resolve()    { this.resolved = true; }
+    public boolean isCritical() { return severity == Severity.CRITICAL; }
+    public boolean isResolved() { return resolved; }
+
+    // Getters
+    public int           getAlertId()   { return alertId; }
+    public String        getAlertType() { return alertType; }
+    public Severity      getSeverity()  { return severity; }
+    public String        getMessage()   { return message; }
+    public LocalDateTime getTimestamp()  { return timestamp; }
+    public int           getPlotId()    { return plotId; }
+
+    @Override
+    public String toString() {
+        return "[" + severity + "] " + alertType
+             + " -- " + message + " (plot=" + plotId + ")";
+    }
+}
+\end{codeblock}
+
+\begin{tcolorbox}[notebox, title={Key OOP Concepts}]
+\begin{itemize}[noitemsep]
+    \item \textbf{Encapsulation} --- all fields are \texttt{private}; access is through methods.
+    \item \textbf{Constructor overloading} --- two constructors serve different use cases (DB load vs.\ new alert).
+    \item \textbf{Enum} --- \texttt{Severity} restricts the value to exactly three options, enforced at compile time.
+\end{itemize}
+\end{tcolorbox}
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{JavaFX Stage (Programmatic --- No FXML)}
+% ──────────────────────────────────────────────────────────────────────────────
+
+The application entry point creates the \texttt{Stage}, configures the window, and launches background services. This is pure Java --- no FXML layout file is used for the Stage itself.
+
+\begin{codeblock}{javaStyle}{Main --- JavaFX Application with programmatic Stage setup}
+public class Main extends Application {
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        // Build the root layout in Java code
+        Parent root = FXMLLoader.load(
+            getClass().getResource("/fxml/signin.fxml"));
+
+        // Create Scene and apply stylesheet
+        Scene scene = new Scene(root, 1000, 650);
+        scene.getStylesheets().add(
+            getClass().getResource("/css/farm-theme.css")
+                      .toExternalForm());
+
+        // Configure the Stage (window)
+        primaryStage.setTitle(
+            "Agrilliant -- Smart Farm Management System");
+        primaryStage.getIcons().add(new Image(
+            getClass().getResourceAsStream("/images/logo-dark.png")));
+        primaryStage.setScene(scene);
+        primaryStage.setMinWidth(1300);
+        primaryStage.setMinHeight(820);
+        primaryStage.setMaximized(true);
+        primaryStage.setOnCloseRequest(e -> System.exit(0));
+        primaryStage.show();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
+\end{codeblock}
+
+The \texttt{SettingsPage} is a screen built \textbf{entirely without FXML} --- all UI controls are created and laid out in pure Java:
+
+\begin{codeblock}{javaStyle}{SettingsPage --- programmatic JavaFX UI (no FXML)}
+public class SettingsPage extends VBox {
+
+    private final TextField txtServerIp   = new TextField("192.168.8.141");
+    private final TextField txtServerPort = new TextField("8080");
+    private final Spinner<Integer> spnInterval = new Spinner<>(5, 300, 60, 5);
+    private final ComboBox<String> cmbUnit     = new ComboBox<>();
+
+    public SettingsPage() {
+        setSpacing(24);
+        setPadding(new Insets(32, 40, 32, 40));
+
+        // Header
+        Label title = new Label("Settings");
+        title.setFont(Font.font("System", FontWeight.BOLD, 24));
+
+        // Server section
+        GridPane serverGrid = new GridPane();
+        serverGrid.setHgap(16);
+        serverGrid.setVgap(12);
+        serverGrid.add(new Label("Server IP"), 0, 0);
+        serverGrid.add(txtServerIp, 1, 0);
+        serverGrid.add(new Label("Port"), 2, 0);
+        serverGrid.add(txtServerPort, 3, 0);
+
+        // Temperature unit selector
+        cmbUnit.getItems().addAll("Celsius", "Fahrenheit");
+        cmbUnit.setValue("Celsius");
+
+        // Save button with event handler
+        Button btnSave = new Button("Save Changes");
+        btnSave.setOnAction(e -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                "Settings saved.", ButtonType.OK);
+            alert.showAndWait();
+        });
+
+        // Assemble the layout
+        getChildren().addAll(title, serverGrid, cmbUnit, btnSave);
+    }
+}
+\end{codeblock}
+
+\begin{tcolorbox}[infobox, title={Why Two Approaches?}]
+JavaFX supports two UI-building strategies:
+\begin{itemize}[noitemsep]
+    \item \textbf{FXML} --- XML layout files (used for complex screens like the dashboard)
+    \item \textbf{Programmatic} --- pure Java code (used for simpler pages like Settings)
+\end{itemize}
+The \texttt{Stage} and \texttt{Scene} are always created in Java code. FXML only defines the \emph{content} inside the scene.
+\end{tcolorbox}
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{JDBC Database Programming}
+% ──────────────────────────────────────────────────────────────────────────────
+
+\subsection{Database Connection (Singleton)}
+
+The \texttt{DBConnection} class provides a single shared \texttt{Connection} instance using the Singleton pattern. Credentials are loaded from a properties file.
+
+\begin{codeblock}{javaStyle}{DBConnection --- Singleton JDBC connection}
+public class DBConnection {
+    private static Connection connection;
+    private static String url, user, password;
+
+    private DBConnection() {} // prevent instantiation
+
+    static {
+        // Load credentials from db.properties
+        try (InputStream input = DBConnection.class
+                .getClassLoader()
+                .getResourceAsStream("db.properties")) {
+            Properties props = new Properties();
+            props.load(input);
+            url      = props.getProperty("db.url");
+            user     = props.getProperty("db.user");
+            password = props.getProperty("db.password");
+        } catch (IOException e) {
+            System.err.println("Failed to load db.properties");
+        }
+    }
+
+    public static Connection getInstance() {
+        try {
+            if (connection == null || connection.isClosed()) {
+                connection = DriverManager.getConnection(
+                    url, user, password);
+            }
+        } catch (SQLException e) {
+            System.err.println("DB connection failed: "
+                + e.getMessage());
+        }
+        return connection;
+    }
+}
+\end{codeblock}
+
+\subsection{CRUD with PreparedStatement}
+
+The \texttt{WorkerDAO} demonstrates JDBC CRUD operations using \texttt{PreparedStatement} to prevent SQL injection:
+
+\begin{codeblock}{javaStyle}{WorkerDAO --- INSERT and SELECT with PreparedStatement}
+public class WorkerDAO implements GenericDAO<Worker> {
+    private final Connection conn = DBConnection.getInstance();
+
+    @Override
+    public void save(Worker item) throws SQLException {
+        String sql = "INSERT INTO worker (full_name, phone, email, "
+                   + "job_title, on_duty) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString (1, item.getFullName());
+            ps.setString (2, item.getPhone());
+            ps.setString (3, item.getEmail());
+            ps.setString (4, item.getJobTitle());
+            ps.setBoolean(5, item.isOnDuty());
+            ps.executeUpdate();
+
+            // Retrieve auto-generated primary key
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next())
+                    item.setWorkerId(keys.getInt(1));
+            }
+        }
+    }
+
+    @Override
+    public List<Worker> getAll() throws SQLException {
+        String sql = "SELECT * FROM worker ORDER BY full_name";
+        List<Worker> workers = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                workers.add(new Worker(
+                    rs.getInt("worker_id"),
+                    rs.getString("full_name"),
+                    rs.getString("phone"),
+                    rs.getString("email"),
+                    rs.getString("job_title"),
+                    rs.getBoolean("on_duty")
+                ));
+            }
+        }
+        return workers;
+    }
+
+    @Override
+    public void delete(int id) throws SQLException {
+        String sql = "DELETE FROM worker WHERE worker_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+    }
+}
+\end{codeblock}
+
+\begin{tcolorbox}[notebox, title={JDBC Best Practices Shown}]
+\begin{itemize}[noitemsep]
+    \item \textbf{PreparedStatement} --- prevents SQL injection by using \texttt{?}~placeholders instead of string concatenation.
+    \item \textbf{try-with-resources} --- automatically closes \texttt{PreparedStatement} and \texttt{ResultSet}, even if an exception is thrown.
+    \item \textbf{Generated keys} --- retrieves the auto-incremented ID after an \texttt{INSERT}.
+\end{itemize}
+\end{tcolorbox}
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Multithreading}
+% ──────────────────────────────────────────────────────────────────────────────
+
+The system uses multithreading in two ways: a \textbf{daemon thread} for the TCP server and an \textbf{ExecutorService thread pool} that spawns a new thread for each connected sensor device.
+
+\subsection{Starting the Server on a Daemon Thread}
+
+The TCP server blocks forever waiting for connections, so it must run on a background thread. A \textbf{daemon thread} is used so it automatically stops when the application closes.
+
+\begin{codeblock}{javaStyle}{Main --- launching the server on a daemon thread}
+// Inside Main.start() -- after showing the JavaFX stage:
+
+// Start TCP sensor server on a daemon thread
+Thread serverThread = new Thread(() -> new FarmServer().start());
+serverThread.setDaemon(true);       // dies when app closes
+serverThread.setName("FarmServer-TCP");
+serverThread.start();
+\end{codeblock}
+
+\subsection{Thread Pool for Multiple Devices}
+
+The \texttt{FarmServer} uses a \texttt{CachedThreadPool} to handle multiple ESP32 devices simultaneously. Each device gets its own \texttt{SensorHandler} thread.
+
+\begin{codeblock}{javaStyle}{FarmServer --- thread pool accepts multiple device connections}
+public class FarmServer {
+    private static final int PORT = 8080;
+
+    public void start() {
+        ExecutorService threadPool = Executors.newCachedThreadPool();
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Farm Server started on port " + PORT);
+
+            while (true) {
+                Socket deviceSocket = serverSocket.accept();
+                System.out.println("Device connected: "
+                    + deviceSocket.getInetAddress());
+                // Each device runs on its own thread
+                threadPool.submit(new SensorHandler(deviceSocket));
+            }
+        } catch (IOException e) {
+            System.err.println("Server error: " + e.getMessage());
+        }
+    }
+}
+\end{codeblock}
+
+\begin{tcolorbox}[infobox, title={Multithreading Concepts Demonstrated}]
+\begin{itemize}[noitemsep]
+    \item \textbf{Daemon thread} --- background thread that does not prevent JVM shutdown.
+    \item \textbf{ExecutorService} --- manages a pool of threads; avoids creating threads manually for each connection.
+    \item \textbf{Runnable} --- \texttt{SensorHandler} implements \texttt{Runnable}, allowing it to be submitted to the thread pool.
+    \item \textbf{Concurrency} --- multiple ESP32 sensors can connect and send data simultaneously without blocking each other.
+\end{itemize}
+\end{tcolorbox}
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Socket Programming}
+% ──────────────────────────────────────────────────────────────────────────────
+
+The system uses TCP sockets to receive live data from ESP32 devices. The \textbf{server side} uses \texttt{ServerSocket} to listen for connections, and the \textbf{handler} uses \texttt{Socket.getInputStream()} to read data line by line.
+
+\begin{codeblock}{javaStyle}{SensorHandler --- reads data from a TCP socket}
+public class SensorHandler implements Runnable {
+    private final Socket socket;
+    private final SensorService sensorService = new SensorService();
+
+    public SensorHandler(Socket socket) {
+        this.socket = socket;
+    }
+
+    @Override
+    public void run() {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(socket.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                SensorReading reading = parseLine(line);
+                if (reading != null) {
+                    sensorService.processReading(reading);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Device disconnected: "
+                + socket.getInetAddress());
+        }
+    }
+
+    // Parses "DEVICE:plot1_sensor,TEMP:27.50,HUM:63.20"
+    private SensorReading parseLine(String raw) {
+        try {
+            String[] parts = raw.split(",");
+            String device = parts[0].split(":")[1];
+            float  temp   = Float.parseFloat(parts[1].split(":")[1]);
+            float  hum    = Float.parseFloat(parts[2].split(":")[1]);
+            return new SensorReading(device, temp, hum,
+                                     LocalDateTime.now());
+        } catch (Exception e) {
+            System.err.println("Bad data format: " + raw);
+            return null;
+        }
+    }
+}
+\end{codeblock}
+
+The data flow is:
+
+\begin{tcolorbox}[colback=codebg, colframe=gray, fontupper=\ttfamily\small\color{codetext}]
+\begin{verbatim}
+ESP32 (WiFiClient)
+  |--- TCP connect ---> ServerSocket.accept()
+  |--- "DEVICE:plot1_sensor,TEMP:27.5,HUM:63.2\n" --->
+  |                     BufferedReader.readLine()
+  |                         |
+  |                     parseLine() -> SensorReading
+  |                         |
+  |                     sensorService.processReading()
+  |                         |
+  |                     Save to DB + Check alerts + Update UI
+\end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[notebox, title={Socket Programming Concepts}]
+\begin{itemize}[noitemsep]
+    \item \textbf{ServerSocket} --- listens on a port and accepts incoming connections.
+    \item \textbf{Socket} --- represents one end of a two-way TCP connection.
+    \item \textbf{InputStream wrapping} --- \texttt{Socket} $\rightarrow$ \texttt{InputStreamReader} $\rightarrow$ \texttt{BufferedReader} for line-by-line reading.
+    \item \textbf{Protocol design} --- a simple text-based protocol (\texttt{KEY:VALUE,KEY:VALUE}) parsed with \texttt{split()}.
+\end{itemize}
+\end{tcolorbox}
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Generics}
+% ──────────────────────────────────────────────────────────────────────────────
+
+The system uses a \textbf{generic DAO interface} to define standard CRUD operations for \emph{any} model class. Each concrete DAO implements this interface with a specific type.
+
+\subsection{Generic Interface Definition}
+
+\begin{codeblock}{javaStyle}{GenericDAO<T> --- generic interface for all data access objects}
+public interface GenericDAO<T> {
+    void    save(T item)    throws SQLException;
+    T       getById(int id) throws SQLException;
+    List<T> getAll()        throws SQLException;
+    void    update(T item)  throws SQLException;
+    void    delete(int id)  throws SQLException;
+}
+\end{codeblock}
+
+\subsection{Concrete Implementation}
+
+Each model class gets its own DAO that implements \texttt{GenericDAO} with the appropriate type parameter:
+
+\begin{codeblock}{javaStyle}{TaskDAO --- implements GenericDAO<Task>}
+public class TaskDAO implements GenericDAO<Task> {
+    private final Connection conn = DBConnection.getInstance();
+
+    @Override
+    public void save(Task item) throws SQLException {
+        String sql = "INSERT INTO tasks (description, status, "
+                   + "due_date, plot_id) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, item.getDescription());
+            ps.setString(2, item.getStatus().name());
+            ps.setDate  (3, Date.valueOf(item.getDueDate()));
+            ps.setInt   (4, item.getPlotId());
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next())
+                    item.setTaskId(keys.getInt(1));
+            }
+        }
+    }
+
+    @Override
+    public List<Task> getAll() throws SQLException {
+        List<Task> tasks = new ArrayList<>();
+        String sql = "SELECT * FROM tasks ORDER BY due_date";
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                tasks.add(new Task(
+                    rs.getInt("task_id"),
+                    rs.getString("description"),
+                    Task.Status.valueOf(rs.getString("status")),
+                    rs.getDate("due_date").toLocalDate(),
+                    rs.getInt("plot_id")
+                ));
+            }
+        }
+        return tasks;
+    }
+
+    @Override
+    public void delete(int id) throws SQLException {
+        String sql = "DELETE FROM tasks WHERE task_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+    }
+
+    // getById() and update() follow the same pattern...
+}
+\end{codeblock}
+
+All DAO classes in the project implement this single generic interface:
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{>{\ttfamily}l >{\ttfamily}l X}
+\toprule
+\textbf{DAO Class} & \textbf{Implements} & \textbf{Model} \\
+\midrule
+TaskDAO    & GenericDAO<Task>          & Farm tasks assigned to workers \\
+WorkerDAO  & GenericDAO<Worker>        & Farm workers \\
+AlertDAO   & GenericDAO<Alert>         & Sensor-triggered alerts \\
+CropDAO    & GenericDAO<Crop>          & Planted crops \\
+PlotDAO    & GenericDAO<Plot>          & Farm plots of land \\
+DeviceDAO  & GenericDAO<Device>        & IoT sensor devices \\
+\bottomrule
+\end{tabularx}
+\caption{All DAO classes implement the same generic interface}
+\end{table}
+
+\begin{tcolorbox}[notebox, title={Generics Concepts Demonstrated}]
+\begin{itemize}[noitemsep]
+    \item \textbf{Type parameter \texttt{<T>}} --- the interface is written once and works for any model type.
+    \item \textbf{Type safety} --- \texttt{GenericDAO<Task>} guarantees that \texttt{save()} only accepts a \texttt{Task}, not a \texttt{Worker} or \texttt{Alert}. The compiler catches type mismatches.
+    \item \textbf{Code reuse} --- the contract (five CRUD methods) is defined once; six classes implement it without duplicating the interface.
+    \item \textbf{Bounded usage} --- \texttt{List<T>} in the return type of \texttt{getAll()} is itself a generic, showing generics composed inside generics.
+\end{itemize}
+\end{tcolorbox}
+
+
+\end{document}

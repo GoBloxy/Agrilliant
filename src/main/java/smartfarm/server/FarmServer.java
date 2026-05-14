@@ -21,7 +21,8 @@ public class FarmServer {
                 threadPool.submit(new SensorHandler(deviceSocket));
             }
         } catch (IOException e) {
-            System.err.println("Server error: " + e.getMessage());
+            System.out.println("[FarmServer] TCP server not started (port " + PORT + " unavailable or not needed on this machine). "
+                    + "MQTT will still deliver live sensor data.");
         }
     }
 }

@@ -44,6 +44,10 @@ public class TaskController {
     private static int currentManagerId = 1;
     public static void setCurrentManagerId(int id) { currentManagerId = id; }
 
+    private static int workerModeId = -1;
+    public static void setWorkerMode(int workerId) { workerModeId = workerId; }
+    public static void clearWorkerMode() { workerModeId = -1; }
+
     @FXML
     public void initialize() {
         loadWorkerCache();
@@ -52,6 +56,10 @@ public class TaskController {
         loadTasks();
         setupFilters();
         updateSummaryCards();
+        if (workerModeId > 0) {
+            btnAddTask.setVisible(false);
+            btnAddTask.setManaged(false);
+        }
     }
 
     private void loadWorkerCache() {
@@ -131,7 +139,7 @@ public class TaskController {
             private final Button revertBtn = new Button("", new FontIcon("fth-arrow-left"));
             private final Button editBtn = new Button("", new FontIcon("fth-edit"));
             private final Button delBtn = new Button("", new FontIcon("fth-trash-2"));
-            private final HBox box = new HBox(4, advanceBtn, revertBtn, editBtn, delBtn);
+            private final HBox box;
             {
                 advanceBtn.getStyleClass().add("icon-btn");
                 revertBtn.getStyleClass().add("icon-btn");
@@ -153,6 +161,12 @@ public class TaskController {
                     Task t = getTableRow() != null ? getTableRow().getItem() : null;
                     if (t != null) onDeleteTask(t);
                 });
+                // Workers can only advance/revert status, not edit or delete
+                if (workerModeId > 0) {
+                    box = new HBox(4, advanceBtn, revertBtn);
+                } else {
+                    box = new HBox(4, advanceBtn, revertBtn, editBtn, delBtn);
+                }
             }
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -173,7 +187,13 @@ public class TaskController {
 
     private void loadTasks() {
         try {
-            allTasks.setAll(taskDAO.getAll());
+            List<Task> tasks = taskDAO.getAll();
+            if (workerModeId > 0) {
+                tasks = tasks.stream()
+                    .filter(t -> t.getWorkerIds().contains(workerModeId))
+                    .collect(Collectors.toList());
+            }
+            allTasks.setAll(tasks);
         } catch (SQLException e) {
             allTasks.clear();
         }

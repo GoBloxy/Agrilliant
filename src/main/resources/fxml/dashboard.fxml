@@ -287,7 +287,7 @@
                 </VBox>
 
                 <!-- Worker Overview -->
-                <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                <VBox fx:id="workerOverviewCard" styleClass="card" HBox.hgrow="ALWAYS">
                     <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                     <HBox alignment="CENTER_LEFT">
                         <Label text="Worker Overview" styleClass="card-title"/>
@@ -306,7 +306,7 @@
                 </VBox>
 
                 <!-- Quick Actions -->
-                <VBox styleClass="card" prefWidth="320" minWidth="300" spacing="10">
+                <VBox fx:id="quickActionsCard" styleClass="card" prefWidth="320" minWidth="300" spacing="10">
                     <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
                     <Label text="Quick Actions" styleClass="card-title"/>
                     <GridPane hgap="10" vgap="10" VBox.vgrow="ALWAYS">
@@ -331,7 +331,7 @@
             </HBox>
 
             <!-- ─────────── BOTTOM SECTION: Recent Harvests | Reports Export ─────────── -->
-            <HBox spacing="14" VBox.vgrow="SOMETIMES">
+            <HBox fx:id="bottomSection" spacing="14" VBox.vgrow="SOMETIMES">
 
                 <!-- Recent Harvests -->
                 <VBox styleClass="card" HBox.hgrow="ALWAYS">

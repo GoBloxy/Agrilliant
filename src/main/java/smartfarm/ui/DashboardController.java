@@ -102,6 +102,8 @@ public class DashboardController {
     @FXML private Hyperlink linkViewSensors, linkShowAllAlerts,
                              linkViewAllTasks, linkViewCrops,
                              linkViewWorkers, linkViewHarvests, linkManagePlots;
+    @FXML private VBox workerOverviewCard, quickActionsCard;
+    @FXML private HBox bottomSection;
 
     private ContextMenu userMenu;
     private Button activeNavButton;
@@ -129,17 +131,19 @@ public class DashboardController {
             WorkerController.setCurrentManagerId(user.getId());
             PlotController.setCurrentManagerId(user.getId());
             applyRolePermissions(user.getRole());
-            // For workers, show "My Tasks" instead of "Tasks"
             if (user.getRole() == smartfarm.model.User.Role.WORKER) {
                 lblTasksTitle.setText("My Tasks");
+                TaskController.setWorkerMode(user.getId());
+                loadTasks(); // reload filtered for this worker
+            } else {
+                TaskController.clearWorkerMode();
             }
         }
     }
 
     private void applyRolePermissions(smartfarm.model.User.Role role) {
         if (role == smartfarm.model.User.Role.WORKER) {
-            btnMonitoring.setVisible(false); btnMonitoring.setManaged(false);
-            btnAlerts.setVisible(false);     btnAlerts.setManaged(false);
+            // Sidebar: workers can see Dashboard, Monitoring, Disease, Alerts, Attendance, Tasks
             btnCrops.setVisible(false);      btnCrops.setManaged(false);
             btnWorkers.setVisible(false);    btnWorkers.setManaged(false);
             btnHarvests.setVisible(false);   btnHarvests.setManaged(false);
@@ -147,9 +151,24 @@ public class DashboardController {
             btnSettings.setVisible(false);   btnSettings.setManaged(false);
             btnUsers.setVisible(false);      btnUsers.setManaged(false);
             btnLogs.setVisible(false);       btnLogs.setManaged(false);
+
+            // Dashboard: hide management-only sections
+            workerOverviewCard.setVisible(false); workerOverviewCard.setManaged(false);
+            quickActionsCard.setVisible(false);   quickActionsCard.setManaged(false);
+            bottomSection.setVisible(false);      bottomSection.setManaged(false);
+
+            // Hyperlinks: hide management links
+            linkViewCrops.setVisible(false);    linkViewCrops.setManaged(false);
+            linkViewWorkers.setVisible(false);  linkViewWorkers.setManaged(false);
+            linkViewHarvests.setVisible(false); linkViewHarvests.setManaged(false);
+            linkManagePlots.setVisible(false);  linkManagePlots.setManaged(false);
+
+            // User menu: remove Settings for workers
+            userMenu.getItems().removeIf(item -> "Settings".equals(item.getText()));
         }
         if (role == smartfarm.model.User.Role.MANAGER) {
             btnUsers.setVisible(false);      btnUsers.setManaged(false);
+            btnLogs.setVisible(false);       btnLogs.setManaged(false);
         }
     }
 
@@ -210,17 +229,20 @@ public class DashboardController {
     private void loadTasks() {
         try {
             allTasks = taskDAO.getAll();
+            boolean isWorker = currentUser != null && currentUser.getRole() == smartfarm.model.User.Role.WORKER;
+            int workerId = isWorker ? currentUser.getId() : -1;
             ObservableList<String> items = FXCollections.observableArrayList();
             int count = 0;
             for (Task t : allTasks) {
                 if (t.getStatus() == Task.Status.DONE) continue;
+                if (isWorker && !t.getWorkerIds().contains(workerId)) continue;
                 if (count >= 8) break;
                 String statusIcon = t.getStatus() == Task.Status.IN_PROGRESS ? "🔄" : "⏳";
                 String due = t.getDueDate() != null ? " (due " + t.getDueDate() + ")" : "";
                 items.add(statusIcon + " " + t.getDescription() + due);
                 count++;
             }
-            if (items.isEmpty()) items.add("No pending tasks");
+            if (items.isEmpty()) items.add(isWorker ? "No assigned tasks" : "No pending tasks");
             taskListView.setItems(items);
         } catch (SQLException e) {
             taskListView.setItems(FXCollections.observableArrayList("Failed to load tasks"));
@@ -860,13 +882,8 @@ public class DashboardController {
 
     private void onLogout() {
         smartfarm.service.SessionManager.clearSession();
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
-            Stage stage = (Stage) lblUserName.getScene().getWindow();
-            stage.getScene().setRoot(root);
-        } catch (Exception e) {
-            System.err.println("Logout navigation error: " + e.getMessage());
-        }
+        Stage stage = (Stage) lblUserName.getScene().getWindow();
+        stage.getScene().setRoot(new SignInView());
     }
 
     // ═══════════════ SIDEBAR STATUS ═══════════════
@@ -915,7 +932,10 @@ public class DashboardController {
     private void subscribeLiveSensor() {
         LiveSensorData live = LiveSensorData.getInstance();
 
-        live.temperatureProperty().addListener((obs, oldVal, newVal) -> updateTemperature(newVal.floatValue()));
+        live.temperatureProperty().addListener((obs, oldVal, newVal) -> {
+            updateTemperature(newVal.floatValue());
+            updateSensorDot(live.activeSensorsProperty().get());
+        });
         live.humidityProperty().addListener((obs, oldVal, newVal) -> updateHumidity(newVal.floatValue()));
         live.soilMoistureProperty().addListener((obs, oldVal, newVal) -> updateSoilMoisture(newVal.floatValue()));
         live.deviceIdProperty().addListener((obs, oldVal, newVal) -> updatePlotLabels(newVal));

@@ -14,6 +14,7 @@ import smartfarm.server.MqttSensorSubscriber;
 import smartfarm.service.AuthService;
 import smartfarm.service.SessionManager;
 import smartfarm.ui.DashboardController;
+import smartfarm.ui.SignInView;
 
 public class Main extends Application {
 
@@ -25,7 +26,6 @@ public class Main extends Application {
         String savedEmail = SessionManager.loadSession();
         User restoredUser = null;
 
-        // Try to restore previous session
         if (savedEmail != null) {
             try {
                 AuthService authService = new AuthService();
@@ -41,10 +41,10 @@ public class Main extends Application {
             DashboardController controller = loader.getController();
             controller.setCurrentUser(restoredUser);
         } else {
-            root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
+            root = new SignInView();
         }
 
-        Scene scene = new Scene(root, 1000, 650);
+        Scene scene = new Scene(root, 1100, 700);
         scene.getStylesheets().add(getClass().getResource("/css/farm-theme.css").toExternalForm());
         primaryStage.setTitle("Agrilliant — Smart Farm Management System");
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo-dark.png")));

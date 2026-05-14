@@ -21,6 +21,7 @@ public class SignUpController {
     @FXML
     public void initialize() {
         lblError.setVisible(false);
+        lblError.setManaged(false);
         cmbRole.getItems().addAll("Admin", "Manager");
         cmbRole.setValue("Manager");
     }
@@ -71,5 +72,6 @@ public class SignUpController {
     private void showError(String msg) {
         lblError.setText(msg);
         lblError.setVisible(true);
+        lblError.setManaged(true);
     }
 }
