@@ -6,7 +6,7 @@
 <?import javafx.scene.shape.*?>
 <?import org.kordamp.ikonli.javafx.*?>
 
-<StackPane prefHeight="900" prefWidth="1200" styleClass="content-pane" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartfarm.ui.CropController">
+<StackPane styleClass="content-pane" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartfarm.ui.CropController">
 
     <!-- ════════ VIEW 1: CROP LIST ════════ -->
     <VBox fx:id="listView" spacing="16">
