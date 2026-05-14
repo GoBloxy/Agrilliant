@@ -12,11 +12,14 @@
     <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
 
     <!-- Page title row with primary actions, matches the other inner pages. -->
-    <HBox alignment="CENTER_LEFT" spacing="8">
-        <Label text="Plots" styleClass="page-title"/>
-        <Region HBox.hgrow="ALWAYS"/>
+    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="page-header">
+        <VBox HBox.hgrow="ALWAYS">
+            <Label text="Management" styleClass="page-kicker"/>
+            <Label text="Plots" styleClass="page-title"/>
+            <Label text="Manage field geometry, status, and crop assignments" styleClass="page-subtitle" wrapText="true"/>
+        </VBox>
         <Button text="+ Add New Plot" styleClass="btn-primary" />
-        <Button text="Export" styleClass="btn-secondary" >
+        <Button text="Export" styleClass="btn-secondary,btn-tonal" >
             <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
         </Button>
     </HBox>
@@ -29,7 +32,7 @@
         Desktop ≥860dp:  4 columns × 1
     -->
     <FlowPane hgap="10" vgap="10" prefWrapLength="160">
-        <VBox styleClass="card" minWidth="160">
+        <VBox styleClass="section-card,summary-card" minWidth="160">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
                 <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="36" prefHeight="36" minWidth="36">
@@ -42,7 +45,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="160">
+        <VBox styleClass="section-card,summary-card" minWidth="160">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
                 <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="36" prefHeight="36" minWidth="36">
@@ -55,7 +58,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="160">
+        <VBox styleClass="section-card,summary-card" minWidth="160">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
                 <StackPane styleClass="metric-icon,metric-icon-warning" prefWidth="36" prefHeight="36" minWidth="36">
@@ -68,7 +71,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="160">
+        <VBox styleClass="section-card,summary-card" minWidth="160">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
                 <StackPane styleClass="metric-icon,metric-icon-info" prefWidth="36" prefHeight="36" minWidth="36">
@@ -84,7 +87,7 @@
     </FlowPane>
 
     <!-- Filter row: FlowPane wraps search box + combos onto multiple rows on narrow screens. -->
-    <FlowPane hgap="10" vgap="10">
+    <FlowPane hgap="10" vgap="10" styleClass="section-card">
         <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="180" HBox.hgrow="NEVER">
             <padding><Insets right="6" left="6"/></padding>
             <TextField promptText="Search plots..." styleClass="search-field"/>
@@ -99,7 +102,7 @@
     <!-- Map + Overview: stacked vertically for mobile-first single-column layout -->
     <VBox spacing="10">
         <!-- Map card -->
-        <VBox styleClass="card" VBox.vgrow="ALWAYS">
+        <VBox styleClass="section-card,summary-card" VBox.vgrow="ALWAYS">
             <StackPane prefHeight="260" style="-fx-background-color: #2d5a27; -fx-background-radius: 10;">
                 <ImageView fitHeight="260" fitWidth="366" preserveRatio="false" style="-fx-opacity: 0.95;">
                     <image><Image url="@../images/farm_map.png"/></image>
@@ -128,7 +131,7 @@
         </VBox>
 
         <!-- Plot Overview card: stacked below map, full width, no fixed prefWidth/minWidth -->
-        <VBox styleClass="card" spacing="10">
+        <VBox styleClass="section-card,summary-card" spacing="10">
             <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
             <Label text="Plot Overview" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
             <!-- Chart + legend: stacked vertically on mobile -->
@@ -213,7 +216,7 @@
     </VBox>
 
     <!-- All Plots Table -->
-    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="8">
+    <VBox styleClass="list-card" VBox.vgrow="ALWAYS" spacing="8">
         <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
         <Label text="All Plots" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
         <TableView fx:id="plotTable" VBox.vgrow="ALWAYS" prefHeight="250" style="-fx-fixed-cell-size: 46;">

@@ -472,3 +472,19 @@
 .drawer-header {
     -fx-padding: 18 14 14 14;
 }
+
+/* ───── Full redesign management sizing ──────────────────────── */
+.management-summary-grid,
+.flow-pane {
+    -fx-hgap: 8;
+    -fx-vgap: 8;
+}
+
+.summary-card {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+}
+
+.list-card .table-view {
+    -fx-max-height: 260;
+}

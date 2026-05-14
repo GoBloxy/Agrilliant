@@ -10,9 +10,12 @@
       spacing="14" styleClass="content-pane">
     <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
-    <HBox alignment="CENTER_LEFT" spacing="12">
-        <Label text="Users and Workers" styleClass="page-title"/>
-        <Region HBox.hgrow="ALWAYS"/>
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="page-header">
+        <VBox HBox.hgrow="ALWAYS">
+            <Label text="Operations" styleClass="page-kicker"/>
+            <Label text="Users and Workers" styleClass="page-title"/>
+            <Label text="Staff availability and farm team actions" styleClass="page-subtitle" wrapText="true"/>
+        </VBox>
         <Button fx:id="btnAddWorker" text="+ Add Worker" styleClass="btn-primary" onAction="#onAddWorker"/>
     </HBox>
 
@@ -24,7 +27,7 @@
         Desktop ≥860dp:  4 columns × 1
     -->
     <FlowPane hgap="12" vgap="12" prefWrapLength="200">
-        <VBox styleClass="card" minWidth="200" spacing="8">
+        <VBox styleClass="section-card,summary-card" minWidth="200" spacing="8">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="44" prefHeight="44">
@@ -36,7 +39,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="200" spacing="8">
+        <VBox styleClass="section-card,summary-card" minWidth="200" spacing="8">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="44" prefHeight="44">
@@ -48,7 +51,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="200" spacing="8">
+        <VBox styleClass="section-card,summary-card" minWidth="200" spacing="8">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane styleClass="metric-icon,metric-icon-warning" prefWidth="44" prefHeight="44">
@@ -60,7 +63,7 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="200" spacing="8">
+        <VBox styleClass="section-card,summary-card" minWidth="200" spacing="8">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <StackPane styleClass="metric-icon,metric-icon-error" prefWidth="44" prefHeight="44">
@@ -75,7 +78,7 @@
     </FlowPane>
 
     <!-- Filter row: FlowPane wraps search box + combos onto multiple rows on narrow screens. -->
-    <FlowPane hgap="12" vgap="12">
+    <FlowPane hgap="12" vgap="12" styleClass="section-card">
         <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="240" HBox.hgrow="NEVER">
             <padding><Insets right="8" left="8"/></padding>
             <TextField fx:id="txtSearch" promptText="Search workers..." styleClass="search-field"/>
@@ -84,7 +87,7 @@
         <ComboBox fx:id="cmbStatus" promptText="All Status" styleClass="filter-combo"/>
     </FlowPane>
 
-    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
+    <VBox styleClass="list-card" VBox.vgrow="ALWAYS" spacing="10">
         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
         <Label text="All Workers" styleClass="card-title"/>
         <CharmListView fx:id="workerList" VBox.vgrow="ALWAYS"/>
