@@ -1,12 +1,10 @@
 package smartfarm.ui;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
 import smartfarm.model.User;
 import smartfarm.service.AuthService;
+import smartfarm.ui.nav.AppView;
 
 public class SignUpController {
 
@@ -59,13 +57,7 @@ public class SignUpController {
 
     @FXML
     private void onGoToSignIn() {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
-            Stage stage = (Stage) btnSignUp.getScene().getWindow();
-            stage.getScene().setRoot(root);
-        } catch (Exception e) {
-            showError("Navigation error: " + e.getMessage());
-        }
+        AppView.SIGNIN.switchTo();
     }
 
     private void showError(String msg) {
