@@ -6,22 +6,48 @@
 }
 
 .root {
-    -color-accent-fg:        #2e7d32;
-    -color-accent-emphasis:  #388e3c;
-    -color-accent-muted:     #a5d6a7;
-    -color-accent-subtle:    #e8f5e9;
+    -ag-primary: #2f6f3e;
+    -ag-on-primary: #ffffff;
+    -ag-primary-container: #d8f0d4;
+    -ag-on-primary-container: #102116;
+    -ag-secondary: #53634f;
+    -ag-secondary-container: #d6e8cf;
+    -ag-tertiary: #38656a;
+    -ag-tertiary-container: #bcebf0;
+    -ag-error: #ba1a1a;
+    -ag-error-container: #ffdad6;
+    -ag-background: #fbfdf7;
+    -ag-surface: #ffffff;
+    -ag-surface-dim: #eef3ea;
+    -ag-surface-container-low: #f7faf2;
+    -ag-surface-container: #f1f5ed;
+    -ag-surface-container-high: #eaf0e5;
+    -ag-surface-variant: #dde6d8;
+    -ag-on-surface: #191d17;
+    -ag-on-surface-variant: #41493d;
+    -ag-outline: #c2ccbd;
+    -ag-outline-variant: #dce5d8;
+    -ag-warning: #8a5100;
+    -ag-warning-container: #ffddb0;
+    -ag-info: #0061a4;
+    -ag-info-container: #d1e4ff;
+
+    -color-accent-fg: -ag-primary;
+    -color-accent-emphasis: -ag-primary;
+    -color-accent-muted: -ag-primary-container;
+    -color-accent-subtle: -ag-primary-container;
 }
 
 .dashboard-root {
-    -fx-background-color: #f5f7fa;
+    -fx-background-color: -ag-background;
 }
 
 .content-area {
-    -fx-background-color: #f5f7fa;
+    -fx-background-color: -ag-background;
 }
 
 .content-pane {
-    -fx-background-color: #f5f7fa;
+    -fx-background-color: -ag-background;
 }
 
 /* ── Page scroll ── */
@@ -47,7 +73,7 @@
 
 /* ── Placeholder pages ── */
 .placeholder-page {
-    -fx-background-color: #f5f7fa;
+    -fx-background-color: -ag-background;
 }
 
 .placeholder-icon {
