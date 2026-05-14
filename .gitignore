@@ -1,6 +1,7 @@
 # === Secrets ===
 src/main/resources/db.properties
 src/main/resources/crop-health.properties
+src/main/resources/mqtt.properties
 
 # === Build output ===
 target/

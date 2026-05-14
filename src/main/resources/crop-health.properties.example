@@ -1,0 +1,9 @@
+# Crop.health API configuration — loaded by smartfarm.service.PlantIdService
+# Copy this file to src/main/resources/crop-health.properties and fill in your values.
+# The real file is gitignored.
+#
+# Dashboard: https://admin.kindwise.com/
+# Docs: https://crop.kindwise.com/docs
+# Fallback: environment variable CROP_HEALTH_API_KEY
+
+api.key=YOUR_CROP_HEALTH_API_KEY_HERE

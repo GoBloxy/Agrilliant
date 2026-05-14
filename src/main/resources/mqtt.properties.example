@@ -1,0 +1,26 @@
+# MQTT Broker Configuration — loaded by smartfarm.server.MqttBridge
+# and smartfarm.server.MqttSensorSubscriber
+# Copy this file to src/main/resources/mqtt.properties and fill in your values.
+# The real file is gitignored.
+#
+# Used for real-time sensor data broadcast across all connected clients.
+# Architecture: ESP32 -> TCP socket -> FarmServer -> SensorService
+#   -> LiveSensorData (local) + MqttBridge (publish to broker)
+#   -> All remote clients subscribe via MqttSensorSubscriber -> LiveSensorData
+
+# Broker URL. For HiveMQ Cloud (TLS), use ssl:// prefix.
+# For a local/plain broker: tcp://broker.hivemq.com:1883
+mqtt.broker=ssl://YOUR_CLUSTER_ID.s1.eu.hivemq.cloud:8883
+
+# Topic prefix for sensor data. Devices publish under <prefix>/<deviceCode>
+mqtt.topic.prefix=agrilliant/sensors
+
+# Client ID prefix — a random suffix is appended at runtime
+mqtt.client.id.prefix=agrilliant-
+
+# Quality of Service (0=at-most-once, 1=at-least-once, 2=exactly-once)
+mqtt.qos=1
+
+# Broker credentials (required for HiveMQ Cloud; leave empty for open brokers)
+mqtt.username=
+mqtt.password=

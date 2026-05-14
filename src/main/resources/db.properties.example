@@ -10,10 +10,9 @@
 # Layer 2 lets the app prompt the user for credentials at first run on
 # Android and remember them per device — without baking them into the APK.
 
-# JDBC URL. Example (LAN MySQL):
-#   db.url=jdbc:mysql://192.168.1.50:3306/smartfarm?useSSL=false&serverTimezone=UTC
-# On a phone over 4G/5G, this must be a public host or via VPN.
-db.url=jdbc:mysql://localhost:3306/smartfarm?useSSL=false&serverTimezone=UTC
+# JDBC URL. On a phone over 4G/5G, this must be a public host or via VPN.
+# Add ?useSSL=false&serverTimezone=UTC for typical remote MySQL hosts.
+db.url=jdbc:mysql://YOUR_MYSQL_HOST:3306/agrilliant?useSSL=false&serverTimezone=UTC
 
-db.user=smartfarm_user
-db.password=replace_me
+db.user=YOUR_DB_USER
+db.password=YOUR_DB_PASSWORD
