@@ -27,52 +27,52 @@
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-package" iconSize="18" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Total Harvested" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotalHarvested" text="0 kg" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Total yield collected" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Total Harvested" styleClass="summary-card-title"/>
+                    <Label fx:id="lblTotalHarvested" text="0 kg" styleClass="summary-card-value"/>
+                    <Label text="Total yield collected" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-dollar-sign" iconSize="18" iconColor="#065f46"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Total Revenue" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotalRevenue" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Gross income from harvests" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Total Revenue" styleClass="summary-card-title"/>
+                    <Label fx:id="lblTotalRevenue" text="0.00" styleClass="summary-card-value"/>
+                    <Label text="Gross income from harvests" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-warning" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-trending-down" iconSize="18" iconColor="#d97706"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Total Cost" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotalCost" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Operational expenses" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Total Cost" styleClass="summary-card-title"/>
+                    <Label fx:id="lblTotalCost" text="0.00" styleClass="summary-card-value"/>
+                    <Label text="Operational expenses" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#e0e7ff;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-info" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-trending-up" iconSize="18" iconColor="#4338ca"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Net Profit" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblNetProfit" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Revenue minus costs" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Net Profit" styleClass="summary-card-title"/>
+                    <Label fx:id="lblNetProfit" text="0.00" styleClass="summary-card-value"/>
+                    <Label text="Revenue minus costs" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>

@@ -1494,3 +1494,26 @@
 .icon-warning {
     -fx-icon-color: -ag-warning;
 }
+
+.metric-icon {
+    -fx-background-radius: 999;
+    -fx-min-width: 42;
+    -fx-min-height: 42;
+    -fx-effect: dropshadow(gaussian, rgba(25,29,23,0.08), 8, 0, 0, 2);
+}
+
+.metric-icon-primary {
+    -fx-background-color: -ag-primary-container;
+}
+
+.metric-icon-warning {
+    -fx-background-color: -ag-warning-container;
+}
+
+.metric-icon-info {
+    -fx-background-color: -ag-info-container;
+}
+
+.metric-icon-error {
+    -fx-background-color: -ag-error-container;
+}

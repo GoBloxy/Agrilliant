@@ -27,52 +27,52 @@
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-check-square" iconSize="18" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Total Tasks" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotalTasks" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="All assigned tasks" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Total Tasks" styleClass="summary-card-title"/>
+                    <Label fx:id="lblTotalTasks" text="0" styleClass="summary-card-value"/>
+                    <Label text="All assigned tasks" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-warning" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-clock" iconSize="18" iconColor="#d97706"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Pending" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblPending" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Awaiting action" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Pending" styleClass="summary-card-title"/>
+                    <Label fx:id="lblPending" text="0" styleClass="summary-card-value"/>
+                    <Label text="Awaiting action" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#dbeafe;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-info" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-refresh-cw" iconSize="18" iconColor="#1d4ed8"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="In Progress" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblInProgress" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Currently active" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="In Progress" styleClass="summary-card-title"/>
+                    <Label fx:id="lblInProgress" text="0" styleClass="summary-card-value"/>
+                    <Label text="Currently active" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-check-circle" iconSize="18" iconColor="#065f46"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Completed" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblCompleted" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Successfully done" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Completed" styleClass="summary-card-title"/>
+                    <Label fx:id="lblCompleted" text="0" styleClass="summary-card-value"/>
+                    <Label text="Successfully done" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>

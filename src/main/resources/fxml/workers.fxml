@@ -27,47 +27,47 @@
         <VBox styleClass="card" minWidth="200" spacing="8">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="44" prefHeight="44">
                     <FontIcon iconLiteral="fth-users" iconSize="20" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="Total Workers" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
-                    <Label fx:id="lblTotalWorkers" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Total Workers" styleClass="summary-card-title"/>
+                    <Label fx:id="lblTotalWorkers" text="0" styleClass="summary-card-value"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="8">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="44" prefHeight="44">
                     <FontIcon iconLiteral="fth-check-circle" iconSize="20" iconColor="#065f46"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="On Duty" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
-                    <Label fx:id="lblOnDuty" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="On Duty" styleClass="summary-card-title"/>
+                    <Label fx:id="lblOnDuty" text="0" styleClass="summary-card-value"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="8">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                <StackPane styleClass="metric-icon,metric-icon-warning" prefWidth="44" prefHeight="44">
                     <FontIcon iconLiteral="fth-clock" iconSize="20" iconColor="#d97706"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="Available" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
-                    <Label fx:id="lblAvailable" text="0" style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
+                    <Label text="Available" styleClass="summary-card-title"/>
+                    <Label fx:id="lblAvailable" text="0" styleClass="summary-card-value"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="8">
             <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
             <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fee2e2;-fx-background-radius:100;" prefWidth="44" prefHeight="44">
+                <StackPane styleClass="metric-icon,metric-icon-error" prefWidth="44" prefHeight="44">
                     <FontIcon iconLiteral="fth-alert-circle" iconSize="20" iconColor="#dc2626"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="Busy" style="-fx-font-size:11;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                    <Label text="Busy" styleClass="summary-card-title"/>
                     <Label fx:id="lblBusy" text="0" style="-fx-font-size:22;-fx-font-weight:bold;"/>
                 </VBox>
             </HBox>

@@ -29,52 +29,52 @@
             <VBox spacing="4" styleClass="card" minWidth="0">
                 <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
                 <HBox alignment="CENTER_LEFT" spacing="8">
-                    <StackPane alignment="CENTER" prefHeight="36" prefWidth="36" style="-fx-background-color:#e8f5e9;-fx-background-radius:10;">
+                    <StackPane alignment="CENTER" prefHeight="36" prefWidth="36" styleClass="metric-icon,metric-icon-primary">
                         <FontIcon iconColor="#2e7d32" iconLiteral="fth-feather" iconSize="16" />
                     </StackPane>
                     <VBox spacing="1">
-                        <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Total Crops" />
-                        <Label fx:id="lblTotalCrops" style="-fx-font-size:20;-fx-font-weight:bold;-fx-text-fill:#111827;" text="0" />
-                        <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Active crops across all plots" />
+                        <Label styleClass="summary-card-title" text="Total Crops" />
+                        <Label fx:id="lblTotalCrops" styleClass="summary-card-value" text="0" />
+                        <Label styleClass="summary-card-subtitle" text="Active crops across all plots" />
                     </VBox>
                 </HBox>
             </VBox>
             <VBox spacing="4" styleClass="card" minWidth="0">
                 <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
                 <HBox alignment="CENTER_LEFT" spacing="8">
-                    <StackPane alignment="CENTER" prefHeight="36" prefWidth="36" style="-fx-background-color:#dbeafe;-fx-background-radius:10;">
+                    <StackPane alignment="CENTER" prefHeight="36" prefWidth="36" styleClass="metric-icon,metric-icon-info">
                         <FontIcon iconColor="#1d4ed8" iconLiteral="fth-sun" iconSize="16" />
                     </StackPane>
                     <VBox spacing="1">
-                        <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Growing" />
-                        <Label fx:id="lblGrowing" style="-fx-font-size:20;-fx-font-weight:bold;-fx-text-fill:#111827;" text="0" />
-                        <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Crops in growth phase" />
+                        <Label styleClass="summary-card-title" text="Growing" />
+                        <Label fx:id="lblGrowing" styleClass="summary-card-value" text="0" />
+                        <Label styleClass="summary-card-subtitle" text="Crops in growth phase" />
                     </VBox>
                 </HBox>
             </VBox>
             <VBox spacing="4" styleClass="card" minWidth="0">
                 <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
                 <HBox alignment="CENTER_LEFT" spacing="8">
-                    <StackPane alignment="CENTER" prefHeight="36" prefWidth="36" style="-fx-background-color:#fef3c7;-fx-background-radius:10;">
+                    <StackPane alignment="CENTER" prefHeight="36" prefWidth="36" styleClass="metric-icon,metric-icon-warning">
                         <FontIcon iconColor="#d97706" iconLiteral="fth-check-circle" iconSize="16" />
                     </StackPane>
                     <VBox spacing="1">
-                        <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Ready to Harvest" />
-                        <Label fx:id="lblReady" style="-fx-font-size:20;-fx-font-weight:bold;-fx-text-fill:#111827;" text="0" />
-                        <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Ready for collection" />
+                        <Label styleClass="summary-card-title" text="Ready to Harvest" />
+                        <Label fx:id="lblReady" styleClass="summary-card-value" text="0" />
+                        <Label styleClass="summary-card-subtitle" text="Ready for collection" />
                     </VBox>
                 </HBox>
             </VBox>
             <VBox spacing="4" styleClass="card" minWidth="0">
                 <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
                 <HBox alignment="CENTER_LEFT" spacing="8">
-                    <StackPane alignment="CENTER" prefHeight="36" prefWidth="36" style="-fx-background-color:#fee2e2;-fx-background-radius:10;">
+                    <StackPane alignment="CENTER" prefHeight="36" prefWidth="36" styleClass="metric-icon,metric-icon-error">
                         <FontIcon iconColor="#dc2626" iconLiteral="fth-alert-triangle" iconSize="16" />
                     </StackPane>
                     <VBox spacing="1">
-                        <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="At Risk" />
-                        <Label fx:id="lblAtRisk" style="-fx-font-size:20;-fx-font-weight:bold;-fx-text-fill:#111827;" text="0" />
-                        <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Require attention" />
+                        <Label styleClass="summary-card-title" text="At Risk" />
+                        <Label fx:id="lblAtRisk" styleClass="summary-card-value" text="0" />
+                        <Label styleClass="summary-card-subtitle" text="Require attention" />
                     </VBox>
                 </HBox>
             </VBox>
@@ -105,7 +105,7 @@
                 </columns>
             </TableView>
             <HBox alignment="CENTER_LEFT" style="-fx-padding:8 0 2 0;">
-                <Label fx:id="lblPagination" style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Showing 1 to 8 of 24 crops" />
+                <Label fx:id="lblPagination" styleClass="summary-card-title" text="Showing 1 to 8 of 24 crops" />
                 <Region HBox.hgrow="ALWAYS" />
                 <HBox spacing="4">
                     <Button styleClass="page-btn" text="&lt;" />
@@ -153,32 +153,32 @@
                     <VBox spacing="10" styleClass="card">
                         <padding><Insets bottom="12" left="12" right="12" top="12" /></padding>
                         <VBox alignment="CENTER" spacing="4">
-                            <StackPane alignment="CENTER" prefHeight="56" prefWidth="56" style="-fx-background-color:#e8f5e9;-fx-background-radius:100;">
+                            <StackPane alignment="CENTER" prefHeight="56" prefWidth="56" styleClass="metric-icon,metric-icon-primary">
                                 <FontIcon iconColor="#2e7d32" iconLiteral="fth-feather" iconSize="24" />
                             </StackPane>
                             <Label fx:id="lblDetailName" style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Wheat" />
-                            <Label fx:id="lblDetailPlot" style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Plot 1 - North Field" />
+                            <Label fx:id="lblDetailPlot" styleClass="summary-card-title" text="Plot 1 - North Field" />
                             <HBox alignment="CENTER">
                                 <Label fx:id="lblDetailStatus" style="-fx-background-color:#d1fae5;-fx-text-fill:#065f46;-fx-padding:2 10;-fx-background-radius:12;-fx-font-size:11;-fx-font-weight:bold;" text="Active" />
                             </HBox>
                         </VBox>
                         <Separator />
-                        <Label fx:id="lblDetailPlanted" style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Planted  Apr 1, 2025" />
+                        <Label fx:id="lblDetailPlanted" styleClass="summary-card-title" text="Planted  Apr 1, 2025" />
                         <VBox spacing="8">
                             <VBox spacing="2">
-                                <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Area" />
+                                <Label styleClass="summary-card-subtitle" text="Area" />
                                 <Label fx:id="lblDetailArea" style="-fx-font-size:12;-fx-font-weight:bold;-fx-text-fill:#111827;" text="2.5 ha" />
                             </VBox>
                             <VBox spacing="2">
-                                <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Days Planted" />
+                                <Label styleClass="summary-card-subtitle" text="Days Planted" />
                                 <Label fx:id="lblDetailDays" style="-fx-font-size:12;-fx-font-weight:bold;-fx-text-fill:#111827;" text="50 days" />
                             </VBox>
                             <VBox spacing="2">
-                                <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Growth Stage" />
+                                <Label styleClass="summary-card-subtitle" text="Growth Stage" />
                                 <Label fx:id="lblDetailStage" style="-fx-font-size:12;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Vegetative" />
                             </VBox>
                             <VBox spacing="2">
-                                <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Expected Harvest" />
+                                <Label styleClass="summary-card-subtitle" text="Expected Harvest" />
                                 <Label fx:id="lblDetailHarvest" style="-fx-font-size:12;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Jun 30, 2025" />
                             </VBox>
                         </VBox>
@@ -193,24 +193,24 @@
                                 <Circle fill="transparent" radius="60" stroke="#e5e7eb" strokeWidth="12" />
                                 <Circle fx:id="progressArc" fill="transparent" radius="60" rotate="-90" stroke="#2e7d32" strokeDashOffset="0" strokeWidth="12" />
                                 <VBox alignment="CENTER" spacing="0">
-                                    <Label fx:id="lblProgressPercent" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;" text="65%" />
-                                    <Label style="-fx-font-size:9;-fx-text-fill:#9ca3af;" text="Complete" />
+                                    <Label fx:id="lblProgressPercent" styleClass="summary-card-value" text="65%" />
+                                    <Label styleClass="summary-card-subtitle" text="Complete" />
                                 </VBox>
                             </StackPane>
                             <VBox spacing="8">
                                 <HBox alignment="CENTER_LEFT" spacing="6">
                                     <Circle fill="#2e7d32" radius="4" />
-                                    <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Current" />
+                                    <Label styleClass="summary-card-title" text="Current" />
                                     <Label fx:id="lblTargetProgress" style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#111827;" text="100%" />
                                 </HBox>
                                 <HBox alignment="CENTER_LEFT" spacing="6">
                                     <Circle fill="#3b82f6" radius="4" />
-                                    <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Expected" />
+                                    <Label styleClass="summary-card-title" text="Expected" />
                                     <Label fx:id="lblExpectedProgress" style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#111827;" text="70%" />
                                 </HBox>
                                 <HBox alignment="CENTER_LEFT" spacing="6">
                                     <Circle fill="#dc2626" radius="4" />
-                                    <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Behind" />
+                                    <Label styleClass="summary-card-title" text="Behind" />
                                     <Label fx:id="lblBehindSchedule" style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#111827;" text="5%" />
                                 </HBox>
                             </VBox>
@@ -223,7 +223,7 @@
                             </VBox>
                             <VBox spacing="2">
                                 <Label style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#111827;" text="ETA" />
-                                <Label fx:id="lblMilestoneEta" style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="15 days" />
+                                <Label fx:id="lblMilestoneEta" styleClass="summary-card-title" text="15 days" />
                             </VBox>
                         </VBox>
                     </VBox>
@@ -234,23 +234,23 @@
                         <Label style="-fx-font-size:14;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Health Indicators" />
                         <VBox spacing="10">
                             <HBox alignment="CENTER_LEFT">
-                                <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Overall Health" HBox.hgrow="ALWAYS" />
+                                <Label styleClass="summary-card-title" text="Overall Health" HBox.hgrow="ALWAYS" />
                                 <Label fx:id="lblHealthOverall" style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#16a34a;" text="Good" />
                             </HBox>
                             <HBox alignment="CENTER_LEFT">
-                                <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Leaf Color" HBox.hgrow="ALWAYS" />
+                                <Label styleClass="summary-card-title" text="Leaf Color" HBox.hgrow="ALWAYS" />
                                 <Label fx:id="lblHealthLeaf" style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#16a34a;" text="Good" />
                             </HBox>
                             <HBox alignment="CENTER_LEFT">
-                                <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Growth Rate" HBox.hgrow="ALWAYS" />
+                                <Label styleClass="summary-card-title" text="Growth Rate" HBox.hgrow="ALWAYS" />
                                 <Label fx:id="lblHealthGrowth" style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#16a34a;" text="Good" />
                             </HBox>
                             <HBox alignment="CENTER_LEFT">
-                                <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Pest Level" HBox.hgrow="ALWAYS" />
+                                <Label styleClass="summary-card-title" text="Pest Level" HBox.hgrow="ALWAYS" />
                                 <Label fx:id="lblHealthPest" style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#3b82f6;" text="Low" />
                             </HBox>
                             <HBox alignment="CENTER_LEFT">
-                                <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Disease Risk" HBox.hgrow="ALWAYS" />
+                                <Label styleClass="summary-card-title" text="Disease Risk" HBox.hgrow="ALWAYS" />
                                 <Label fx:id="lblHealthDisease" style="-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#3b82f6;" text="Low" />
                             </HBox>
                         </VBox>
@@ -259,7 +259,7 @@
                             <Label style="-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Yield Estimate" />
                             <HBox alignment="CENTER_LEFT" spacing="6">
                                 <Label fx:id="lblYieldEstimate" style="-fx-font-size:18;-fx-font-weight:bold;-fx-text-fill:#2e7d32;" text="0 kg" />
-                                <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="expected" />
+                                <Label styleClass="summary-card-subtitle" text="expected" />
                             </HBox>
                             <StackPane prefHeight="6" style="-fx-pref-height:6;-fx-background-color:#e5e7eb;-fx-background-radius:3;">
                                 <StackPane fx:id="yieldBar" alignment="CENTER_LEFT" maxWidth="180" prefHeight="6" style="-fx-background-color:#2e7d32;-fx-background-radius:3;" />
@@ -288,20 +288,20 @@
                         <VBox spacing="8">
                             <FlowPane hgap="16" vgap="8">
                                 <VBox spacing="2">
-                                    <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Days Elapsed" />
+                                    <Label styleClass="summary-card-subtitle" text="Days Elapsed" />
                                     <Label fx:id="lblElapsedDays" style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="50" />
                                 </VBox>
                                 <VBox spacing="2">
-                                    <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Days Remaining" />
+                                    <Label styleClass="summary-card-subtitle" text="Days Remaining" />
                                     <Label fx:id="lblRemainingDays" style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#2e7d32;" text="40" />
                                 </VBox>
                                 <VBox spacing="2">
-                                    <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Total Lifecycle" />
+                                    <Label styleClass="summary-card-subtitle" text="Total Lifecycle" />
                                     <Label fx:id="lblTotalLifecycle" style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#6b7280;" text="90 days" />
                                 </VBox>
                             </FlowPane>
                             <VBox spacing="2">
-                                <Label style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Completion" />
+                                <Label styleClass="summary-card-subtitle" text="Completion" />
                                 <ProgressBar fx:id="lifecycleBar" prefHeight="8" prefWidth="140" progress="0.55" style="-fx-accent:#2e7d32;" />
                             </VBox>
                         </VBox>
@@ -314,7 +314,7 @@
                             <FontIcon iconColor="#2e7d32" iconLiteral="fth-thermometer" iconSize="14" />
                             <Label style="-fx-font-size:14;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Plot Conditions" />
                         </HBox>
-                        <Label fx:id="lblConditionsSource" style="-fx-font-size:10;-fx-text-fill:#9ca3af;" text="Live from sensors" />
+                        <Label fx:id="lblConditionsSource" styleClass="summary-card-subtitle" text="Live from sensors" />
 
                         <!-- Temperature -->
                         <VBox spacing="3" style="-fx-background-color:#f0fdf4;-fx-background-radius:8;-fx-padding:8;">
@@ -322,7 +322,7 @@
                                 <FontIcon iconColor="#dc2626" iconLiteral="fth-sun" iconSize="12" />
                                 <Label style="-fx-font-size:10;-fx-text-fill:#6b7280;" text="Temperature" />
                             </HBox>
-                            <Label fx:id="lblEnvTemp" style="-fx-font-size:18;-fx-font-weight:bold;-fx-text-fill:#111827;" text="-- °C" />
+                            <Label fx:id="lblEnvTemp" styleClass="summary-card-value" text="-- °C" />
                             <Label fx:id="lblEnvTempStatus" style="-fx-font-size:9;-fx-text-fill:#16a34a;-fx-font-weight:bold;" text="Normal" />
                         </VBox>
 
@@ -332,7 +332,7 @@
                                 <FontIcon iconColor="#2563eb" iconLiteral="fth-droplet" iconSize="12" />
                                 <Label style="-fx-font-size:10;-fx-text-fill:#6b7280;" text="Humidity" />
                             </HBox>
-                            <Label fx:id="lblEnvHumidity" style="-fx-font-size:18;-fx-font-weight:bold;-fx-text-fill:#111827;" text="-- %" />
+                            <Label fx:id="lblEnvHumidity" styleClass="summary-card-value" text="-- %" />
                             <Label fx:id="lblEnvHumStatus" style="-fx-font-size:9;-fx-text-fill:#16a34a;-fx-font-weight:bold;" text="Normal" />
                         </VBox>
 
@@ -342,7 +342,7 @@
                                 <FontIcon iconColor="#ca8a04" iconLiteral="fth-activity" iconSize="12" />
                                 <Label style="-fx-font-size:10;-fx-text-fill:#6b7280;" text="Soil Moisture" />
                             </HBox>
-                            <Label fx:id="lblEnvSoil" style="-fx-font-size:18;-fx-font-weight:bold;-fx-text-fill:#111827;" text="-- %" />
+                            <Label fx:id="lblEnvSoil" styleClass="summary-card-value" text="-- %" />
                             <Label fx:id="lblEnvSoilStatus" style="-fx-font-size:9;-fx-text-fill:#16a34a;-fx-font-weight:bold;" text="Normal" />
                         </VBox>
                     </VBox>
@@ -364,7 +364,7 @@
                     <VBox spacing="10" styleClass="card">
                         <padding><Insets bottom="12" left="12" right="12" top="12" /></padding>
                         <Label style="-fx-font-size:14;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Care &amp; Activity Log" />
-                        <Label style="-fx-font-size:12;-fx-text-fill:#6b7280;" text="Activities such as watering, fertilizing, and pest control will appear here." />
+                        <Label styleClass="summary-card-title" text="Activities such as watering, fertilizing, and pest control will appear here." />
                         <VBox fx:id="careEntries" spacing="0">
                             <!-- Populated dynamically -->
                         </VBox>
@@ -377,7 +377,7 @@
                         <padding><Insets bottom="20" left="12" right="12" top="20" /></padding>
                         <FontIcon iconColor="#9ca3af" iconLiteral="fth-camera" iconSize="40" />
                         <Label style="-fx-font-size:14;-fx-font-weight:bold;-fx-text-fill:#374151;" text="No Photos Yet" />
-                        <Label style="-fx-font-size:12;-fx-text-fill:#6b7280;" text="Upload crop photos to track visual progress over time." />
+                        <Label styleClass="summary-card-title" text="Upload crop photos to track visual progress over time." />
                     </VBox>
                 </VBox>
 

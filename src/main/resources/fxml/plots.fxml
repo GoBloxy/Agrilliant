@@ -15,8 +15,8 @@
     <HBox alignment="CENTER_LEFT" spacing="8">
         <Label text="Plots" styleClass="page-title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+ Add New Plot" styleClass="btn-primary" style="-fx-padding: 8 12;"/>
-        <Button text="Export" styleClass="btn-secondary" style="-fx-padding: 8 12;">
+        <Button text="+ Add New Plot" styleClass="btn-primary" />
+        <Button text="Export" styleClass="btn-secondary" >
             <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
         </Button>
     </HBox>
@@ -32,7 +32,7 @@
         <VBox styleClass="card" minWidth="160">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color: #e8f5e9; -fx-background-radius: 100;" prefWidth="36" prefHeight="36" minWidth="36">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="36" prefHeight="36" minWidth="36">
                     <FontIcon iconLiteral="fth-grid" iconSize="16" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="0">
@@ -45,7 +45,7 @@
         <VBox styleClass="card" minWidth="160">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color: #e8f5e9; -fx-background-radius: 100;" prefWidth="36" prefHeight="36" minWidth="36">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="36" prefHeight="36" minWidth="36">
                     <FontIcon iconLiteral="fth-sun" iconSize="16" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="0">
@@ -58,7 +58,7 @@
         <VBox styleClass="card" minWidth="160">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color: #fef3c7; -fx-background-radius: 100;" prefWidth="36" prefHeight="36" minWidth="36">
+                <StackPane styleClass="metric-icon,metric-icon-warning" prefWidth="36" prefHeight="36" minWidth="36">
                     <FontIcon iconLiteral="fth-maximize" iconSize="16" iconColor="#d97706"/>
                 </StackPane>
                 <VBox spacing="0">
@@ -71,7 +71,7 @@
         <VBox styleClass="card" minWidth="160">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color: #f3e8ff; -fx-background-radius: 100;" prefWidth="36" prefHeight="36" minWidth="36">
+                <StackPane styleClass="metric-icon,metric-icon-info" prefWidth="36" prefHeight="36" minWidth="36">
                     <FontIcon iconLiteral="fth-clock" iconSize="16" iconColor="#9333ea"/>
                 </StackPane>
                 <VBox spacing="0">
