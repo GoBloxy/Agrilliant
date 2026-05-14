@@ -41,10 +41,12 @@ public class Main extends MobileApplication {
 
     @Override
     public void init() {
-        addViewFactory(AppView.SPLASH.name(), SplashView::new);
-        addViewFactory(AppView.SIGNIN.name(), SignInView::new);
-        addViewFactory(AppView.SIGNUP.name(), SignUpView::new);
-        addViewFactory(AppView.SHELL.name(),  ShellView::new);
+        // SPLASH registers under HOME_VIEW ("home") so Glisten mounts it at startup.
+        // See AppView's javadoc for the contract.
+        addViewFactory(AppView.SPLASH.registeredName(), SplashView::new);
+        addViewFactory(AppView.SIGNIN.registeredName(), SignInView::new);
+        addViewFactory(AppView.SIGNUP.registeredName(), SignUpView::new);
+        addViewFactory(AppView.SHELL.registeredName(),  ShellView::new);
     }
 
     @Override
