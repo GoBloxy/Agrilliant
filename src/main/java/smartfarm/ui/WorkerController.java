@@ -1,11 +1,16 @@
 package smartfarm.ui;
 
+import com.gluonhq.charm.glisten.control.CharmListCell;
+import com.gluonhq.charm.glisten.control.CharmListView;
+import com.gluonhq.charm.glisten.control.ListTile;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -25,8 +30,7 @@ public class WorkerController {
     @FXML private Label lblTotalWorkers, lblOnDuty, lblAvailable, lblBusy;
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbStatus;
-    @FXML private TableView<Worker> workerTable;
-    @FXML private TableColumn<Worker, String> colName, colPhone, colJobTitle, colSkills, colStatus, colWorkload, colFingerprint, colActions;
+    @FXML private CharmListView<Worker, String> workerList;
     @FXML private Button btnAddWorker;
 
     private final WorkerService workerService = new WorkerService(new WorkerDAO(), new TaskDAO());
@@ -40,7 +44,7 @@ public class WorkerController {
     @FXML
     public void initialize() {
         loadTasks();
-        setupTableColumns();
+        setupCellFactory();
         setupFilters();
         loadWorkers();
         updateSummaryCards();
@@ -54,62 +58,68 @@ public class WorkerController {
         }
     }
 
-    private void setupTableColumns() {
-        workerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colName.setResizable(false);
-        colPhone.setResizable(false);
-        colJobTitle.setResizable(false);
-        colSkills.setResizable(false);
-        colStatus.setResizable(false);
-        colWorkload.setResizable(false);
-        colFingerprint.setResizable(false);
-        colActions.setResizable(false);
+    /**
+     * Builds each list row as a Gluon {@link ListTile}: a circular avatar on
+     * the left, three text lines (name, role + status, workload + phone),
+     * and edit/delete icon buttons on the right. The pattern collapses
+     * cleanly onto a phone row without horizontal scrolling.
+     */
+    private void setupCellFactory() {
+        workerList.setCellFactory(view -> new WorkerListCell());
+    }
 
-        colName.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getFullName()));
-        colPhone.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getPhone() != null ? data.getValue().getPhone() : "--"));
-        colJobTitle.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getJobTitle() != null ? data.getValue().getJobTitle() : "--"));
-        colSkills.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getSkills() != null ? data.getValue().getSkills() : "--"));
-        colStatus.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().isOnDuty() ? "On Duty" : "Off Duty"));
-        colWorkload.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getActiveTaskCount(allTasks) + " tasks"));
-        colFingerprint.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getFingerprintId() != null
-                                ? "ID: " + data.getValue().getFingerprintId()
-                                : "Not enrolled"));
+    private final class WorkerListCell extends CharmListCell<Worker> {
+        private final ListTile tile = new ListTile();
+        private final Button editBtn = new Button("", new FontIcon("fth-edit-2"));
+        private final Button delBtn  = new Button("", new FontIcon("fth-trash-2"));
+        private final HBox actionBox = new HBox(6, editBtn, delBtn);
 
-        colActions.setCellFactory(col -> new TableCell<Worker, String>() {
-            private final Button editBtn = new Button("", new FontIcon("fth-edit-2"));
-            private final Button delBtn = new Button("", new FontIcon("fth-trash-2"));
-            private final HBox box = new HBox(6, editBtn, delBtn);
-            {
-                editBtn.getStyleClass().add("icon-btn");
-                delBtn.getStyleClass().add("icon-btn");
-                editBtn.setOnAction(e -> {
-                    Worker w = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (w != null) onEditWorker(w);
-                });
-                delBtn.setOnAction(e -> {
-                    Worker w = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (w != null) onDeleteWorker(w);
-                });
+        WorkerListCell() {
+            editBtn.getStyleClass().add("icon-btn");
+            delBtn.getStyleClass().add("icon-btn");
+            actionBox.setAlignment(Pos.CENTER);
+            editBtn.setOnAction(e -> {
+                Worker w = getItem();
+                if (w != null) onEditWorker(w);
+            });
+            delBtn.setOnAction(e -> {
+                Worker w = getItem();
+                if (w != null) onDeleteWorker(w);
+            });
+            tile.setSecondaryGraphic(actionBox);
+
+            FontIcon avatarIcon = new FontIcon("fth-user");
+            avatarIcon.setIconSize(20);
+            StackPane avatar = new StackPane(avatarIcon);
+            avatar.setStyle(
+                    "-fx-background-color:#e8f5e9;-fx-background-radius:100;"
+                    + "-fx-min-width:44;-fx-min-height:44;-fx-pref-width:44;-fx-pref-height:44;");
+            tile.setPrimaryGraphic(avatar);
+        }
+
+        @Override
+        public void updateItem(Worker w, boolean empty) {
+            super.updateItem(w, empty);
+            if (empty || w == null) {
+                setText(null);
+                setGraphic(null);
+                return;
             }
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
-            }
-        });
+            String name     = w.getFullName();
+            String role     = w.getJobTitle() != null ? w.getJobTitle() : "--";
+            String status   = w.isOnDuty() ? "On Duty" : "Off Duty";
+            String workload = w.getActiveTaskCount(allTasks) + " tasks";
+            String phone    = w.getPhone() != null ? w.getPhone() : "--";
+            String fpStatus = w.getFingerprintId() != null
+                    ? "FP ID: " + w.getFingerprintId()
+                    : "FP: not enrolled";
+
+            tile.setTextLine(0, name);
+            tile.setTextLine(1, role + "  ·  " + status);
+            tile.setTextLine(2, workload + "  ·  " + phone + "  ·  " + fpStatus);
+            setText(null);
+            setGraphic(tile);
+        }
     }
 
     private void loadWorkers() {
@@ -142,7 +152,7 @@ public class WorkerController {
                         || ("Off Duty".equals(status) && !w.isOnDuty()))
                 .collect(Collectors.toList());
         filteredWorkers.setAll(filtered);
-        workerTable.setItems(filteredWorkers);
+        workerList.setItems(filteredWorkers);
     }
 
     private void updateSummaryCards() {
