@@ -10,11 +10,16 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.MonitoringController"
-      spacing="8" styleClass="content-pane">
+      spacing="12" styleClass="content-pane">
     <padding><Insets top="8" right="10" bottom="8" left="10"/></padding>
+    <VBox styleClass="page-header">
+        <Label text="Operations" styleClass="page-kicker"/>
+        <Label text="Monitoring" styleClass="page-title"/>
+        <Label text="Live sensor health and field readings" styleClass="page-subtitle" wrapText="true"/>
+    </VBox>
 
     <!-- Filters bar: FlowPane wraps controls onto multiple rows on narrow screens. -->
-    <FlowPane hgap="8" vgap="8">
+    <FlowPane hgap="8" vgap="8" styleClass="section-card">
         <ComboBox fx:id="cmbFields" promptText="All Fields" styleClass="filter-combo"/>
         <ComboBox fx:id="cmbPlots" promptText="All Plots" styleClass="filter-combo"/>
         <HBox alignment="CENTER_LEFT" spacing="6" styleClass="date-picker-box">
@@ -32,7 +37,7 @@
     </FlowPane>
 
     <!-- Top Section: Summary Cards — horizontal row layout (icon left, label+value right) -->
-    <VBox spacing="6">
+    <VBox spacing="8" styleClass="hero-card">
         <!-- Temperature -->
         <HBox styleClass="sensor-card" spacing="10" alignment="CENTER_LEFT">
             <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
@@ -105,8 +110,7 @@
     </VBox>
 
     <!-- Middle Section: Trend Chart (full-width, stacked vertically) -->
-    <VBox styleClass="card">
-        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+    <VBox styleClass="chart-card">
         <HBox alignment="CENTER_LEFT">
             <Label text="Temperature &amp; Humidity Trend" styleClass="card-title"/>
             <Region HBox.hgrow="ALWAYS"/>
@@ -119,8 +123,7 @@
     </VBox>
 
     <!-- Sensor Map (full-width, stacked below chart) -->
-    <VBox styleClass="card">
-        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+    <VBox styleClass="section-card">
         <HBox alignment="CENTER_LEFT">
             <Label text="Sensor Map" styleClass="card-title"/>
             <Region HBox.hgrow="ALWAYS"/>
@@ -155,8 +158,7 @@
     </VBox>
 
     <!-- Bottom Section: Live Sensor Readings (full-width, stacked vertically) -->
-    <VBox styleClass="card" VBox.vgrow="ALWAYS">
-        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+    <VBox styleClass="list-card" VBox.vgrow="ALWAYS">
         <Label text="Live Sensor Readings" styleClass="card-title"/>
         <TableView fx:id="sensorTable" VBox.vgrow="ALWAYS" prefHeight="200">
             <columns>
@@ -176,8 +178,7 @@
     </VBox>
 
     <!-- Sensor Status (full-width, stacked below live readings) -->
-    <VBox styleClass="card">
-        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+    <VBox styleClass="section-card">
         <Label text="Sensor Status" styleClass="card-title"/>
         
         <VBox VBox.vgrow="ALWAYS" alignment="CENTER" spacing="10">

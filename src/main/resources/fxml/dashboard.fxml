@@ -167,12 +167,19 @@
             <StackPane fx:id="pageContainer">
                 <VBox fx:id="dashboardPage" spacing="12" styleClass="content-pane">
                     <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                    <VBox styleClass="page-header">
+                        <Label text="Farm home" styleClass="page-kicker"/>
+                        <Label text="Dashboard" styleClass="page-title"/>
+                        <Label text="Live field health, work, and harvest signals" styleClass="page-subtitle" wrapText="true"/>
+                    </VBox>
 
             <!-- ─────────── SENSORS (full-width, stacked vertically) ─────────── -->
-            <VBox styleClass="card" spacing="8">
-                <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            <VBox styleClass="hero-card" spacing="12">
                 <HBox alignment="CENTER_LEFT">
-                    <Label text="Live Environmental Monitor" styleClass="card-title"/>
+                    <VBox HBox.hgrow="ALWAYS">
+                        <Label text="Live Environmental Monitor" styleClass="hero-title"/>
+                        <Label text="Current conditions across connected plots" styleClass="hero-subtitle" wrapText="true"/>
+                    </VBox>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Hyperlink fx:id="linkViewSensors" text="View All"/>
                 </HBox>
@@ -223,15 +230,13 @@
             </VBox>
 
             <!-- ─────────── CHART (full-width) ─────────── -->
-            <VBox styleClass="card">
-                <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            <VBox styleClass="chart-card">
                 <Label text="Temperature &amp; Humidity Trend" styleClass="card-title"/>
                 <StackPane fx:id="chartContainer" prefHeight="180" maxHeight="180"/>
             </VBox>
 
             <!-- ─────────── FIELD OVERVIEW (full-width) ─────────── -->
-            <VBox styleClass="card">
-                <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            <VBox styleClass="section-card">
                 <HBox alignment="CENTER_LEFT">
                     <Label text="Field Overview" styleClass="card-title"/>
                     <Region HBox.hgrow="ALWAYS"/>
@@ -267,7 +272,7 @@
             </VBox>
 
             <!-- ─────────── RECENT ALERTS (full-width) ─────────── -->
-            <VBox styleClass="card" spacing="8">
+            <VBox styleClass="section-card" spacing="8">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 <HBox alignment="CENTER_LEFT">
                     <Label text="Recent Alerts" styleClass="card-title"/>
@@ -279,7 +284,7 @@
             </VBox>
 
             <!-- ─────────── TASKS (full-width) ─────────── -->
-            <VBox styleClass="card" spacing="8">
+            <VBox styleClass="section-card" spacing="8">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 <HBox alignment="CENTER_LEFT">
                     <Label fx:id="lblTasksTitle" text="Tasks" styleClass="card-title"/>
@@ -291,7 +296,7 @@
             </VBox>
 
             <!-- ─────────── CROP OVERVIEW (full-width) ─────────── -->
-            <VBox styleClass="card">
+            <VBox styleClass="list-card">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 <HBox alignment="CENTER_LEFT">
                     <Label text="Crop &amp; Plot Overview" styleClass="card-title"/>
@@ -310,7 +315,7 @@
             </VBox>
 
             <!-- ─────────── WORKER OVERVIEW (full-width) ─────────── -->
-            <VBox styleClass="card">
+            <VBox styleClass="list-card">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 <HBox alignment="CENTER_LEFT">
                     <Label text="Worker Overview" styleClass="card-title"/>
@@ -329,7 +334,7 @@
             </VBox>
 
             <!-- ─────────── QUICK ACTIONS (full-width, 2-column grid) ─────────── -->
-            <VBox styleClass="card" spacing="8">
+            <VBox styleClass="section-card" spacing="8">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 <Label text="Quick Actions" styleClass="card-title"/>
                 <GridPane hgap="8" vgap="8" VBox.vgrow="ALWAYS">
@@ -337,23 +342,23 @@
                         <ColumnConstraints percentWidth="50"/>
                         <ColumnConstraints percentWidth="50"/>
                     </columnConstraints>
-                    <Button fx:id="btnAddCrop"      onAction="#onAddCrop"      text="Add Crop"      styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" graphicTextGap="6">
+                    <Button fx:id="btnAddCrop"      onAction="#onAddCrop"      text="Add Crop"      styleClass="action-btn,btn-tonal" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" graphicTextGap="6">
                         <graphic><FontIcon iconLiteral="fth-plus-circle" iconSize="16"/></graphic>
                     </Button>
-                    <Button fx:id="btnAddTask"      onAction="#onAddTask"      text="Add Task"      styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" graphicTextGap="6">
+                    <Button fx:id="btnAddTask"      onAction="#onAddTask"      text="Add Task"      styleClass="action-btn,btn-tonal" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" graphicTextGap="6">
                         <graphic><FontIcon iconLiteral="fth-clipboard" iconSize="16"/></graphic>
                     </Button>
-                    <Button fx:id="btnLogHarvest"   onAction="#onLogHarvest"   text="Log Harvest"   styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1" graphicTextGap="6">
+                    <Button fx:id="btnLogHarvest"   onAction="#onLogHarvest"   text="Log Harvest"   styleClass="action-btn,btn-tonal" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1" graphicTextGap="6">
                         <graphic><FontIcon iconLiteral="fth-package" iconSize="16"/></graphic>
                     </Button>
-                    <Button fx:id="btnExportReport" onAction="#onExportReport" text="Export Report" styleClass="action-btn" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" graphicTextGap="6">
+                    <Button fx:id="btnExportReport" onAction="#onExportReport" text="Export Report" styleClass="action-btn,btn-tonal" maxWidth="Infinity" maxHeight="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" graphicTextGap="6">
                         <graphic><FontIcon iconLiteral="fth-file-text" iconSize="16"/></graphic>
                     </Button>
                 </GridPane>
             </VBox>
 
             <!-- ─────────── RECENT HARVESTS (full-width) ─────────── -->
-            <VBox styleClass="card">
+            <VBox styleClass="list-card">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 <HBox alignment="CENTER_LEFT">
                     <Label text="Recent Harvests" styleClass="card-title"/>
@@ -377,13 +382,13 @@
             <VBox styleClass="card" spacing="6">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 <Label text="Reports Export" styleClass="card-title"/>
-                <Button fx:id="btnExportSensorCSV"  onAction="#onExportSensorCSV"  text="Sensor Logs (CSV)"     maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                <Button fx:id="btnExportSensorCSV"  onAction="#onExportSensorCSV"  text="Sensor Logs (CSV)"     maxWidth="Infinity" styleClass="export-btn,btn-tonal" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
                     <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
                 </Button>
-                <Button fx:id="btnExportHarvestCSV" onAction="#onExportHarvestCSV" text="Harvest Summary (CSV)" maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                <Button fx:id="btnExportHarvestCSV" onAction="#onExportHarvestCSV" text="Harvest Summary (CSV)" maxWidth="Infinity" styleClass="export-btn,btn-tonal" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
                     <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
                 </Button>
-                <Button fx:id="btnExportAlertCSV"   onAction="#onExportAlertCSV"   text="Alert History (CSV)"   maxWidth="Infinity" styleClass="export-btn" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
+                <Button fx:id="btnExportAlertCSV"   onAction="#onExportAlertCSV"   text="Alert History (CSV)"   maxWidth="Infinity" styleClass="export-btn,btn-tonal" alignment="CENTER_LEFT" contentDisplay="RIGHT" graphicTextGap="0">
                     <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
                 </Button>
             </VBox>
