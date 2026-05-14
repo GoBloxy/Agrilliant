@@ -8,85 +8,85 @@
 <?import javafx.scene.shape.Circle?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.PlotController"
-      spacing="14" styleClass="content-pane">
-    <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
+      spacing="10" styleClass="content-pane">
+    <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
 
     <!-- Page title row with primary actions, matches the other inner pages. -->
-    <HBox alignment="CENTER_LEFT" spacing="12">
+    <HBox alignment="CENTER_LEFT" spacing="8">
         <Label text="Plots" styleClass="page-title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+ Add New Plot" styleClass="btn-primary" style="-fx-padding: 10 18;"/>
-        <Button text="Export" styleClass="btn-secondary" style="-fx-padding: 10 18;">
+        <Button text="+ Add New Plot" styleClass="btn-primary" style="-fx-padding: 8 12;"/>
+        <Button text="Export" styleClass="btn-secondary" style="-fx-padding: 8 12;">
             <graphic><FontIcon iconLiteral="fth-download" iconSize="14"/></graphic>
         </Button>
     </HBox>
 
     <!--
-      Summary cards: FlowPane wraps to 1 / 2 / 4 columns depending on width.
-      Card minWidth=200 forces a wrap when (200*N + hgap*(N-1)) > available.
-        Phone (≤460dp):  1 column × 4
+      Summary cards: FlowPane wraps to 1 / 2 columns depending on width.
+      Card minWidth=160 forces a wrap when (160*N + hgap*(N-1)) > available.
+        Phone (≤390dp):  1 column × 4
         Tablet (~860dp): 2 columns × 2
         Desktop ≥860dp:  4 columns × 1
     -->
-    <FlowPane hgap="14" vgap="14" prefWrapLength="200">
-        <VBox styleClass="card" minWidth="200">
-            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
-            <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color: #e8f5e9; -fx-background-radius: 100;" prefWidth="44" prefHeight="44" minWidth="44">
-                    <FontIcon iconLiteral="fth-grid" iconSize="20" iconColor="#2e7d32"/>
+    <FlowPane hgap="10" vgap="10" prefWrapLength="160">
+        <VBox styleClass="card" minWidth="160">
+            <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color: #e8f5e9; -fx-background-radius: 100;" prefWidth="36" prefHeight="36" minWidth="36">
+                    <FontIcon iconLiteral="fth-grid" iconSize="16" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="Total Plots" style="-fx-font-size: 11; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblTotalPlots" text="12" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                    <Label text="Across all fields" style="-fx-font-size: 10; -fx-text-fill: #9ca3af;"/>
+                    <Label text="Total Plots" style="-fx-font-size: 10; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <Label fx:id="lblTotalPlots" text="12" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="Across all fields" style="-fx-font-size: 9; -fx-text-fill: #9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="200">
-            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
-            <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color: #e8f5e9; -fx-background-radius: 100;" prefWidth="44" prefHeight="44" minWidth="44">
-                    <FontIcon iconLiteral="fth-sun" iconSize="20" iconColor="#2e7d32"/>
+        <VBox styleClass="card" minWidth="160">
+            <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color: #e8f5e9; -fx-background-radius: 100;" prefWidth="36" prefHeight="36" minWidth="36">
+                    <FontIcon iconLiteral="fth-sun" iconSize="16" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="Under Cultivation" style="-fx-font-size: 11; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblCultivation" text="8" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                    <Label text="Plots with active crops" style="-fx-font-size: 10; -fx-text-fill: #9ca3af;"/>
+                    <Label text="Under Cultivation" style="-fx-font-size: 10; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <Label fx:id="lblCultivation" text="8" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="Plots with active crops" style="-fx-font-size: 9; -fx-text-fill: #9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="200">
-            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
-            <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color: #fef3c7; -fx-background-radius: 100;" prefWidth="44" prefHeight="44" minWidth="44">
-                    <FontIcon iconLiteral="fth-maximize" iconSize="20" iconColor="#d97706"/>
+        <VBox styleClass="card" minWidth="160">
+            <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color: #fef3c7; -fx-background-radius: 100;" prefWidth="36" prefHeight="36" minWidth="36">
+                    <FontIcon iconLiteral="fth-maximize" iconSize="16" iconColor="#d97706"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="Available" style="-fx-font-size: 11; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblAvailable" text="2" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                    <Label text="Ready for planting" style="-fx-font-size: 10; -fx-text-fill: #9ca3af;"/>
+                    <Label text="Available" style="-fx-font-size: 10; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <Label fx:id="lblAvailable" text="2" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="Ready for planting" style="-fx-font-size: 9; -fx-text-fill: #9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" minWidth="200">
-            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
-            <HBox spacing="12" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color: #f3e8ff; -fx-background-radius: 100;" prefWidth="44" prefHeight="44" minWidth="44">
-                    <FontIcon iconLiteral="fth-clock" iconSize="20" iconColor="#9333ea"/>
+        <VBox styleClass="card" minWidth="160">
+            <padding><Insets top="10" right="12" bottom="10" left="12"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <StackPane style="-fx-background-color: #f3e8ff; -fx-background-radius: 100;" prefWidth="36" prefHeight="36" minWidth="36">
+                    <FontIcon iconLiteral="fth-clock" iconSize="16" iconColor="#9333ea"/>
                 </StackPane>
                 <VBox spacing="0">
-                    <Label text="Fallow" style="-fx-font-size: 11; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblFallow" text="2" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                    <Label text="Not in use" style="-fx-font-size: 10; -fx-text-fill: #9ca3af;"/>
+                    <Label text="Fallow" style="-fx-font-size: 10; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <Label fx:id="lblFallow" text="2" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="Not in use" style="-fx-font-size: 9; -fx-text-fill: #9ca3af;"/>
                 </VBox>
             </HBox>
         </VBox>
     </FlowPane>
 
     <!-- Filter row: FlowPane wraps search box + combos onto multiple rows on narrow screens. -->
-    <FlowPane hgap="14" vgap="14">
-        <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="240" HBox.hgrow="NEVER">
-            <padding><Insets right="8" left="8"/></padding>
+    <FlowPane hgap="10" vgap="10">
+        <HBox alignment="CENTER_LEFT" styleClass="search-box" minWidth="180" HBox.hgrow="NEVER">
+            <padding><Insets right="6" left="6"/></padding>
             <TextField promptText="Search plots..." styleClass="search-field"/>
             <Region HBox.hgrow="ALWAYS"/>
             <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon"/>
@@ -96,23 +96,24 @@
         <ComboBox promptText="All Crops" styleClass="filter-combo"/>
     </FlowPane>
 
-    <!-- Map + Overview -->
-    <HBox spacing="14">
-        <VBox styleClass="card" HBox.hgrow="ALWAYS">
-            <StackPane prefHeight="380" style="-fx-background-color: #2d5a27; -fx-background-radius: 10;">
-                <ImageView fitHeight="380" fitWidth="780" preserveRatio="false" style="-fx-opacity: 0.95;">
+    <!-- Map + Overview: stacked vertically for mobile-first single-column layout -->
+    <VBox spacing="10">
+        <!-- Map card -->
+        <VBox styleClass="card" VBox.vgrow="ALWAYS">
+            <StackPane prefHeight="260" style="-fx-background-color: #2d5a27; -fx-background-radius: 10;">
+                <ImageView fitHeight="260" fitWidth="366" preserveRatio="false" style="-fx-opacity: 0.95;">
                     <image><Image url="@../images/farm_map.png"/></image>
                 </ImageView>
                 <Pane fx:id="plotMapPane" style="-fx-background-color: transparent;"/>
                 <VBox spacing="4" StackPane.alignment="TOP_LEFT" pickOnBounds="false"
                       maxWidth="-Infinity" maxHeight="-Infinity">
-                    <padding><Insets top="10" left="10"/></padding>
+                    <padding><Insets top="8" left="8"/></padding>
                     <Button text="+" style="-fx-background-color: white; -fx-background-radius: 4; -fx-padding: 4 10; -fx-cursor: hand; -fx-font-weight: bold;"/>
                     <Button text="—" style="-fx-background-color: white; -fx-background-radius: 4; -fx-padding: 4 10; -fx-cursor: hand;"/>
                     <Button style="-fx-background-color: white; -fx-background-radius: 4; -fx-padding: 6; -fx-cursor: hand;">
                         <graphic><FontIcon iconLiteral="fth-crosshair" iconSize="14"/></graphic>
                     </Button>
-                    <Region prefHeight="6"/>
+                    <Region prefHeight="4"/>
                     <!-- Tooltips removed for touch: hover doesn't exist on phone.
                          If hint text becomes important, a long-press handler can
                          be added in PlotController (Gluon gestures). -->
@@ -126,17 +127,19 @@
             </StackPane>
         </VBox>
 
-        <VBox styleClass="card" prefWidth="380" minWidth="380" spacing="12">
-            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+        <!-- Plot Overview card: stacked below map, full width, no fixed prefWidth/minWidth -->
+        <VBox styleClass="card" spacing="10">
+            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
             <Label text="Plot Overview" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-            <HBox spacing="16" alignment="CENTER_LEFT">
-                <StackPane fx:id="chartContainer" prefWidth="130" prefHeight="130" minWidth="130">
+            <!-- Chart + legend: stacked vertically on mobile -->
+            <VBox spacing="10" alignment="CENTER">
+                <StackPane fx:id="chartContainer" prefWidth="120" prefHeight="120" minWidth="120">
                     <VBox alignment="CENTER" spacing="0" mouseTransparent="true">
-                        <Label text="12" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                        <Label text="12" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                         <Label text="Total Plots" style="-fx-font-size: 9; -fx-text-fill: #6b7280;"/>
                     </VBox>
                 </StackPane>
-                <VBox spacing="8" HBox.hgrow="ALWAYS">
+                <VBox spacing="8" VBox.vgrow="ALWAYS">
                     <HBox spacing="6" alignment="CENTER_LEFT">
                         <Circle radius="5" fill="#28a745"/>
                         <Label text="Under Cultivation" style="-fx-font-size: 11; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
@@ -156,30 +159,31 @@
                         <Label text="2 (16.7\%)" style="-fx-font-size: 11; -fx-text-fill: #374151;"/>
                     </HBox>
                 </VBox>
-            </HBox>
-            <HBox spacing="8" alignment="CENTER_LEFT">
-                <VBox HBox.hgrow="ALWAYS">
+            </VBox>
+            <!-- Area stats: stacked vertically on mobile -->
+            <VBox spacing="8">
+                <VBox>
                     <HBox spacing="4" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fth-map" iconSize="11" iconColor="#9ca3af"/>
                         <Label text="Total Area" style="-fx-font-size: 10; -fx-text-fill: #6b7280;"/>
                     </HBox>
-                    <Label text="24.5 ha" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="24.5 ha" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                 </VBox>
-                <VBox HBox.hgrow="ALWAYS">
+                <VBox>
                     <HBox spacing="4" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fth-map" iconSize="11" iconColor="#9ca3af"/>
                         <Label text="Cultivated Area" style="-fx-font-size: 10; -fx-text-fill: #6b7280;"/>
                     </HBox>
-                    <Label text="16.8 ha (68.6\%)" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="16.8 ha (68.6\%)" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                 </VBox>
-                <VBox HBox.hgrow="ALWAYS">
+                <VBox>
                     <HBox spacing="4" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fth-map" iconSize="11" iconColor="#9ca3af"/>
                         <Label text="Available Area" style="-fx-font-size: 10; -fx-text-fill: #6b7280;"/>
                     </HBox>
-                    <Label text="4.5 ha" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="4.5 ha" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                 </VBox>
-            </HBox>
+            </VBox>
             <Separator/>
             <VBox spacing="8">
                 <Label text="Plot Status" style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
@@ -206,11 +210,11 @@
                 </HBox>
             </VBox>
         </VBox>
-    </HBox>
+    </VBox>
 
     <!-- All Plots Table -->
-    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
-        <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="8">
+        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
         <Label text="All Plots" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
         <TableView fx:id="plotTable" VBox.vgrow="ALWAYS" prefHeight="250" style="-fx-fixed-cell-size: 46;">
             <columns>
@@ -225,7 +229,7 @@
                 <TableColumn fx:id="colActions" text="Actions" prefWidth="75" minWidth="75"/>
             </columns>
         </TableView>
-        <HBox alignment="CENTER_LEFT" spacing="10">
+        <HBox alignment="CENTER_LEFT" spacing="8">
             <Label text="Showing 1 to 8 of 12 plots" style="-fx-font-size: 11; -fx-text-fill: #6b7280;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <HBox spacing="4">

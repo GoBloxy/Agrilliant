@@ -56,13 +56,14 @@ public class Main extends MobileApplication {
         scene.getStylesheets().add(
                 getClass().getResource("/css/farm-theme.css").toExternalForm());
 
-        if (Constants.IS_ANDROID) {
-            // Android-only: touch-target overrides + larger base font (B5).
-            // Loaded after farm-theme.css so its size rules win over the
-            // dashboard-optimized defaults without changing the desktop UX.
-            scene.getStylesheets().add(
-                    getClass().getResource("/css/mobile.css").toExternalForm());
-        } else {
+        // Always apply mobile.css — the app is now mobile-first on both
+        // Android and desktop. Touch-target overrides + larger base font
+        // are loaded after farm-theme.css so they win over the old
+        // dashboard-optimized defaults.
+        scene.getStylesheets().add(
+                getClass().getResource("/css/mobile.css").toExternalForm());
+
+        if (!Constants.IS_ANDROID) {
             // Desktop-only: window setup + FarmServer
             applyDesktopWindowDefaults(scene);
             startFarmServerReflectively();
@@ -74,9 +75,15 @@ public class Main extends MobileApplication {
         stage.setTitle("Agrilliant — Smart Farm Management System");
         stage.getIcons().add(
                 new Image(getClass().getResourceAsStream("/images/logo-dark.png")));
-        stage.setMinWidth(1300);
-        stage.setMinHeight(820);
-        stage.setMaximized(true);
+
+        // ── Always mobile-sized window ───────────────────────────
+        // The app is mobile-first — phone-sized window on desktop
+        // matches the Android experience exactly.
+        stage.setMinWidth(390);
+        stage.setMinHeight(844);
+        stage.setWidth(390);
+        stage.setHeight(844);
+        stage.setMaximized(false);
     }
 
     /**

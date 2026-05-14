@@ -7,10 +7,10 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.ReportsController"
-      spacing="16" styleClass="content-pane">
-    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+      spacing="12" styleClass="content-pane">
+    <padding><Insets top="12" right="16" bottom="12" left="16"/></padding>
 
-    <HBox alignment="CENTER_LEFT" spacing="12">
+    <HBox alignment="CENTER_LEFT" spacing="8">
         <Label text="Reports" styleClass="page-title"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button fx:id="btnExport" text="Export CSV" styleClass="btn-primary" onAction="#onExport">
@@ -18,10 +18,17 @@
         </Button>
     </HBox>
 
-    <HBox spacing="16">
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
-            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-            <HBox spacing="10" alignment="CENTER_LEFT">
+    <!--
+      Summary cards: FlowPane wraps to 1 / 2 / 4 columns depending on width.
+      Card minWidth=200 forces a wrap when (200*N + hgap*(N-1)) > available.
+        Phone (≤460dp):  1 column × 4
+        Tablet (~860dp): 2 columns × 2
+        Desktop ≥860dp:  4 columns × 1
+    -->
+    <FlowPane hgap="12" vgap="12" prefWrapLength="200">
+        <VBox styleClass="card" minWidth="200" spacing="6">
+            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-package" iconSize="18" iconColor="#2e7d32"/>
                 </StackPane>
@@ -32,9 +39,9 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
-            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-            <HBox spacing="10" alignment="CENTER_LEFT">
+        <VBox styleClass="card" minWidth="200" spacing="6">
+            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-trending-up" iconSize="18" iconColor="#065f46"/>
                 </StackPane>
@@ -45,9 +52,9 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
-            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-            <HBox spacing="10" alignment="CENTER_LEFT">
+        <VBox styleClass="card" minWidth="200" spacing="6">
+            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#dbeafe;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-dollar-sign" iconSize="18" iconColor="#1d4ed8"/>
                 </StackPane>
@@ -58,9 +65,9 @@
                 </VBox>
             </HBox>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
-            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-            <HBox spacing="10" alignment="CENTER_LEFT">
+        <VBox styleClass="card" minWidth="200" spacing="6">
+            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            <HBox spacing="8" alignment="CENTER_LEFT">
                 <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-percent" iconSize="18" iconColor="#d97706"/>
                 </StackPane>
@@ -71,30 +78,29 @@
                 </VBox>
             </HBox>
         </VBox>
-    </HBox>
+    </FlowPane>
 
-    <HBox spacing="16" VBox.vgrow="ALWAYS">
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
-            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
-            <Label text="Yield by Crop (kg)" styleClass="card-title"/>
-            <BarChart fx:id="yieldChart" animated="false" legendVisible="false" VBox.vgrow="ALWAYS" prefHeight="300">
-                <xAxis><CategoryAxis label="Crop"/></xAxis>
-                <yAxis><NumberAxis label="kg"/></yAxis>
-            </BarChart>
-        </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
-            <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
-            <Label text="Recent Harvests" styleClass="card-title"/>
-            <TableView fx:id="harvestTable" VBox.vgrow="ALWAYS" prefHeight="300">
-                <columns>
-                    <TableColumn fx:id="colDate"    text="Date"       prefWidth="100"/>
-                    <TableColumn fx:id="colCrop"    text="Crop"       prefWidth="100"/>
-                    <TableColumn fx:id="colPlot"    text="Plot"       prefWidth="70"/>
-                    <TableColumn fx:id="colQty"     text="Qty (kg)"   prefWidth="80"/>
-                    <TableColumn fx:id="colGrade"   text="Grade"      prefWidth="70"/>
-                    <TableColumn fx:id="colRevenue" text="Revenue"    prefWidth="80"/>
-                </columns>
-            </TableView>
-        </VBox>
-    </HBox>
+    <!-- Chart + Table stacked vertically for mobile-first single-column layout -->
+    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="8">
+        <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+        <Label text="Yield by Crop (kg)" styleClass="card-title"/>
+        <BarChart fx:id="yieldChart" animated="false" legendVisible="false" VBox.vgrow="ALWAYS" prefHeight="260">
+            <xAxis><CategoryAxis label="Crop"/></xAxis>
+            <yAxis><NumberAxis label="kg"/></yAxis>
+        </BarChart>
+    </VBox>
+    <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="8">
+        <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+        <Label text="Recent Harvests" styleClass="card-title"/>
+        <TableView fx:id="harvestTable" VBox.vgrow="ALWAYS" prefHeight="260">
+            <columns>
+                <TableColumn fx:id="colDate"    text="Date"       prefWidth="100"/>
+                <TableColumn fx:id="colCrop"    text="Crop"       prefWidth="100"/>
+                <TableColumn fx:id="colPlot"    text="Plot"       prefWidth="70"/>
+                <TableColumn fx:id="colQty"     text="Qty (kg)"   prefWidth="80"/>
+                <TableColumn fx:id="colGrade"   text="Grade"      prefWidth="70"/>
+                <TableColumn fx:id="colRevenue" text="Revenue"    prefWidth="80"/>
+            </columns>
+        </TableView>
+    </VBox>
 </VBox>

@@ -82,13 +82,12 @@ public class ShellView extends View {
     private ChangeListener<Number> drawerSensorStatusListener;
 
     /**
-     * P2.5: viewport-width threshold above which the legacy sidebar inflates
-     * inline and the Gluon AppBar hamburger is hidden. Below this, the drawer
-     * + hamburger pattern takes over. 900px is a sensible phone/tablet split:
-     * iPad portrait is 768, iPad landscape is 1024, so 900 catches small
-     * tablets and up.
+     * Viewport-width threshold above which the legacy sidebar inflates
+     * inline and the Gluon AppBar hamburger is hidden. Set to a very
+     * high value (9999) so the sidebar never inflates — the app is
+     * always mobile-first with the NavigationDrawer + hamburger pattern.
      */
-    private static final double WIDE_BREAKPOINT = 900.0;
+    private static final double WIDE_BREAKPOINT = 9999.0;
 
     /**
      * P2.5: scene-width listener handle, retained so we can detach on

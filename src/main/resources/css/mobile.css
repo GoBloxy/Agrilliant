@@ -1,25 +1,23 @@
 /*
- * mobile.css — touch-friendly overrides for the Android build only.
+ * mobile.css — mobile-first overrides for both Android and desktop.
  *
- * Loaded by Main.postInit when Constants.IS_ANDROID is true.
- * NOT applied on desktop (which keeps the dashboard-optimized sizing
- * from farm-theme.css unchanged).
- *
+ * Always loaded by Main.postInit (mobile-first app).
  * Layered on top of:
  *   1. AtlantaFX PrimerLight   (Application.setUserAgentStylesheet)
  *   2. farm-theme.css          (scene stylesheet, both targets)
- *   3. mobile.css              (this file, Android only)
+ *   3. mobile.css              (this file, always applied)
  *
  * Strategy:
  *   - Bump base font to 16px (controls inherit relative to .root).
  *   - Enforce 48dp touch targets on every tappable control.
- *   - Increase CharmListView row height so action buttons fit 48dp.
+ *   - Sensor cards use horizontal row layout (icon left, value right).
+ *   - Cards stack vertically, full-width, compact padding.
+ *   - Tables scroll horizontally and use smaller cell sizes.
+ *   - Auth pages fill the viewport width, no side-by-side panels.
  *   - Keep .icon-btn at 44dp (still finger-tappable, doesn't
  *     dominate the toolbar visually).
  *   - Defer to farm-theme.css for per-component palette + chrome —
- *     mobile.css only changes sizing.
- *
- * Spec: §8.B5 of ANDROID_MIGRATION.md.
+ *     mobile.css only changes sizing and layout.
  */
 
 /* ───── Base font ─────────────────────────────────────────────── */
@@ -97,17 +95,320 @@
     -fx-padding: 10 22 10 22;
 }
 
-/* ───── TableView rows ────────────────────────────────────────── *
- * Five inner pages keep TableView (dashboard, crops, alerts,
- * monitoring, reports) because columns genuinely matter there.
- * Bump row height so taps don't miss between rows. */
-.table-view {
-    -fx-fixed-cell-size: 48;
-}
-
 /* ───── Page titles ───────────────────────────────────────────── *
  * Slightly bigger than farm-theme.css's defaults so the heading
  * stays visually anchored after the global font bump. */
 .page-title {
     -fx-font-size: 22;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE-FIRST LAYOUT OVERRIDES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ───── Content pane — tighter padding for phone screens ─────── */
+.content-pane {
+    -fx-padding: 8;
+}
+
+/* ───── Cards — compact, full-width ──────────────────────────── */
+.card {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 0;
+}
+
+.card-title {
+    -fx-font-size: 15;
+}
+
+/* ───── Sensor cards — horizontal row layout ─────────────────── *
+ * Each sensor row is an HBox: icon | label+value | plot+badge.
+ * Compact height, left-to-right scan pattern. */
+.sensor-card {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 8 12 8 12;
+}
+
+.sensor-label {
+    -fx-font-size: 11;
+}
+
+.sensor-value {
+    -fx-font-size: 18;
+}
+
+.sensor-plot {
+    -fx-font-size: 9;
+}
+
+/* ───── Field overview map — compact for mobile ──────────────── */
+.field-map {
+    -fx-pref-height: 180;
+    -fx-min-height: 180;
+}
+
+.plot-label {
+    -fx-font-size: 10;
+}
+
+/* ───── Tables — horizontal scroll, compact rows ─────────────── *
+ * Tables are too wide for 390px. Let them scroll horizontally
+ * inside the ScrollPane and use smaller cells. */
+.table-view {
+    -fx-fixed-cell-size: 40;
+    -fx-min-height: 120;
+    -fx-pref-height: 140;
+    -fx-max-height: 200;
+}
+
+.table-view .column-header .label {
+    -fx-font-size: 10;
+}
+
+.table-view .table-cell {
+    -fx-font-size: 11;
+    -fx-padding: 4 6 4 6;
+}
+
+/* ───── List views — compact ─────────────────────────────────── */
+.ghost-list .list-cell {
+    -fx-padding: 4 4 4 4;
+    -fx-font-size: 12;
+}
+
+/* ───── Action buttons — compact grid ────────────────────────── */
+.action-btn {
+    -fx-font-size: 12;
+    -fx-padding: 10 6 10 6;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+/* ───── Export buttons — full-width, compact ──────────────────── */
+.export-btn {
+    -fx-font-size: 13;
+    -fx-padding: 10 12 10 12;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+/* ───── Badges — slightly larger for touch ───────────────────── */
+.badge {
+    -fx-padding: 4 10 4 10;
+    -fx-font-size: 11;
+}
+
+/* ───── Filter buttons — touch-friendly ──────────────────────── */
+.filter-btn {
+    -fx-min-height: 40;
+    -fx-padding: 8 14 8 14;
+    -fx-font-size: 12;
+}
+
+/* ───── Search box — full-width ──────────────────────────────── */
+.search-box {
+    -fx-pref-width: Infinity;
+    -fx-max-width: Infinity;
+}
+
+.filter-combo {
+    -fx-pref-width: Infinity;
+    -fx-max-width: Infinity;
+}
+
+/* ───── Summary cards — compact ──────────────────────────────── */
+.summary-card-value {
+    -fx-font-size: 20;
+}
+
+.summary-card-title {
+    -fx-font-size: 12;
+}
+
+.summary-card-subtitle {
+    -fx-font-size: 10;
+}
+
+.summary-value {
+    -fx-font-size: 22;
+}
+
+.summary-label {
+    -fx-font-size: 10;
+}
+
+/* ───── Detail pane — compact for mobile ─────────────────────── */
+.detail-title {
+    -fx-font-size: 15;
+}
+
+.detail-subtitle {
+    -fx-font-size: 11;
+}
+
+.detail-section-title {
+    -fx-font-size: 12;
+}
+
+.detail-text {
+    -fx-font-size: 11;
+    -fx-line-spacing: 3;
+}
+
+.detail-grid-label {
+    -fx-font-size: 11;
+}
+
+.detail-grid-value {
+    -fx-font-size: 11;
+}
+
+/* ───── Crop detail tabs — touch-friendly ────────────────────── */
+.crop-tab {
+    -fx-font-size: 13;
+    -fx-padding: 10 14 10 14;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH PAGES — mobile-first
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Auth pages: no side-by-side panel, just a centered vertical form */
+.auth-root {
+    -fx-padding: 0;
+}
+
+.auth-left {
+    -fx-pref-width: 0;
+    -fx-min-width: 0;
+    -fx-max-width: 0;
+    -fx-visible: false;
+}
+
+/* Branding header — compact */
+.auth-app-name {
+    -fx-font-size: 22;
+}
+
+.auth-tagline {
+    -fx-font-size: 12;
+}
+
+.auth-title {
+    -fx-font-size: 20;
+}
+
+.auth-subtitle {
+    -fx-font-size: 12;
+}
+
+/* Form fields — full-width, no fixed 360px cap */
+.auth-field {
+    -fx-pref-width: Infinity;
+    -fx-max-width: Infinity;
+    -fx-font-size: 14;
+    -fx-padding: 12 14 12 14;
+    -fx-min-height: 48;
+}
+
+/* Auth buttons — full-width */
+.auth-btn {
+    -fx-pref-width: Infinity;
+    -fx-max-width: Infinity;
+    -fx-font-size: 15;
+    -fx-min-height: 48;
+    -fx-background-radius: 10;
+}
+
+.auth-btn-secondary {
+    -fx-pref-width: Infinity;
+    -fx-max-width: Infinity;
+    -fx-min-height: 48;
+    -fx-background-radius: 10;
+}
+
+.auth-combo {
+    -fx-pref-width: Infinity;
+    -fx-max-width: Infinity;
+    -fx-min-height: 48;
+}
+
+/* ───── Gluon AppBar — mobile styling ────────────────────────── */
+.app-bar {
+    -fx-min-height: 56;
+}
+
+.appbar-user-label {
+    -fx-font-size: 13;
+    -fx-text-fill: #374151;
+}
+
+/* ───── NavigationDrawer header/footer ───────────────────────── */
+.drawer-header {
+    -fx-padding: 16 12 12 12;
+}
+
+.drawer-header-brand {
+    -fx-font-size: 16;
+}
+
+.drawer-footer {
+    -fx-padding: 8 12 12 12;
+}
+
+/* ───── Pagination — touch-friendly ──────────────────────────── */
+.page-btn {
+    -fx-min-height: 36;
+    -fx-min-width: 36;
+    -fx-padding: 6 10 6 10;
+}
+
+/* ───── Resolve button — touch-friendly ──────────────────────── */
+.resolve-btn {
+    -fx-min-height: 36;
+    -fx-padding: 6 12 6 12;
+}
+
+/* ───── Primary / Danger / Secondary buttons — touch-friendly ── */
+.btn-primary,
+.btn-danger,
+.btn-secondary {
+    -fx-min-height: 44;
+    -fx-padding: 10 18 10 18;
+    -fx-background-radius: 8;
+}
+
+/* ───── Hyperlinks — larger tap area ──────────────────────────── */
+.hyperlink {
+    -fx-font-size: 12;
+    -fx-padding: 4 0 4 0;
+}
+
+/* ───── Chart — compact for mobile ───────────────────────────── */
+.chart-legend {
+    -fx-font-size: 10;
+}
+
+/* ───── Scroll bars — thin, mobile-friendly ──────────────────── */
+.scroll-bar:vertical {
+    -fx-pref-width: 6;
+}
+
+.scroll-bar:horizontal {
+    -fx-pref-height: 6;
+}
+
+.scroll-bar .thumb {
+    -fx-background-radius: 3;
+}
+
+/* ───── Status bar in alerts — compact ────────────────────────── */
+.alert-status-bar {
+    -fx-padding: 6 10 6 10;
+}
+
+.status-bar-text {
+    -fx-font-size: 10;
 }
