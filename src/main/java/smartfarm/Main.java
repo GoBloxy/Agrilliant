@@ -14,6 +14,7 @@ import smartfarm.server.MqttSensorSubscriber;
 import smartfarm.service.AuthService;
 import smartfarm.service.SessionManager;
 import smartfarm.ui.DashboardController;
+import smartfarm.ui.LoginPage;
 
 public class Main extends Application {
 
@@ -41,7 +42,7 @@ public class Main extends Application {
             DashboardController controller = loader.getController();
             controller.setCurrentUser(restoredUser);
         } else {
-            root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
+            root = new LoginPage().createView();
         }
 
         Scene scene = new Scene(root, 1000, 650);

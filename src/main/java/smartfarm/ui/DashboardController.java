@@ -861,7 +861,7 @@ public class DashboardController {
     private void onLogout() {
         smartfarm.service.SessionManager.clearSession();
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/signin.fxml"));
+            Parent root = new LoginPage().createView();
             Stage stage = (Stage) lblUserName.getScene().getWindow();
             stage.getScene().setRoot(root);
         } catch (Exception e) {
@@ -906,7 +906,7 @@ public class DashboardController {
     }
 
     private void updateSensorDot(int count) {
-        lblSensorStatus.setText(count + " Active");
+        lblSensorStatus.setText(count > 0 ? "Active" : "Inactive");
         dotSensors.getStyleClass().setAll(count > 0 ? "status-dot-online" : "status-dot-offline");
     }
 
