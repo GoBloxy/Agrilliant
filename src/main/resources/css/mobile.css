@@ -147,6 +147,8 @@
 .field-map {
     -fx-pref-height: 180;
     -fx-min-height: 180;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
 }
 
 .plot-label {
@@ -235,6 +237,11 @@
 
 .summary-value {
     -fx-font-size: 22;
+}
+
+.sensor-map-container {
+    -fx-pref-height: 200;
+    -fx-max-height: 220;
 }
 
 .summary-label {

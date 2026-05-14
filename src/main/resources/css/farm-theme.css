@@ -1417,3 +1417,80 @@
     -fx-background-radius: 14;
     -fx-padding: 8 12 8 12;
 }
+
+.chart-plot-background {
+    -fx-background-color: -ag-surface-container-low;
+}
+
+.chart-vertical-grid-lines,
+.chart-horizontal-grid-lines {
+    -fx-stroke: -ag-outline-variant;
+}
+
+.axis {
+    -fx-tick-label-fill: -ag-on-surface-variant;
+}
+
+.sensor-map-container {
+    -fx-background-color: -ag-surface-container-low;
+    -fx-background-radius: 20;
+    -fx-border-color: -ag-outline-variant;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-padding: 8;
+}
+
+.map-pin {
+    -fx-background-radius: 999;
+    -fx-min-width: 28;
+    -fx-min-height: 28;
+    -fx-pref-width: 28;
+    -fx-pref-height: 28;
+    -fx-effect: dropshadow(gaussian, rgba(25,29,23,0.20), 8, 0, 0, 2);
+}
+
+.pin-normal {
+    -fx-background-color: -ag-primary;
+}
+
+.pin-info {
+    -fx-background-color: -ag-info;
+}
+
+.pin-warning {
+    -fx-background-color: -ag-warning;
+}
+
+.pin-critical {
+    -fx-background-color: -ag-error;
+}
+
+.map-pin .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.donut-value {
+    -fx-text-fill: -ag-on-surface;
+    -fx-font-size: 26;
+    -fx-font-weight: 800;
+}
+
+.donut-label,
+.legend-text-right,
+.text-muted {
+    -fx-text-fill: -ag-on-surface-variant;
+}
+
+.text-success,
+.icon-success {
+    -fx-text-fill: -ag-primary;
+    -fx-icon-color: -ag-primary;
+}
+
+.icon-info {
+    -fx-icon-color: -ag-info;
+}
+
+.icon-warning {
+    -fx-icon-color: -ag-warning;
+}
