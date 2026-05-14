@@ -10,11 +10,14 @@ import smartfarm.dao.CropDAO;
 import smartfarm.dao.HarvestDAO;
 import smartfarm.model.Crop;
 import smartfarm.model.HarvestRecord;
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/ReportsController.java
+=======
+import smartfarm.ui.async.AsyncCalls;
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/ReportsController.java
 import smartfarm.util.CSVExporter;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,29 +32,45 @@ public class ReportsController {
 
     private final HarvestDAO harvestDAO = new HarvestDAO();
     private final CropDAO cropDAO = new CropDAO();
-    private List<HarvestRecord> allHarvests;
-    private List<Crop> allCrops;
+    // P2.2: default to empty lists so cell factories + summary methods
+    // tolerate being called before the async loadData() completes.
+    private List<HarvestRecord> allHarvests = List.of();
+    private List<Crop> allCrops = List.of();
     private static final double PRICE_PER_KG = 2.5;
     private static final double COST_PER_KG = 0.8;
 
     @FXML
     public void initialize() {
-        loadData();
+        // P2.2: setupTableColumns is data-independent (cell factories read
+        // allCrops at render time). Everything else — summary cards, yield
+        // chart, table populate — moves into loadData's apply because each
+        // reads the just-fetched lists.
         setupTableColumns();
-        updateSummaryCards();
-        buildYieldChart();
-        populateTable();
+        loadData();
     }
 
     private void loadData() {
-        try {
-            allHarvests = harvestDAO.getAll();
-            allCrops = cropDAO.getAll();
-        } catch (SQLException e) {
-            allHarvests = List.of();
-            allCrops = List.of();
-        }
+        AsyncCalls.runAndApply(
+                () -> new ReportsData(harvestDAO.getAll(), cropDAO.getAll()),
+                data -> {
+                    allHarvests = data.harvests();
+                    allCrops = data.crops();
+                    updateSummaryCards();
+                    buildYieldChart();
+                    populateTable();
+                },
+                err -> {
+                    allHarvests = List.of();
+                    allCrops = List.of();
+                    updateSummaryCards();
+                    buildYieldChart();
+                    populateTable();
+                    System.err.println("Failed to load reports data: " + err.getMessage());
+                }
+        );
     }
+
+    private record ReportsData(List<HarvestRecord> harvests, List<Crop> crops) {}
 
     private void setupTableColumns() {
         harvestTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

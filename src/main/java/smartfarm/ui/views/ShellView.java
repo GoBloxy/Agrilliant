@@ -8,11 +8,13 @@ import com.gluonhq.charm.glisten.control.AppBar;
 import com.gluonhq.charm.glisten.control.NavigationDrawer;
 import com.gluonhq.charm.glisten.mvc.View;
 import com.gluonhq.charm.glisten.visual.MaterialDesignIcon;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -69,6 +71,27 @@ public class ShellView extends View {
      *  are wired once per controller instance, not on every showing. */
     private boolean lifecycleServiceWired = false;
 
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/views/ShellView.java
+=======
+    /**
+     * P2.5: viewport-width threshold above which the legacy sidebar inflates
+     * inline and the Gluon AppBar hamburger is hidden. Below this, the drawer
+     * + hamburger pattern takes over. 900px is a sensible phone/tablet split:
+     * iPad portrait is 768, iPad landscape is 1024, so 900 catches small
+     * tablets and up.
+     */
+    private static final double WIDE_BREAKPOINT = 900.0;
+
+    /**
+     * P2.5: scene-width listener handle, retained so we can detach on
+     * setOnHiding. Attached lazily from setOnShowing once the view has a
+     * Scene. Held null while ShellView is hidden, which is why the
+     * applyResponsiveChrome / AppBar mutations are safe — the listener
+     * never fires for the wrong view.
+     */
+    private ChangeListener<Number> widthListener;
+
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/views/ShellView.java
     public ShellView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
@@ -92,9 +115,21 @@ public class ShellView extends View {
             if (controller != null) {
                 controller.startLifecycle();
             }
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/views/ShellView.java
+=======
+            // P2.5: width-driven sidebar + hamburger toggling. Attached here
+            // so it only fires while ShellView is the active view; detached
+            // in setOnHiding to keep chrome from bleeding into sign-in /
+            // sign-up.
+            attachWidthListener();
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/views/ShellView.java
         });
         setOnHiding(e -> {
             Logger.d(TAG, "hiding");
+            // P2.5: detach the width listener before clearing the AppBar so a
+            // width change during sign-in / sign-up can't re-add chrome we
+            // just removed.
+            detachWidthListener();
             // Sign-in / Sign-up don't want our hamburger or actions
             // bleeding into their (also AppBar-using) views.
             AppBar appBar = AppManager.getInstance().getAppBar();
@@ -160,9 +195,11 @@ public class ShellView extends View {
         appBar.setVisible(true);
         appBar.setTitleText("Agrilliant");
 
-        // Hamburger that opens the drawer.
-        appBar.setNavIcon(MaterialDesignIcon.MENU.button(
-                ev -> AppManager.getInstance().getDrawer().open()));
+        // P2.5: hamburger is now toggled by applyResponsiveChrome based on
+        // the current scene width — it's hidden on wide viewports where the
+        // inline sidebar is visible. attachWidthListener() runs after this
+        // method (both fire from setOnShowing) and applies the correct
+        // chrome.
 
         // Trailing user chip + sign-out icon. Tapping the chip is a
         // no-op for now; long-press / tap-handler hooks can land in a
@@ -275,6 +312,58 @@ public class ShellView extends View {
             AppManager.getInstance().getDrawer().close();
         });
         return item;
+    }
+
+    // --------------------------------------------------------------
+    // P2.5 — responsive sidebar + hamburger.
+    //
+    // The legacy sidebar inside dashboard.fxml is hidden by default so the
+    // mobile-native AppBar + NavigationDrawer drives the layout. On wide
+    // viewports (>= WIDE_BREAKPOINT) we inflate the sidebar inline and hide
+    // the AppBar hamburger — the user gets a desktop look without losing
+    // the drawer-based nav available below the breakpoint.
+    //
+    // The width listener is attached only while ShellView is the active
+    // view (setOnShowing → attach, setOnHiding → detach) so a resize during
+    // sign-in / sign-up can't reach into our AppBar.
+    // --------------------------------------------------------------
+
+    private void attachWidthListener() {
+        if (widthListener != null) return;
+        Scene scene = getScene();
+        if (scene == null) return;
+        widthListener = (obs, oldW, newW) -> applyResponsiveChrome(newW.doubleValue());
+        scene.widthProperty().addListener(widthListener);
+        // Apply once up-front so the chrome matches the current width
+        // before the first user interaction.
+        applyResponsiveChrome(scene.getWidth());
+    }
+
+    private void detachWidthListener() {
+        if (widthListener == null) return;
+        Scene scene = getScene();
+        if (scene != null) {
+            scene.widthProperty().removeListener(widthListener);
+        }
+        widthListener = null;
+    }
+
+    private void applyResponsiveChrome(double width) {
+        boolean wide = width >= WIDE_BREAKPOINT;
+
+        if (controller != null) {
+            controller.setSidebarInline(wide);
+        }
+
+        // Hamburger only when narrow — on wide viewports the inline sidebar
+        // is the nav surface and the hamburger would be redundant.
+        AppBar appBar = AppManager.getInstance().getAppBar();
+        if (wide) {
+            appBar.setNavIcon(null);
+        } else {
+            appBar.setNavIcon(MaterialDesignIcon.MENU.button(
+                    ev -> AppManager.getInstance().getDrawer().open()));
+        }
     }
 
     // --------------------------------------------------------------

@@ -55,7 +55,7 @@ permissions:
   contents: read
 
 env:
-  GRAALVM_VERSION: '21.0.1'           # GraalVM CE Java version (downgraded to 21.0.1 to fix gluonfx CAPCache bug)
+  GRAALVM_VERSION: '21.0.2'           # GraalVM CE Java version
   GRAALVM_DISTRIBUTION: 'graalvm-community'
   ANDROID_SDK_PLATFORM: '34'
   ANDROID_BUILD_TOOLS: '34.0.0'
@@ -75,7 +75,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          submodules: true
 
       # -----------------------------------------------------------------
       # 2. Linux build deps (GluonFX Substrate native-image prerequisites)
@@ -118,6 +117,8 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
+          # NOTE: `packages` must be a SPACE-separated string, not a YAML list.
+          # The `>` folded block scalar joins multi-line content with spaces.
           packages: >
             platform-tools
             platforms;android-${{ env.ANDROID_SDK_PLATFORM }}
@@ -157,8 +158,8 @@ jobs:
           MQTT_QOS: ${{ secrets.MQTT_QOS }}
         run: |
           if [ -z "$MQTT_BROKER" ]; then
-            echo "::warning::Missing MQTT_BROKER secret, using dummy value to prevent build failure"
-            MQTT_BROKER="tcp://127.0.0.1:1883"
+            echo "::error::Missing MQTT_BROKER secret"
+            exit 1
           fi
           cat > src/main/resources/mqtt.properties <<EOF
           mqtt.broker=$MQTT_BROKER

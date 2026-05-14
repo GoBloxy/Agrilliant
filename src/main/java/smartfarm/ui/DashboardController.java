@@ -31,6 +31,10 @@ import smartfarm.model.SensorReading;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
 import smartfarm.service.LiveSensorData;
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+=======
+import smartfarm.ui.async.AsyncCalls;
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
 import smartfarm.util.CSVExporter;
 import smartfarm.util.DBConnection;
 
@@ -87,6 +91,10 @@ public class DashboardController {
     @FXML private Button btnDashboard, btnMonitoring, btnDisease, btnAlerts, btnCrops, btnWorkers,
                           btnAttendance, btnTasks, btnHarvests, btnReports, btnSettings,
                           btnUsers, btnLogs, btnCropsCrops, btnCropsPlots;
+
+    // P2.5: legacy sidebar (hidden by default in the FXML). ShellView toggles
+    // it inline at wide viewports via getSidebar() / scene-width listener.
+    @FXML private VBox sidebar;
 
     // ── Hyperlinks ──
     @FXML private Hyperlink linkViewSensors, linkViewAlerts, linkShowAllAlerts,
@@ -175,141 +183,182 @@ public class DashboardController {
     }
 
     private void loadAlerts() {
-        try {
-            List<Alert> alerts = alertDAO.getUnresolved();
-            ObservableList<String> items = FXCollections.observableArrayList();
-            int limit = Math.min(alerts.size(), 8);
-            for (int i = 0; i < limit; i++) {
-                Alert a = alerts.get(i);
-                String icon = switch (a.getSeverity()) {
-                    case CRITICAL -> "🔴";
-                    case WARNING -> "🟡";
-                    case INFO -> "🔵";
-                };
-                items.add(icon + " [" + a.getAlertType() + "] " + a.getMessage());
-            }
-            if (items.isEmpty()) items.add("No active alerts");
-            alertListView.setItems(items);
-        } catch (SQLException e) {
-            alertListView.setItems(FXCollections.observableArrayList("Failed to load alerts"));
-        }
+        // P2.2: async — JDBC runs on agrilliant-db thread, UI populated on FX thread.
+        AsyncCalls.runAndApply(
+                alertDAO::getUnresolved,
+                alerts -> {
+                    ObservableList<String> items = FXCollections.observableArrayList();
+                    int limit = Math.min(alerts.size(), 8);
+                    for (int i = 0; i < limit; i++) {
+                        Alert a = alerts.get(i);
+                        String icon = switch (a.getSeverity()) {
+                            case CRITICAL -> "🔴";
+                            case WARNING -> "🟡";
+                            case INFO -> "🔵";
+                        };
+                        items.add(icon + " [" + a.getAlertType() + "] " + a.getMessage());
+                    }
+                    if (items.isEmpty()) items.add("No active alerts");
+                    alertListView.setItems(items);
+                },
+                err -> alertListView.setItems(
+                        FXCollections.observableArrayList("Failed to load alerts"))
+        );
     }
 
     private void loadTasks() {
-        try {
-            allTasks = taskDAO.getAll();
-            ObservableList<String> items = FXCollections.observableArrayList();
-            int count = 0;
-            for (Task t : allTasks) {
-                if (t.getStatus() == Task.Status.DONE) continue;
-                if (count >= 8) break;
-                String statusIcon = t.getStatus() == Task.Status.IN_PROGRESS ? "🔄" : "⏳";
-                String due = t.getDueDate() != null ? " (due " + t.getDueDate() + ")" : "";
-                items.add(statusIcon + " " + t.getDescription() + due);
-                count++;
-            }
-            if (items.isEmpty()) items.add("No pending tasks");
-            taskListView.setItems(items);
-        } catch (SQLException e) {
-            taskListView.setItems(FXCollections.observableArrayList("Failed to load tasks"));
-        }
+        // P2.2: async. The `allTasks` cache is written on the FX thread (inside
+        // the apply lambda) so loadWorkerTable's later read is safe.
+        AsyncCalls.runAndApply(
+                taskDAO::getAll,
+                tasks -> {
+                    allTasks = tasks;
+                    ObservableList<String> items = FXCollections.observableArrayList();
+                    int count = 0;
+                    for (Task t : tasks) {
+                        if (t.getStatus() == Task.Status.DONE) continue;
+                        if (count >= 8) break;
+                        String statusIcon = t.getStatus() == Task.Status.IN_PROGRESS ? "🔄" : "⏳";
+                        String due = t.getDueDate() != null ? " (due " + t.getDueDate() + ")" : "";
+                        items.add(statusIcon + " " + t.getDescription() + due);
+                        count++;
+                    }
+                    if (items.isEmpty()) items.add("No pending tasks");
+                    taskListView.setItems(items);
+                },
+                err -> taskListView.setItems(
+                        FXCollections.observableArrayList("Failed to load tasks"))
+        );
     }
 
     private void loadCropTable() {
-        try {
-            allCrops = cropDAO.getAll();
-            allPlots = plotDAO.getAll();
-            Map<Integer, String> plotMap = new HashMap<>();
-            for (Plot p : allPlots) plotMap.put(p.getPlotId(), p.getName());
+        // P2.2: async. Both DAO calls run on the single-threaded DB executor
+        // in sequence (cheap — same Connection serializes them anyway). The
+        // closure returns a CropPlotData pair so the apply lambda has both
+        // results in one go.
+        AsyncCalls.runAndApply(
+                () -> new CropPlotData(cropDAO.getAll(), plotDAO.getAll()),
+                data -> {
+                    allCrops = data.crops();
+                    allPlots = data.plots();
+                    Map<Integer, String> plotMap = new HashMap<>();
+                    for (Plot p : allPlots) plotMap.put(p.getPlotId(), p.getName());
 
-            colCropName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCropName()));
-            colCropPlot.setCellValueFactory(d -> new SimpleStringProperty(plotMap.getOrDefault(d.getValue().getPlotId(), "Plot " + d.getValue().getPlotId())));
-            colCropStage.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getGrowthStage().name()));
-            colPlantingDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPlantingDate() != null ? d.getValue().getPlantingDate().toString() : "—"));
-            colCropStatus.setCellValueFactory(d -> {
-                Crop c = d.getValue();
-                String status;
-                if (c.getGrowthStage() == Crop.GrowthStage.HARVESTED) status = "Harvested";
-                else if (c.isOverdue()) status = "At Risk";
-                else status = "Growing";
-                return new SimpleStringProperty(status);
-            });
+                    colCropName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCropName()));
+                    colCropPlot.setCellValueFactory(d -> new SimpleStringProperty(plotMap.getOrDefault(d.getValue().getPlotId(), "Plot " + d.getValue().getPlotId())));
+                    colCropStage.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getGrowthStage().name()));
+                    colPlantingDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPlantingDate() != null ? d.getValue().getPlantingDate().toString() : "—"));
+                    colCropStatus.setCellValueFactory(d -> {
+                        Crop c = d.getValue();
+                        String status;
+                        if (c.getGrowthStage() == Crop.GrowthStage.HARVESTED) status = "Harvested";
+                        else if (c.isOverdue()) status = "At Risk";
+                        else status = "Growing";
+                        return new SimpleStringProperty(status);
+                    });
 
-            ObservableList<Crop> cropData = FXCollections.observableArrayList(allCrops.subList(0, Math.min(allCrops.size(), 10)));
-            cropTable.setItems(cropData);
-        } catch (SQLException e) {
-            System.err.println("Failed to load crop table: " + e.getMessage());
-        }
+                    ObservableList<Crop> cropData = FXCollections.observableArrayList(allCrops.subList(0, Math.min(allCrops.size(), 10)));
+                    cropTable.setItems(cropData);
+                },
+                err -> System.err.println("Failed to load crop table: " + err.getMessage())
+        );
     }
 
+    // P2.2: tiny carriers so async closures can return multiple results.
+    private record CropPlotData(List<Crop> crops, List<Plot> plots) {}
+    private record WorkerData(List<Worker> workers, List<Task> tasks) {}
+    private record HarvestData(List<HarvestRecord> records, List<Crop> crops, List<Plot> plots) {}
+
     private void loadWorkerTable() {
-        try {
-            List<Worker> workers = workerDAO.getAll();
-            if (allTasks == null) allTasks = taskDAO.getAll();
+        // P2.2: async. We snapshot allTasks inside the closure to avoid an FX
+        // thread read of a field that another async loader (loadTasks) might
+        // still be populating. The closure executor is single-threaded so
+        // there's no DB-side race; the only ordering hazard is the FX-thread
+        // read of allTasks before loadTasks() completes.
+        AsyncCalls.runAndApply(
+                () -> {
+                    List<Worker> workers = workerDAO.getAll();
+                    List<Task> tasksSnapshot = (allTasks != null) ? allTasks : taskDAO.getAll();
+                    return new WorkerData(workers, tasksSnapshot);
+                },
+                data -> {
+                    if (allTasks == null) allTasks = data.tasks();
+                    final List<Task> tasksForCells = data.tasks();
 
-            colWorkerName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getFullName()));
-            colWorkerRole.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getJobTitle()));
-            colWorkerStatus.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().isOnDuty() ? "On Duty" : "Off"));
-            colWorkerTask.setCellValueFactory(d -> {
-                Worker w = d.getValue();
-                String task = allTasks.stream()
-                    .filter(t -> t.getStatus() != Task.Status.DONE && t.getWorkerIds().contains(w.getWorkerId()))
-                    .map(Task::getDescription)
-                    .findFirst().orElse("—");
-                return new SimpleStringProperty(task.length() > 20 ? task.substring(0, 20) + "…" : task);
-            });
-            colWorkload.setCellValueFactory(d -> {
-                int active = d.getValue().getActiveTaskCount(allTasks);
-                return new SimpleStringProperty(active + " task" + (active != 1 ? "s" : ""));
-            });
+                    colWorkerName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getFullName()));
+                    colWorkerRole.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getJobTitle()));
+                    colWorkerStatus.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().isOnDuty() ? "On Duty" : "Off"));
+                    colWorkerTask.setCellValueFactory(d -> {
+                        Worker w = d.getValue();
+                        String task = tasksForCells.stream()
+                            .filter(t -> t.getStatus() != Task.Status.DONE && t.getWorkerIds().contains(w.getWorkerId()))
+                            .map(Task::getDescription)
+                            .findFirst().orElse("—");
+                        return new SimpleStringProperty(task.length() > 20 ? task.substring(0, 20) + "…" : task);
+                    });
+                    colWorkload.setCellValueFactory(d -> {
+                        int active = d.getValue().getActiveTaskCount(tasksForCells);
+                        return new SimpleStringProperty(active + " task" + (active != 1 ? "s" : ""));
+                    });
 
-            ObservableList<Worker> workerData = FXCollections.observableArrayList(workers.subList(0, Math.min(workers.size(), 10)));
-            workerTable.setItems(workerData);
-        } catch (SQLException e) {
-            System.err.println("Failed to load worker table: " + e.getMessage());
-        }
+                    List<Worker> workers = data.workers();
+                    ObservableList<Worker> workerData = FXCollections.observableArrayList(workers.subList(0, Math.min(workers.size(), 10)));
+                    workerTable.setItems(workerData);
+                },
+                err -> System.err.println("Failed to load worker table: " + err.getMessage())
+        );
     }
 
     private void loadHarvestTable() {
-        try {
-            List<HarvestRecord> records = harvestDAO.getAll();
-            if (allCrops == null) allCrops = cropDAO.getAll();
-            if (allPlots == null) allPlots = plotDAO.getAll();
+        // P2.2: async. Returns all three result lists; the apply lambda builds
+        // its lookup maps as before. Cell factory lambdas capture this call's
+        // maps — same lifetime semantics the original code had.
+        AsyncCalls.runAndApply(
+                () -> {
+                    List<HarvestRecord> records = harvestDAO.getAll();
+                    List<Crop> cropsSnapshot = (allCrops != null) ? allCrops : cropDAO.getAll();
+                    List<Plot> plotsSnapshot = (allPlots != null) ? allPlots : plotDAO.getAll();
+                    return new HarvestData(records, cropsSnapshot, plotsSnapshot);
+                },
+                data -> {
+                    if (allCrops == null) allCrops = data.crops();
+                    if (allPlots == null) allPlots = data.plots();
 
-            Map<Integer, Crop> cropMap = new HashMap<>();
-            for (Crop c : allCrops) cropMap.put(c.getCropId(), c);
-            Map<Integer, String> plotMap = new HashMap<>();
-            for (Plot p : allPlots) plotMap.put(p.getPlotId(), p.getName());
+                    Map<Integer, Crop> cropMap = new HashMap<>();
+                    for (Crop c : data.crops()) cropMap.put(c.getCropId(), c);
+                    Map<Integer, String> plotMap = new HashMap<>();
+                    for (Plot p : data.plots()) plotMap.put(p.getPlotId(), p.getName());
 
-            colHarvestCrop.setCellValueFactory(d -> {
-                Crop c = cropMap.get(d.getValue().getCropId());
-                return new SimpleStringProperty(c != null ? c.getCropName() : "Crop #" + d.getValue().getCropId());
-            });
-            colHarvestPlot.setCellValueFactory(d -> {
-                Crop c = cropMap.get(d.getValue().getCropId());
-                return new SimpleStringProperty(c != null ? plotMap.getOrDefault(c.getPlotId(), "—") : "—");
-            });
-            colHarvestDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getHarvestDate() != null ? d.getValue().getHarvestDate().toString() : "—"));
-            colHarvestQty.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.1f", d.getValue().getQuantityKg())));
-            colHarvestGrade.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getGrade().name()));
-            colHarvestExpected.setCellValueFactory(d -> {
-                Crop c = cropMap.get(d.getValue().getCropId());
-                return new SimpleStringProperty(c != null ? String.format("%.1f", c.getExpectedYield()) : "—");
-            });
-            colHarvestPerf.setCellValueFactory(d -> {
-                Crop c = cropMap.get(d.getValue().getCropId());
-                if (c != null && c.getExpectedYield() > 0) {
-                    double perf = (d.getValue().getQuantityKg() / c.getExpectedYield()) * 100;
-                    return new SimpleStringProperty(String.format("%.0f%%", perf));
-                }
-                return new SimpleStringProperty("—");
-            });
+                    colHarvestCrop.setCellValueFactory(d -> {
+                        Crop c = cropMap.get(d.getValue().getCropId());
+                        return new SimpleStringProperty(c != null ? c.getCropName() : "Crop #" + d.getValue().getCropId());
+                    });
+                    colHarvestPlot.setCellValueFactory(d -> {
+                        Crop c = cropMap.get(d.getValue().getCropId());
+                        return new SimpleStringProperty(c != null ? plotMap.getOrDefault(c.getPlotId(), "—") : "—");
+                    });
+                    colHarvestDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getHarvestDate() != null ? d.getValue().getHarvestDate().toString() : "—"));
+                    colHarvestQty.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.1f", d.getValue().getQuantityKg())));
+                    colHarvestGrade.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getGrade().name()));
+                    colHarvestExpected.setCellValueFactory(d -> {
+                        Crop c = cropMap.get(d.getValue().getCropId());
+                        return new SimpleStringProperty(c != null ? String.format("%.1f", c.getExpectedYield()) : "—");
+                    });
+                    colHarvestPerf.setCellValueFactory(d -> {
+                        Crop c = cropMap.get(d.getValue().getCropId());
+                        if (c != null && c.getExpectedYield() > 0) {
+                            double perf = (d.getValue().getQuantityKg() / c.getExpectedYield()) * 100;
+                            return new SimpleStringProperty(String.format("%.0f%%", perf));
+                        }
+                        return new SimpleStringProperty("—");
+                    });
 
-            ObservableList<HarvestRecord> harvestData = FXCollections.observableArrayList(records.subList(0, Math.min(records.size(), 10)));
-            harvestTable.setItems(harvestData);
-        } catch (SQLException e) {
-            System.err.println("Failed to load harvest table: " + e.getMessage());
-        }
+                    List<HarvestRecord> records = data.records();
+                    ObservableList<HarvestRecord> harvestData = FXCollections.observableArrayList(records.subList(0, Math.min(records.size(), 10)));
+                    harvestTable.setItems(harvestData);
+                },
+                err -> System.err.println("Failed to load harvest table: " + err.getMessage())
+        );
     }
 
     // ═══════════════ HYPERLINK NAVIGATION ═══════════════
@@ -390,12 +439,14 @@ public class DashboardController {
         });
 
         dialog.showAndWait().ifPresent(crop -> {
-            try {
-                cropDAO.save(crop);
-                loadCropTable();
-            } catch (SQLException e) {
-                showQuickAlert("Failed to save crop: " + e.getMessage());
-            }
+            // P2.2: async save — keeps the FX thread free while JDBC INSERT runs.
+            // Callable<Void> chosen so cropDAO.save's checked SQLException can
+            // surface to the onError handler without an inner try/catch.
+            AsyncCalls.runAndApply(
+                    () -> { cropDAO.save(crop); return null; },
+                    ignored -> loadCropTable(),
+                    err -> showQuickAlert("Failed to save crop: " + err.getMessage())
+            );
         });
     }
 
@@ -465,12 +516,12 @@ public class DashboardController {
         });
 
         dialog.showAndWait().ifPresent(task -> {
-            try {
-                taskDAO.save(task);
-                loadTasks();
-            } catch (SQLException e) {
-                showQuickAlert("Failed to save task: " + e.getMessage());
-            }
+            // P2.2: async save (see onAddCrop above for rationale).
+            AsyncCalls.runAndApply(
+                    () -> { taskDAO.save(task); return null; },
+                    ignored -> loadTasks(),
+                    err -> showQuickAlert("Failed to save task: " + err.getMessage())
+            );
         });
     }
 
@@ -535,17 +586,18 @@ public class DashboardController {
         });
 
         dialog.showAndWait().ifPresent(record -> {
-            try {
-                harvestDAO.save(record);
-                loadHarvestTable();
-            } catch (SQLException e) {
-                showQuickAlert("Failed to save harvest: " + e.getMessage());
-            }
+            // P2.2: async save (see onAddCrop above for rationale).
+            AsyncCalls.runAndApply(
+                    () -> { harvestDAO.save(record); return null; },
+                    ignored -> loadHarvestTable(),
+                    err -> showQuickAlert("Failed to save harvest: " + err.getMessage())
+            );
         });
     }
 
     @FXML
     private void onExportReport() {
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
         try {
             List<HarvestRecord> harvests = harvestDAO.getAll();
             List<Crop> crops = (allCrops != null) ? allCrops : cropDAO.getAll();
@@ -572,6 +624,41 @@ public class DashboardController {
         } catch (SQLException | IOException e) {
             showExportError("Failed to export: " + e.getMessage());
         }
+=======
+        // P2.2: fetch on DB thread; format CSV + saveCsv on FX thread (CSVExporter
+        // opens a desktop FileChooser or writes via Gluon Storage — must be on FX).
+        AsyncCalls.runAndApply(
+                () -> new HarvestData(
+                        harvestDAO.getAll(),
+                        (allCrops != null) ? allCrops : cropDAO.getAll(),
+                        (allPlots != null) ? allPlots : plotDAO.getAll()),
+                data -> {
+                    try {
+                        Map<Integer, Crop> cropMap = new HashMap<>();
+                        for (Crop c : data.crops()) cropMap.put(c.getCropId(), c);
+                        Map<Integer, String> plotMap = new HashMap<>();
+                        for (Plot p : data.plots()) plotMap.put(p.getPlotId(), p.getName());
+
+                        double pricePerKg = 2.50;
+                        StringBuilder csv = new StringBuilder("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
+                        for (HarvestRecord hr : data.records()) {
+                            Crop c = cropMap.get(hr.getCropId());
+                            String cropName = (c != null) ? c.getCropName() : "Crop #" + hr.getCropId();
+                            String plotName = (c != null) ? plotMap.getOrDefault(c.getPlotId(), "—") : "—";
+                            csv.append(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
+                                    hr.getHarvestDate(), cropName, plotName,
+                                    hr.getQuantityKg(), hr.getGrade().name(),
+                                    hr.getQuantityKg() * pricePerKg));
+                        }
+                        File saved = CSVExporter.saveCsv(csv.toString(), "harvest_report.csv");
+                        showExportSuccess("Report exported to " + saved.getName());
+                    } catch (IOException e) {
+                        showExportError("Failed to export: " + e.getMessage());
+                    }
+                },
+                err -> showExportError("Failed to export: " + err.getMessage())
+        );
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
     }
 
     private void showQuickAlert(String msg) {
@@ -586,6 +673,7 @@ public class DashboardController {
 
     @FXML
     private void onExportSensorCSV() {
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
         try {
             List<SensorReading> readings = sensorDAO.getRecent(500);
             StringBuilder csv = new StringBuilder("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,Timestamp\n");
@@ -599,10 +687,32 @@ public class DashboardController {
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export sensor logs: " + ex.getMessage());
         }
+=======
+        // P2.2: see onExportReport for the split rationale.
+        AsyncCalls.runAndApply(
+                () -> sensorDAO.getRecent(500),
+                readings -> {
+                    try {
+                        StringBuilder csv = new StringBuilder("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,Timestamp\n");
+                        for (SensorReading r : readings) {
+                            csv.append(String.format("%d,%d,%.2f,%.2f,%.2f,%s\n",
+                                    r.getReadingId(), r.getDeviceId(), r.getTemperature(),
+                                    r.getHumidity(), r.getSoilMoisture(), r.getTimestamp()));
+                        }
+                        File saved = CSVExporter.saveCsv(csv.toString(), "sensor_logs.csv");
+                        showExportSuccess("Sensor logs exported to " + saved.getName());
+                    } catch (IOException ex) {
+                        showExportError("Failed to export sensor logs: " + ex.getMessage());
+                    }
+                },
+                err -> showExportError("Failed to export sensor logs: " + err.getMessage())
+        );
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
     }
 
     @FXML
     private void onExportHarvestCSV() {
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
         try {
             List<HarvestRecord> records = harvestDAO.getAll();
             StringBuilder csv = new StringBuilder("RecordID,CropID,HarvestDate,QuantityKg,Grade\n");
@@ -616,10 +726,32 @@ public class DashboardController {
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export harvest data: " + ex.getMessage());
         }
+=======
+        // P2.2: see onExportReport for the split rationale.
+        AsyncCalls.runAndApply(
+                harvestDAO::getAll,
+                records -> {
+                    try {
+                        StringBuilder csv = new StringBuilder("RecordID,CropID,HarvestDate,QuantityKg,Grade\n");
+                        for (HarvestRecord r : records) {
+                            csv.append(String.format("%d,%d,%s,%.2f,%s\n",
+                                    r.getRecordId(), r.getCropId(), r.getHarvestDate(),
+                                    r.getQuantityKg(), r.getGrade().name()));
+                        }
+                        File saved = CSVExporter.saveCsv(csv.toString(), "harvest_summary.csv");
+                        showExportSuccess("Harvest summary exported to " + saved.getName());
+                    } catch (IOException ex) {
+                        showExportError("Failed to export harvest data: " + ex.getMessage());
+                    }
+                },
+                err -> showExportError("Failed to export harvest data: " + err.getMessage())
+        );
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
     }
 
     @FXML
     private void onExportAlertCSV() {
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
         try {
             List<Alert> alerts = alertDAO.getAll();
             StringBuilder csv = new StringBuilder("AlertID,Type,Severity,Message,Resolved,Timestamp,PlotID\n");
@@ -634,6 +766,28 @@ public class DashboardController {
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export alert history: " + ex.getMessage());
         }
+=======
+        // P2.2: see onExportReport for the split rationale.
+        AsyncCalls.runAndApply(
+                alertDAO::getAll,
+                alerts -> {
+                    try {
+                        StringBuilder csv = new StringBuilder("AlertID,Type,Severity,Message,Resolved,Timestamp,PlotID\n");
+                        for (Alert a : alerts) {
+                            csv.append(String.format("%d,%s,%s,\"%s\",%b,%s,%d\n",
+                                    a.getAlertId(), a.getAlertType(), a.getSeverity().name(),
+                                    a.getMessage().replace("\"", "\"\""), a.isResolved(),
+                                    a.getTimestamp(), a.getPlotId()));
+                        }
+                        File saved = CSVExporter.saveCsv(csv.toString(), "alert_history.csv");
+                        showExportSuccess("Alert history exported to " + saved.getName());
+                    } catch (IOException ex) {
+                        showExportError("Failed to export alert history: " + ex.getMessage());
+                    }
+                },
+                err -> showExportError("Failed to export alert history: " + err.getMessage())
+        );
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
     }
 
     private void showExportSuccess(String msg) {
@@ -787,7 +941,13 @@ public class DashboardController {
     /**
 <<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
 <<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
 =======
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
 =======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      * B9 lifecycle re-attach — restarts the clock and re-subscribes to
@@ -816,6 +976,12 @@ public class DashboardController {
 
     /**
 <<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
 =======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
@@ -823,6 +989,8 @@ public class DashboardController {
      * listeners from the shared {@code LiveSensorData} singleton.
      *
      * <p>Idempotent: safe to call multiple times in a row, or before
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
 <<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
 <<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
      * lifecycle has started. Pairs naturally with a future
@@ -838,6 +1006,10 @@ public class DashboardController {
 =======
 =======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      * lifecycle has started. Pairs with {@link #startLifecycle()}.
      *
      * <p>Wired by {@code ShellView.setOnHiding} (handles user logout) and
@@ -845,6 +1017,12 @@ public class DashboardController {
      * subscription (handles OS-level backgrounding on Android — the
      * dashboard goes idle while the user has switched away from the app).
 <<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
 =======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
@@ -990,6 +1168,22 @@ public class DashboardController {
     public enum NavTarget {
         DASHBOARD, MONITORING, DISEASE, ALERTS, CROPS, PLOTS,
         WORKERS, ATTENDANCE, TASKS, HARVESTS, REPORTS, SETTINGS, USERS, LOGS
+    }
+
+    /**
+     * P2.5: Toggle the legacy sidebar inline. {@link smartfarm.ui.views.ShellView}
+     * calls this from its scene-width listener so the sidebar inflates on
+     * wide viewports (desktop / tablet landscape) and stays collapsed on
+     * narrow viewports where the Gluon NavigationDrawer + AppBar hamburger
+     * is the nav surface.
+     *
+     * <p>No-op if the sidebar reference is null (e.g. unit-test contexts
+     * where the FXML hasn't been loaded).
+     */
+    public void setSidebarInline(boolean inline) {
+        if (sidebar == null) return;
+        sidebar.setVisible(inline);
+        sidebar.setManaged(inline);
     }
 
     private void showPage(Node page, Button navBtn) {

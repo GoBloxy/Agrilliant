@@ -1,6 +1,6 @@
 # Agrilliant Android Migration — Current Status
 
-> Branch: `mobile-app` | Last updated: 2026-05-14
+> Branch: `mobile-app` | Last updated: 2026-05-15 (Phase 2 in progress)
 > Tracks: **Hagag** (Build / Data / IoT — §8.A) + **3bdelbary** (UI / Navigation / Resources — §8.B)
 
 ---
@@ -11,6 +11,8 @@ The Agrilliant desktop JavaFX app is being migrated to Android via Gluon Mobile 
 
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 - **Hagag's track (H1–H11):** Complete. All build, data, and infrastructure tasks are done.
 - **3bdelbary's track (B1–B10):** Complete. B1 (Gluon `MobileApplication`), B2 (AppView nav), B3 + B3X (mobile-friendly FXMLs + UX rework), B4 (FileChooser sweep), B5 (`mobile.css`), B6 (JFreeChart audit), B7 (launcher icons — 10 PNGs generated and committed), B8 (`PlatformPickers`), B9 (lifecycle hooks), and B10 (consolidated FXML / controller / Phase 2 reference matrices in `MIGRATION_3BDELBARY.md`). All 3bdelbary-track Phase 1 work is done. Outstanding items are entirely cross-track on Hagag's side.
 =======
@@ -19,10 +21,21 @@ The Agrilliant desktop JavaFX app is being migrated to Android via Gluon Mobile 
 - **Post-B10 cross-track follow-ups (user-authorized):** JFreeChart deps removed from `pom.xml`; Gluon Attach `LifecycleService` PAUSE/RESUME wired to `DashboardController.startLifecycle()`/`stopLifecycle()`; `Crop.GrowthStage='GROWING'` SQL workaround migration script committed at `docs/sql/2026-05-14-fix-growthstage-growing.sql`. The repo is now ready for the first `mvn -Pandroid gluonfx:build`.
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 =======
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 - **Hagag's track (H1–H11):** Complete.
 - **3bdelbary's track (B1–B10):** Complete.
 - **Post-B10 cross-track follow-ups (user-authorized):** JFreeChart deps removed from `pom.xml`; Gluon Attach `LifecycleService` PAUSE/RESUME wired to `DashboardController.startLifecycle()`/`stopLifecycle()`; `Crop.GrowthStage='GROWING'` SQL workaround migration script committed at `docs/sql/2026-05-14-fix-growthstage-growing.sql`. The repo is now ready for the first `mvn -Pandroid gluonfx:build`.
 - **Build environment (Windows-friendly, user-authorized):** GitHub Actions workflow at `.github/workflows/android-build.yml` builds the APK on a Linux cloud runner so Windows-host developers don't need WSL2. Local-Linux fallback path is `scripts/wsl-setup-android-build-env.sh` (one-shot installer for WSL2 Ubuntu). Docs at `docs/CI_ANDROID_BUILD.md` (cloud) and `scripts/README.md` (local).
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+- **Phase 2 (3bdelbary, in progress):** P2.1–P2.5 landed — `AsyncCalls` helper + 44 DAO call sites across 13 controllers refactored off the FX thread, auth flow timeouts (10 s sign-in/up, 5 s splash restore), and the width-driven dashboard sidebar / hamburger toggle at the 900 px breakpoint. P2.6–P2.12 (UX polish + doc sweep) still pending.
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 
 The app compiles cleanly on both profiles and boots through Splash → SignIn on desktop. No Android APK has been built yet (needs GraalVM + Android SDK toolchain).
@@ -135,6 +148,47 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
   - New public `stopLifecycle()` method stops the clock and removes all 5 listeners. Idempotent. Documented as the intended hook for Phase 2's Gluon Attach `LifecycleService.PAUSE` event.
 - **Rotation safety confirmed.** `AndroidManifest.xml` declares `android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize"` on the launcher activity, so orientation changes don't tear down and rebuild the Activity / JVM. The field-backed `Timeline` provides defense-in-depth for any future scenario where the JVM does restart.
 
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+=======
+### Phase 2 — In Progress (3bdelbary)
+
+Phase 2 picks up the async / lifecycle / layout follow-ups parked at the end of Phase 1. Goals: keep the FX thread free during every DB round-trip, harden the auth flow against hung connections, and make the dashboard feel native on both tablet-landscape (sidebar) and phone-portrait (drawer) widths.
+
+| Task | Description | Status |
+|------|-------------|--------|
+| P2.1 | `AsyncCalls` helper — wraps `DBConnection.runAsync` with FX-thread marshalling + `Duration`-timeout overloads for `runAndApply` / `runWithBusy` | Done |
+| P2.2 | `DashboardController` async sweep — 12 DAO call sites + 4 cached-fallback paths | Done |
+| P2.3a | `AttendancePage` / `AlertController` / `MonitoringController` / `WorkerController` — 10 sites | Done |
+| P2.3b | `PlotController` / `ReportsController` / `HarvestController` — 7 sites | Done |
+| P2.3c | `TaskController` + `CropController` — 16 sites (incl. filter-setup duplication bug fix) | Done |
+| P2.4 | Auth flow async + timeouts: `SignInController` (10 s) / `SignUpController` (10 s) / `SplashView` (5 s) | Done |
+| P2.5 | Width-based dashboard sidebar toggle — 900 px breakpoint listener on `Scene.widthProperty()` | Done |
+| P2.6 | `AlertController` master-detail full-width on wide viewports | Pending |
+| P2.7 | NavigationDrawer footer status dots (system / DB / sensors) | Pending |
+| P2.8 | `DiseaseDetectionPage` "Take Photo" button (Gluon `PicturesService` — capture mode) | Pending |
+| P2.9 | `MonitoringController.setupTrendChart` → `LiveSensorData` with bounded series | Pending |
+| P2.10 | `cmbChartPeriod` listener wired | Pending |
+| P2.11 | Adaptive launcher icons (Android 8.0+ foreground/background layers) | Pending |
+| P2.12 | This doc + `MIGRATION_3BDELBARY.md` Phase 2 section | In progress |
+
+#### P2.1–P2.3 Key Deliverables (async sweep)
+- New helper `src/main/java/smartfarm/ui/async/AsyncCalls.java` with six entry points: `runAndApply` (3 overloads incl. a `Duration` timeout), `runWithBusy` (3 overloads incl. a `Duration` timeout), `runFireAndForget`, `runFireAndForgetThen`. All marshal the success / error consumer back to the FX thread via `Platform.runLater` and unwrap `CompletionException` / `ExecutionException` so callers see the real `SQLException` / `TimeoutException`.
+- **44 DAO call sites** across **13 controller files** converted from synchronous DAO calls on the FX thread to `AsyncCalls.runAndApply` / `runWithBusy`. Count confirmed by `grep "AsyncCalls\.(runAndApply\|runWithBusy\|runFireAndForget)" src/main/java/smartfarm/ui/` (12 in `DashboardController`, 6 each in `CropController` / `TaskController`, 5 each in `HarvestController` / `WorkerController`, 2 each in `AlertController` / `AttendancePage`, 1 each in `MonitoringController` / `PlotController` / `ReportsController` / `SignInController` / `SignUpController` / `SplashView`).
+- UX guards preserved across the sweep: per-row in-memory mutation order (advance / revert task status, fingerprint-rollback on worker save failure), filter combo idempotence (`CropController.setupFilters` split into one-time setup + idempotent `refreshPlotFilter`), and stale-async guards (`CropController.onAdvanceStage` / `buildCareHistoryTab` short-circuit if `selectedCrop` changed mid-fetch).
+- Documented caveat: `CompletableFuture.orTimeout` does **not** cancel the underlying JDBC call. If the driver hangs, the DB executor's worker stays blocked behind it and subsequent operations queue. The timeout only frees the FX side so the UI can recover (e.g. SplashView falls through to sign-in on a hung restore). See the Javadoc on the `Duration` overloads of `runAndApply` / `runWithBusy`.
+
+#### P2.4 Key Deliverables (auth flow)
+- `SignInController.onSignIn` and `SignUpController.onSignUp` refactored to `AsyncCalls.runWithBusy(button, ..., Duration.ofSeconds(10), errorHandler)`. The submit button stays disabled until success / error / timeout; an inline error message renders the right copy for the 10-second cutoff.
+- `SplashView` session restore: ad-hoc `Thread` + `Platform.runLater` boilerplate replaced with `AsyncCalls.runAndApply(..., Duration.ofSeconds(5), ...)`. The 800 ms minimum-visible guard is now expressed as a `PauseTransition` on the FX thread, so a fast DB still gets the full splash beat; a hung DB falls through to `SIGNIN` after 5 s.
+- Both `runAndApply` and `runWithBusy` gained `Duration` overloads in P2.1 specifically to unblock this work.
+
+#### P2.5 Key Deliverables (responsive sidebar)
+- `DashboardController` exposes `setSidebarInline(boolean)` which toggles the legacy sidebar `VBox`'s `visible` + `managed` properties together (collapses layout, not just paint).
+- `ShellView` owns a `WIDE_BREAKPOINT = 900.0` constant and a `ChangeListener<Number> widthListener` attached to `Scene.widthProperty()` from `setOnShowing` and detached from `setOnHiding`. Below 900 px: hamburger in AppBar, sidebar collapsed, drawer-driven nav (phone / portrait-tablet). At or above 900 px: sidebar inflates inline, hamburger hidden (tablet-landscape / desktop).
+- Listener lifecycle is the correctness win — detaching on hide stops chrome from bleeding into sign-in / sign-up if the user resizes the window during auth.
+- 900 px breakpoint catches iPad-portrait-and-up (768 px) while keeping standard phones (≤ 412 px logical width) on the drawer pattern.
+
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 ### Build Verification
 
 | Gate | Result |
@@ -150,6 +204,8 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 ## What Is Missing
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 
 Nothing on 3bdelbary's Phase 1 list. All B-tasks are complete.
 
@@ -160,6 +216,10 @@ Nothing on 3bdelbary's Phase 1 list. All B-tasks are complete.
 =======
 =======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 
 Nothing on 3bdelbary's Phase 1 list. All B-tasks are complete and the post-B10 cross-track items the user pulled forward (JFreeChart pom cleanup, LifecycleService wiring, SQL migration) are also done.
 
@@ -167,10 +227,17 @@ The only remaining work is environmental — running the actual APK build on a h
 
 ### Cross-track items still pending (low priority)
 - **`exec-maven-plugin` for the launcher generator (optional)** — would let the team run `mvn exec:java -Dexec.mainClass=smartfarm.ui.tools.LauncherIconGenerator`. The PowerShell variant (`src/main/java/smartfarm/ui/tools/generate-launcher-icons.ps1`) is the working alternative that needs no Maven plumbing.
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 - **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller `⚠` rows in `docs/MIGRATION_3BDELBARY.md` §B10.
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 =======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+- **Phase 2 async DAO sweep** — **Done in P2.1–P2.3c** (44 sites across 13 controllers via `AsyncCalls`). See the *Phase 2 — In Progress* section above and `docs/MIGRATION_3BDELBARY.md` for details.
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 
 ---
@@ -233,12 +300,16 @@ The full `mvn -Pandroid gluonfx:build` → APK pipeline has not been run. Requir
 
 ---
 
-## Phase 2 TODOs (12 in-code markers)
+## Phase 2 TODOs (14 in-code markers)
 
-| Category | Count | Description |
-|----------|-------|-------------|
-| DAO cached-connection field → per-method call | 11 | One per DAO: `AdminDAO`, `AlertDAO`, `AttendanceDAO`, `CropDAO`, `DeviceDAO`, `HarvestDAO`, `ManagerDAO`, `PlotDAO`, `SensorDAO`, `TaskDAO`, `WorkerDAO` |
-| NavContext unit tests | 1 | Awaiting JUnit/Surefire in pom.xml |
+| Category | Count | Description | Tracked by |
+|----------|-------|-------------|------------|
+| DAO cached-connection field → per-method call | 11 | One per DAO: `AdminDAO`, `AlertDAO`, `AttendanceDAO`, `CropDAO`, `DeviceDAO`, `HarvestDAO`, `ManagerDAO`, `PlotDAO`, `SensorDAO`, `TaskDAO`, `WorkerDAO` | Hagag lane — not in 3bdelbary P2.x |
+| `NavContext` unit tests | 1 | Awaiting JUnit/Surefire in pom.xml | Hagag lane (test framework) |
+| `MonitoringController.setupTrendChart` bounded series | 1 | Cap each `XYChart.Series` at N data points, trim from head before append | **P2.9** (scheduled) |
+| `alerts.fxml` master-detail pattern | 1 | Phone users get full-width detail screen via stacked View | **P2.6** (scheduled) |
+
+Note: the **44 `AsyncCalls.runAsync` / `runWithBusy` call sites added in P2.1–P2.3c are not `TODO(phase-2)` markers** — they're completed refactors. The 14 markers above are the remaining qualitative items the original Phase 1 deliverables flagged for future work.
 
 Additional Phase 2 items from the migration docs (not in-code):
 - Wire `DBConnection.closeQuietly()` into `Main#stop()` and a Gluon `LifecycleEvent.DESTROY` listener
@@ -287,6 +358,8 @@ a0c06d5 [3bdelbary] B2.7 fix: SPLASH registers under HOME_VIEW so Glisten mounts
 
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 1. **Run first `mvn -Pandroid gluonfx:build`** to produce an APK. All 3bdelbary-track assets and code are in place (Gluon Views, mobile.css, launcher icons, FXML mobile-friendliness, lifecycle hooks). This is the next concrete milestone for the project.
 2. **Fix `Crop.GrowthStage` enum mismatch** — UPDATE the DB rows to a valid enum value (e.g. `VEGETATIVE`) so `dashboard` + `reports` FXMLs load cleanly. Enum or DAO fix paths cross into Hagag's lane / frozen `model/`.
 3. **Hagag:** drop JFreeChart deps from `pom.xml` desktop profile (B6 audit complete); optionally add `exec-maven-plugin` to make the Java icon generator invokable via `mvn exec:java`; wire Gluon Attach `LifecycleService` in `Main` to dispatch PAUSE/RESUME into `DashboardController.stopLifecycle()` (B9 Phase 2 hand-off).
@@ -298,10 +371,22 @@ a0c06d5 [3bdelbary] B2.7 fix: SPLASH registers under HOME_VIEW so Glisten mounts
 2. **Add GitHub Secrets** for DB / MQTT / Crop.health (see the secrets table in `docs/CI_ANDROID_BUILD.md`). Without these the cloud build fails fast in step 5 with a clear error.
 3. **Apply the SQL migration** to fix `Crop.GrowthStage='GROWING'` on your MySQL so the app's `dashboard` + `reports` FXMLs load:
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+1. **Push `mobile-app` branch to GitHub** so the Actions workflow becomes available.
+2. **Add GitHub Secrets** for DB / MQTT / Crop.health (see the secrets table in `docs/CI_ANDROID_BUILD.md`). Without these the cloud build fails fast in step 5 with a clear error.
+3. **Apply the SQL migration** to fix `Crop.GrowthStage='GROWING'` on your MySQL so the app's `dashboard` + `reports` FXMLs load:
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+1. **Push `mobile-app` branch to GitHub** so the Actions workflow becomes available.
+2. **Add GitHub Secrets** for DB / MQTT / Crop.health (see the secrets table in `docs/CI_ANDROID_BUILD.md`). Without these the cloud build fails fast in step 5 with a clear error.
+3. **Apply the SQL migration** to fix `Crop.GrowthStage='GROWING'` on your MySQL so the app's `dashboard` + `reports` FXMLs load:
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
    ```
    mysql -h <host> -u <user> -p <db> < docs/sql/2026-05-14-fix-growthstage-growing.sql
    ```
    Idempotent. The script reports row counts before and after.
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 2. **Run first `mvn -Pandroid gluonfx:build`** on a host with GraalVM CE 22+ / Liberica NIK 23+, Android SDK (`platforms;android-35`, `build-tools;35.0.0`), and Android NDK ≥ 25.x installed. Walkthrough + failure modes in `docs/MIGRATION_3BDELBARY.md` *Post-B10 → APK build pre-flight checklist*.
 3. **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller `⚠` rows in `docs/MIGRATION_3BDELBARY.md` §B10.
@@ -311,4 +396,14 @@ a0c06d5 [3bdelbary] B2.7 fix: SPLASH registers under HOME_VIEW so Glisten mounts
 4. **Trigger the cloud build** — Actions tab → "Android APK Build" → Run workflow → pick `mobile-app` → Run. First run ≈20–40 min.
 5. **Download the `agrilliant-apk` artifact** from the completed run, then `adb install` on a device with USB debugging on.
 6. **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller `⚠` rows in `docs/MIGRATION_3BDELBARY.md` §B10.
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+4. **Trigger the cloud build** — Actions tab → "Android APK Build" → Run workflow → pick `mobile-app` → Run. First run ≈20–40 min.
+5. **Download the `agrilliant-apk` artifact** from the completed run, then `adb install` on a device with USB debugging on.
+6. **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller `⚠` rows in `docs/MIGRATION_3BDELBARY.md` §B10.
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+4. **Trigger the cloud build** — Actions tab → "Android APK Build" → Run workflow → pick `mobile-app` → Run. First run ≈20–40 min.
+5. **Download the `agrilliant-apk` artifact** from the completed run, then `adb install` on a device with USB debugging on.
+6. **Continue Phase 2 UX polish (P2.6 → P2.11)** — the async sweep (P2.1–P2.3c), auth-flow timeouts (P2.4), and responsive sidebar (P2.5) are landed. The remaining items are layout / asset / chart wiring polish; see the *Phase 2 — In Progress* matrix above and `docs/MIGRATION_3BDELBARY.md` for per-task specifics.
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md

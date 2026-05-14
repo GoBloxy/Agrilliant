@@ -16,6 +16,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import smartfarm.model.Alert;
 import smartfarm.service.AlertService;
+import smartfarm.ui.async.AsyncCalls;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -237,20 +238,29 @@ public class AlertController {
     // ═══════════════ DATA LOADING ═══════════════
 
     private void loadAlerts() {
-        try {
-            List<Alert> alerts = alertService.getAllAlerts();
-            masterList = FXCollections.observableArrayList(alerts);
-            filteredList = new FilteredList<>(masterList, p -> true);
-            alertTable.setItems(filteredList);
-            updateSummaryCards();
-            updateFilter();
-        } catch (RuntimeException e) {
-            masterList = FXCollections.observableArrayList();
-            filteredList = new FilteredList<>(masterList, p -> true);
-            alertTable.setItems(filteredList);
-            alertTable.setPlaceholder(new Label("No database connection — alerts unavailable"));
-            updateSummaryCards();
-        }
+        // P2.2: async. Initialize empty masterList/filteredList synchronously so
+        // the filter listeners (which can fire as soon as the user types) don't
+        // hit a null filteredList during the in-flight fetch. The setAll(...)
+        // call when the async completes propagates through FilteredList to the
+        // table automatically.
+        masterList = FXCollections.observableArrayList();
+        filteredList = new FilteredList<>(masterList, p -> true);
+        alertTable.setItems(filteredList);
+        updateSummaryCards();
+        updateFilter();
+
+        AsyncCalls.runAndApply(
+                alertService::getAllAlerts,
+                alerts -> {
+                    masterList.setAll(alerts);
+                    updateSummaryCards();
+                    updateFilter();
+                },
+                err -> {
+                    alertTable.setPlaceholder(new Label("No database connection — alerts unavailable"));
+                    System.err.println("Failed to load alerts: " + err.getMessage());
+                }
+        );
     }
 
     private void updateSummaryCards() {
@@ -335,15 +345,19 @@ public class AlertController {
     // ═══════════════ RESOLVE ACTION ═══════════════
 
     private void onResolveAlert(Alert alert) {
-        try {
-            alertService.resolveAlert(alert.getAlertId());
-            alert.resolve();
-            alertTable.refresh();
-            updateSummaryCards();
-            updateFilter();
-        } catch (RuntimeException e) {
-            System.err.println("Failed to resolve alert: " + e.getMessage());
-        }
+        // P2.2: async. In-memory `alert.resolve()` and the UI refresh run on the
+        // FX thread inside the apply lambda — ordered after the DB write
+        // completes so a failed UPDATE doesn't leave the model marked resolved.
+        AsyncCalls.runAndApply(
+                () -> { alertService.resolveAlert(alert.getAlertId()); return null; },
+                ignored -> {
+                    alert.resolve();
+                    alertTable.refresh();
+                    updateSummaryCards();
+                    updateFilter();
+                },
+                err -> System.err.println("Failed to resolve alert: " + err.getMessage())
+        );
     }
 
     // ═══════════════ UTILITY METHODS ═══════════════

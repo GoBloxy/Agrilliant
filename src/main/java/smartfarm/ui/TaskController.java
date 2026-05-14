@@ -18,8 +18,8 @@ import smartfarm.dao.TaskDAO;
 import smartfarm.dao.WorkerDAO;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
+import smartfarm.ui.async.AsyncCalls;
 
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -41,21 +41,28 @@ public class TaskController {
 
     @FXML
     public void initialize() {
-        loadWorkerCache();
+        // P2.2: loadWorkerCache + loadTasks are async. updateSummaryCards runs
+        // from loadTasks's apply so it sees the just-fetched data.
         setupCellFactory();
-        loadTasks();
         setupFilters();
-        updateSummaryCards();
+        loadWorkerCache();
+        loadTasks();
     }
 
     private void loadWorkerCache() {
-        try {
-            for (Worker w : workerDAO.getAll()) {
-                workerCache.put(w.getWorkerId(), w);
-            }
-        } catch (SQLException e) {
-            // cache will be empty
-        }
+        // P2.2: async. After cache populates, refresh the list so cells get
+        // real assignee names (currently the cell factory falls back to
+        // "Worker #<id>" while the cache is empty).
+        AsyncCalls.runAndApply(
+                workerDAO::getAll,
+                workers -> {
+                    for (Worker w : workers) {
+                        workerCache.put(w.getWorkerId(), w);
+                    }
+                    taskList.refresh();
+                },
+                err -> System.err.println("Failed to load worker cache: " + err.getMessage())
+        );
     }
 
     /**
@@ -163,12 +170,22 @@ public class TaskController {
     }
 
     private void loadTasks() {
-        try {
-            allTasks.setAll(taskDAO.getAll());
-        } catch (SQLException e) {
-            allTasks.clear();
-        }
-        applyFilters();
+        // P2.2: async. updateSummaryCards moves here so the summary cards stay
+        // in sync with the just-populated allTasks.
+        AsyncCalls.runAndApply(
+                taskDAO::getAll,
+                tasks -> {
+                    allTasks.setAll(tasks);
+                    applyFilters();
+                    updateSummaryCards();
+                },
+                err -> {
+                    allTasks.clear();
+                    applyFilters();
+                    updateSummaryCards();
+                    System.err.println("Failed to load tasks: " + err.getMessage());
+                }
+        );
     }
 
     private void setupFilters() {
@@ -210,38 +227,37 @@ public class TaskController {
     private void onAddTask() {
         Dialog<Task> dialog = createTaskDialog(null);
         dialog.showAndWait().ifPresent(task -> {
-            try {
-                taskDAO.save(task);
-                loadTasks();
-                updateSummaryCards();
-            } catch (SQLException e) {
-                showAlert("Error", "Failed to save: " + e.getMessage());
-            }
+            // P2.2: async save. loadTasks drives updateSummaryCards.
+            AsyncCalls.runAndApply(
+                    () -> { taskDAO.save(task); return null; },
+                    ignored -> loadTasks(),
+                    err -> showAlert("Error", "Failed to save: " + err.getMessage())
+            );
         });
     }
 
     private void onAdvanceStatus(Task task) {
         if (task == null) return;
+        // In-memory mutation runs synchronously first — matches the original
+        // ordering. loadTasks() in the apply re-syncs in-memory state with the
+        // DB on success. On error the in-memory mutation is not rolled back
+        // (same behaviour as the pre-async code).
         task.advanceStatus();
-        try {
-            taskDAO.update(task);
-            loadTasks();
-            updateSummaryCards();
-        } catch (SQLException e) {
-            showAlert("Error", "Failed to update: " + e.getMessage());
-        }
+        AsyncCalls.runAndApply(
+                () -> { taskDAO.update(task); return null; },
+                ignored -> loadTasks(),
+                err -> showAlert("Error", "Failed to update: " + err.getMessage())
+        );
     }
 
     private void onRevertStatus(Task task) {
         if (task == null) return;
         task.revertStatus();
-        try {
-            taskDAO.update(task);
-            loadTasks();
-            updateSummaryCards();
-        } catch (SQLException e) {
-            showAlert("Error", "Failed to update: " + e.getMessage());
-        }
+        AsyncCalls.runAndApply(
+                () -> { taskDAO.update(task); return null; },
+                ignored -> loadTasks(),
+                err -> showAlert("Error", "Failed to update: " + err.getMessage())
+        );
     }
 
     private void onDeleteTask(Task task) {
@@ -250,15 +266,12 @@ public class TaskController {
                 "Delete task \"" + task.getDescription() + "\"?",
                 ButtonType.YES, ButtonType.NO);
         confirm.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.YES) {
-                try {
-                    taskDAO.delete(task.getTaskId());
-                    loadTasks();
-                    updateSummaryCards();
-                } catch (SQLException e) {
-                    showAlert("Error", "Failed to delete: " + e.getMessage());
-                }
-            }
+            if (btn != ButtonType.YES) return;
+            AsyncCalls.runAndApply(
+                    () -> { taskDAO.delete(task.getTaskId()); return null; },
+                    ignored -> loadTasks(),
+                    err -> showAlert("Error", "Failed to delete: " + err.getMessage())
+            );
         });
     }
 

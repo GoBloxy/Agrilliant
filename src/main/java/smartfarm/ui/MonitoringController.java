@@ -12,8 +12,10 @@ import javafx.scene.layout.Pane;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
+import smartfarm.ui.async.AsyncCalls;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class MonitoringController {
 
@@ -193,44 +195,55 @@ public class MonitoringController {
     }
 
     private void loadSensorReadings() {
+        // P2.2: async. SensorService.getRecentReadings does a JDBC SELECT — used
+        // to block the FX thread on every Monitoring tab open. Fetch on the DB
+        // executor, build rows + update labels on FX thread.
         SensorService sensorService = new SensorService();
-        java.util.List<SensorReading> readings = sensorService.getRecentReadings(50);
-        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm:ss a");
+        AsyncCalls.runAndApply(
+                () -> sensorService.getRecentReadings(50),
+                (List<SensorReading> readings) -> {
+                    DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm:ss a");
+                    ObservableList<SensorRow> rows = FXCollections.observableArrayList();
+                    int normal = 0, warning = 0;
 
-        ObservableList<SensorRow> rows = FXCollections.observableArrayList();
-        int normal = 0, warning = 0;
+                    for (SensorReading r : readings) {
+                        String plotName = "Plot " + (r.getDeviceId() > 0 ? r.getDeviceId() : "?");
+                        String time = r.getTimestamp() != null ? r.getTimestamp().format(timeFmt) : "—";
 
-        for (SensorReading r : readings) {
-            String plotName = "Plot " + (r.getDeviceId() > 0 ? r.getDeviceId() : "?");
-            String time = r.getTimestamp() != null ? r.getTimestamp().format(timeFmt) : "—";
+                        // Temperature row
+                        float t = r.getTemperature();
+                        String tStatus = t > 35 ? "High" : t < 10 ? "Low" : "Normal";
+                        if (tStatus.equals("Normal")) normal++; else warning++;
+                        rows.add(new SensorRow(plotName, "Temperature", String.format("%.1f °C", t), tStatus, time));
 
-            // Temperature row
-            float t = r.getTemperature();
-            String tStatus = t > 35 ? "High" : t < 10 ? "Low" : "Normal";
-            if (tStatus.equals("Normal")) normal++; else warning++;
-            rows.add(new SensorRow(plotName, "Temperature", String.format("%.1f °C", t), tStatus, time));
+                        // Humidity row
+                        float h = r.getHumidity();
+                        String hStatus = h > 80 ? "High" : h < 30 ? "Low" : "Normal";
+                        if (hStatus.equals("Normal")) normal++; else warning++;
+                        rows.add(new SensorRow(plotName, "Humidity", String.format("%.0f %%", h), hStatus, time));
 
-            // Humidity row
-            float h = r.getHumidity();
-            String hStatus = h > 80 ? "High" : h < 30 ? "Low" : "Normal";
-            if (hStatus.equals("Normal")) normal++; else warning++;
-            rows.add(new SensorRow(plotName, "Humidity", String.format("%.0f %%", h), hStatus, time));
+                        // Soil moisture row
+                        float s = r.getSoilMoisture();
+                        if (!Float.isNaN(s)) {
+                            String sStatus = s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal";
+                            if (sStatus.equals("Normal")) normal++; else warning++;
+                            rows.add(new SensorRow(plotName, "Soil Moisture", String.format("%.0f %%", s), sStatus, time));
+                        }
+                    }
 
-            // Soil moisture row
-            float s = r.getSoilMoisture();
-            if (!Float.isNaN(s)) {
-                String sStatus = s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal";
-                if (sStatus.equals("Normal")) normal++; else warning++;
-                rows.add(new SensorRow(plotName, "Soil Moisture", String.format("%.0f %%", s), sStatus, time));
-            }
-        }
-
-        sensorTable.setItems(rows);
-        lblReadingsCount.setText(rows.size() + " readings");
-        lblNormalCount.setText(String.valueOf(normal));
-        lblWarningCount.setText(String.valueOf(warning));
-        lblCriticalCount.setText("0");
-        lblOfflineCount.setText("0");
+                    sensorTable.setItems(rows);
+                    lblReadingsCount.setText(rows.size() + " readings");
+                    lblNormalCount.setText(String.valueOf(normal));
+                    lblWarningCount.setText(String.valueOf(warning));
+                    lblCriticalCount.setText("0");
+                    lblOfflineCount.setText("0");
+                },
+                err -> {
+                    sensorTable.setItems(FXCollections.observableArrayList());
+                    lblReadingsCount.setText("0 readings");
+                    System.err.println("Failed to load sensor readings: " + err.getMessage());
+                }
+        );
     }
 
     // Inner class for TableView items

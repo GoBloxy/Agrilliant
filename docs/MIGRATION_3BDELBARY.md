@@ -988,8 +988,30 @@ The next concrete milestone is the first `mvn -Pandroid gluonfx:build` to produc
 - [x] **B10** — done. This consolidated reference + the FXML/controller matrices + Phase 2 TODO list complete the §B10 deliverable.
 <<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
 <<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
 =======
 =======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
+
+## Status of Phase 2 tasks (3bdelbary lane)
+- [x] **P2.1** — `AsyncCalls` helper + `Duration`-timeout overloads.
+- [x] **P2.2** — `DashboardController` async sweep (12 sites + 4 cached fallbacks).
+- [x] **P2.3a** — `AttendancePage` / `AlertController` / `MonitoringController` / `WorkerController` (10 sites).
+- [x] **P2.3b** — `PlotController` / `ReportsController` / `HarvestController` (7 sites).
+- [x] **P2.3c** — `TaskController` + `CropController` (16 sites + filter-setup duplication fix).
+- [x] **P2.4** — Auth flow async + 10 s / 5 s timeouts (`SignInController`, `SignUpController`, `SplashView`).
+- [x] **P2.5** — Width-based dashboard sidebar toggle (900 px breakpoint listener).
+- [ ] **P2.6** — `AlertController` master-detail full-width on wide viewports.
+- [ ] **P2.7** — NavigationDrawer footer status dots.
+- [ ] **P2.8** — `DiseaseDetectionPage` "Take Photo" button (capture mode).
+- [ ] **P2.9** — `MonitoringController.setupTrendChart` → `LiveSensorData` with bounded series.
+- [ ] **P2.10** — `cmbChartPeriod` listener.
+- [ ] **P2.11** — Adaptive launcher icons (Android 8.0+ foreground/background layers).
+- [x] **P2.12** — This Phase 2 section + `STATUS.md` Phase 2 subsection.
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 
 ---
@@ -1040,10 +1062,16 @@ UPDATE crops SET growth_stage = 'VEGETATIVE' WHERE growth_stage = 'GROWING';
 The file documents the problem, lists the three fix options (a/b/c), justifies why (b) was chosen, and includes a before/after `SELECT COUNT(*)` for verification. After running it, `dashboard.fxml` and `reports.fxml` should pass the FXML-load smoke (the only two failures left in `STATUS.md`'s smoke matrix).
 
 <<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
 ### APK build — pre-flight checklist
 
 The 3bdelbary track and the cross-track items above are now complete. The first `mvn -Pandroid gluonfx:build` is a build-environment task that needs the user's machine to be set up — I cannot run it from this worktree (worktree mode + no installed deps). Pre-flight requirements:
 =======
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 ### APK build — three paths
 
 The 3bdelbary track and the cross-track items above are now complete. The first `mvn -Pandroid gluonfx:build` needs a **Linux host** because GluonFX's Substrate + GraalVM native-image cross-compile toolchain does not run natively on Windows. The team can pick from three paths:
@@ -1053,6 +1081,12 @@ The 3bdelbary track and the cross-track items above are now complete. The first 
 3. **Native Linux / macOS** — run `scripts/wsl-setup-android-build-env.sh` on any Ubuntu 22.04+ machine, or follow the equivalent steps for macOS from Gluon's docs.
 
 Pre-flight requirements (paths 2 + 3 only — the cloud path has none on your machine):
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 
 | Requirement | How to verify |
@@ -1061,10 +1095,16 @@ Pre-flight requirements (paths 2 + 3 only — the cloud path has none on your ma
 | **Android SDK** with `cmdline-tools`, `platforms;android-35`, `build-tools;35.0.0` | `sdkmanager --list_installed`. Set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`). |
 | **Android NDK** ≥ 25.x | Installed via `sdkmanager "ndk;<ver>"`. Set `ANDROID_NDK` env var. |
 <<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
 | **DB credentials** for first-run via `DB_URL` / `DB_USER` / `DB_PASSWORD` env vars or `db.properties` (Hagag's H4) | Per Hagag's `MIGRATION_HAGAG.md`. |
 | **APK signing keystore** (release builds only) | Debug builds auto-sign with the GluonFX-managed debug key — fine for first device install. |
 
 =======
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 | **APK signing keystore** (release builds only) | Debug builds auto-sign with the GluonFX-managed debug key — fine for first device install. |
 
 #### Properties files — gitignored secrets must be copied in before the build
@@ -1090,6 +1130,12 @@ Copy-Item c:\Users\moham\Agrilliant\src\main\resources\crop-health.properties  s
 
 The pre-flight checklist below assumes a dev/internal build where the properties files are in place.
 
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 #### Build commands
 
@@ -1122,6 +1168,184 @@ mvn -Pandroid gluonfx:run
 - **`READ_MEDIA_IMAGES` permission silently denied on Android 13+** — `DiseaseDetectionPage.selectImage` returns empty. Fix: add a runtime permission request before calling `PlatformPickers.pickImage()`. Out of scope here — Hagag's `PermissionRequestActivity` (already in the manifest) is the entry point.
 - **`Crop.GrowthStage.GROWING` enum mismatch** at first DB hit — apply the SQL migration above before launching.
 <<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 =======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
+
+---
+
+## Phase 2 — In Progress (3bdelbary lane)
+
+Phase 2 picks up the async / lifecycle / layout follow-ups parked at the end of Phase 1 (see the `⚠` rows in §B10's per-controller matrix). The goals are: keep the FX thread free during every DB round-trip so the UI never stalls on a slow connection; harden the auth flow against hung connections with explicit timeouts; and make the dashboard feel native on both tablet-landscape (sidebar) and phone-portrait (drawer) widths.
+
+The track is structured as P2.1 → P2.12. P2.1–P2.5 (the high-priority block) are landed; P2.6–P2.11 are UX polish items and P2.12 is this documentation sweep.
+
+---
+
+## P2.1: AsyncCalls helper — DONE ✅
+
+### File created
+- `src/main/java/smartfarm/ui/async/AsyncCalls.java` — facade over Hagag's H4 `DBConnection.runAsync(Callable)`. Wraps every async DAO chain so the success / error consumer always runs on the FX thread via `Platform.runLater`, and unwraps `CompletionException` / `ExecutionException` so callers see the real `SQLException` / `TimeoutException` instead of the wrapper.
+
+### Public API
+| Method | Use case |
+|--------|----------|
+| `runAndApply(Callable<T> dbWork, Consumer<T> uiAction)` | Most common shape — DAO call → table refresh. |
+| `runAndApply(Callable<T>, Consumer<T>, Consumer<Throwable>)` | Same with explicit error handler (inline label, dialog, etc.). |
+| `runAndApply(Callable<T>, Consumer<T>, Consumer<Throwable>, Duration)` | Adds an FX-side timeout via `CompletableFuture.orTimeout`. |
+| `runWithBusy(Node, Callable<T>, Consumer<T>)` | Disables `Node` for the duration of the call. Used for Save / Submit / Sign-In buttons. |
+| `runWithBusy(Node, Callable<T>, Consumer<T>, Consumer<Throwable>)` | Same with explicit error handler. |
+| `runWithBusy(Node, Callable<T>, Consumer<T>, Consumer<Throwable>, Duration)` | Adds the FX-side timeout. Used by P2.4. |
+| `runFireAndForget(Runnable)` | DB-side mutation with no UI follow-up. |
+| `runFireAndForgetThen(Runnable, Runnable [, Consumer<Throwable>])` | Mutation then an FX-thread callback. |
+
+### Caveats documented in Javadoc
+- `CompletableFuture.orTimeout(...)` does **not** cancel the underlying JDBC call. If the driver hangs, the DB executor's single worker stays blocked behind it until the connection itself returns or fails. The timeout only frees the FX side so the UI can react (e.g. `SplashView` falls through to sign-in on a hung restore). Subsequent DB ops queue behind the hung call.
+- The default error handler logs via `Logger.e(TAG, ...)`. Callers that want a user-visible error message pass an explicit `Consumer<Throwable>`.
+
+### Cross-track interactions
+- Builds on Hagag's H4 `DBConnection.runAsync(Callable)`. No changes needed to `DBConnection`; `AsyncCalls` is purely additive in the UI lane.
+- Uses Hagag's H5/H10 `Logger` for the default error handler so all uncaught DAO errors continue to land in `adb logcat` on device.
+
+---
+
+## P2.2: DashboardController async sweep — DONE ✅
+
+### Scope
+12 direct DAO call sites + 4 cached-fallback paths (`workerCache`, `cropCache`, `plotCache`, `alertCache`) refactored from synchronous DAO calls on the FX thread to `AsyncCalls.runAndApply`.
+
+### Pattern
+Each call site follows the shape:
+```java
+AsyncCalls.runAndApply(
+    () -> someDAO.getAll(),         // off-FX
+    items -> {                       // back on FX
+        cache.setAll(items);
+        refreshSummaryCards();
+        refreshChart();
+    });
+```
+
+The cached-fallback paths use the same pattern but seed an empty list synchronously first (so the table draws empty rather than not at all) and then fill in once the async fetch returns.
+
+### Preserved behaviour
+- `Timeline clock` (B9 lifecycle field) untouched — it's pure UI, no DB.
+- 5 `LiveSensorData` listeners (B9 lifecycle fields) untouched — they're FX-thread signals, no DAO.
+- `updateSidebarStatus()` is now called from the FX-side consumer inside each async chain so the status dots only refresh once the underlying data has actually arrived.
+
+---
+
+## P2.3a: AttendancePage / AlertController / MonitoringController / WorkerController — DONE ✅
+
+### Sites converted (10)
+| Controller | Calls converted | Notes |
+|------------|-----------------|-------|
+| `AttendancePage` | `refreshData`, `loadWorkerNames` | Worker names loaded async, table refreshes when both arrive. |
+| `AlertController` | `loadAlerts`, `onResolveAlert` | `loadAlerts` seeds empty lists then fills; resolve action async-updates DB then mutates the in-memory model on FX thread. |
+| `MonitoringController` | `loadSensorReadings` | Lambda parameter explicitly typed to dodge an IDE type-inference quirk. |
+| `WorkerController` | `loadWorkerCache`, `loadWorkers`, add/edit/delete | Add/edit/delete are `runWithBusy(button, ...)` so the dialog buttons can't be double-clicked. The fingerprint-rollback thread on a failed worker save stays on its own thread (it's hardware I/O, not DB). |
+
+### Bug fixes that fell out of the sweep
+- `WorkerController.allTasks` now defaults to `List.of()` instead of `null` so any read during the in-flight async fetch sees empty rather than NPE-ing. The original code only initialised it after the (synchronous) DAO call returned.
+
+---
+
+## P2.3b: PlotController / ReportsController / HarvestController — DONE ✅
+
+### Sites converted (7)
+| Controller | Calls converted | Notes |
+|------------|-----------------|-------|
+| `PlotController` | `loadPlotData` | Single async closure fetches plots + crops together via a new private `PlotData` record so the FX-thread consumer builds the joined view atomically. |
+| `ReportsController` | `loadData` | Same pattern: harvests + crops fetched together via a `ReportsData` record. `setupTableColumns()` moved ahead of the async load so the empty table renders before data arrives. |
+| `HarvestController` | `loadCropCache`, `loadRecords`, record / edit / delete | CRUD dialogs use `runWithBusy(button, ...)` for the same double-click protection as `WorkerController`. |
+
+### Why the record pattern
+Two DAO calls in one closure means one round-trip to the DB executor, not two. The closure returns a single record that the FX-thread consumer destructures. Avoids the read-modify-write race that two independent `runAndApply` chains would have if one finishes before the other.
+
+---
+
+## P2.3c: TaskController + CropController — DONE ✅
+
+### Sites converted (16)
+| Controller | Calls converted | Notes |
+|------------|-----------------|-------|
+| `TaskController` | `loadWorkerCache`, `loadTasks`, `addTask`, `advanceStatus`, `revertStatus`, `deleteTask` | Status transitions (advance / revert) preserve per-row in-memory mutation order: update DAO async, then mutate the `ObservableList` on FX-thread success so the table reorders predictably. |
+| `CropController` | combined `loadData` (plots + crops), add / edit / delete crop, plus `setupFilters` split | Combined load uses the same record pattern as P2.3b. |
+
+### Bug fixes that fell out of the sweep
+- **`CropController.setupFilters` duplication bug** — previously called from both `initialize` and after every add/edit, so combo items + their listeners stacked across operations. Split into:
+  - `setupFilters()` — called once from `initialize`, attaches the filter listener.
+  - `refreshPlotFilter()` — called after add / edit; rebuilds the plot combo's items in-place without re-attaching the listener.
+- **Stale-async guard in `onAdvanceStage` and `buildCareHistoryTab`** — both short-circuit if `selectedCrop` changed mid-fetch, so the user clicking a different crop while one is still loading doesn't repaint the detail pane with the wrong data.
+
+---
+
+## P2.4: Auth flow async + AsyncCalls timeouts — DONE ✅
+
+### Files modified
+- `src/main/java/smartfarm/ui/async/AsyncCalls.java` — added the `Duration` timeout overloads of `runAndApply` and `runWithBusy` (called out under P2.1 above). The Javadoc on these overloads carries the JDBC-cancellation caveat.
+- `src/main/java/smartfarm/ui/SignInController.java` — `onSignIn` now calls `AsyncCalls.runWithBusy(signInBtn, () -> auth.signIn(email, pw), this::onSignInSuccess, this::onSignInError, Duration.ofSeconds(10))`. The button stays disabled until success / error / timeout. Inline error label renders `Sign-in timed out. Check your connection and try again.` on the 10-second cutoff.
+- `src/main/java/smartfarm/ui/SignUpController.java` — `onSignUp` follows the same shape with a different success path (`AppView.SIGNIN.switchTo()`).
+- `src/main/java/smartfarm/ui/views/SplashView.java` — manual `Thread` + `Platform.runLater` boilerplate replaced with `AsyncCalls.runAndApply(() -> auth.restoreSession(token), this::onSessionRestored, this::onRestoreError, Duration.ofSeconds(5))`. The 800 ms minimum-visible guard is now expressed as a `PauseTransition` on the FX thread — a fast DB still gets a full splash beat, a hung DB falls through to `SIGNIN` after 5 s, and the navigation call is deferred until *both* the minimum splash time and the async restore have completed.
+
+### Why different timeouts
+- **10 s for sign-in / sign-up** — interactive flows where the user is actively waiting. A 10 s ceiling is the upper bound of "polite latency" before the user assumes the app is broken.
+- **5 s for splash restore** — non-interactive flow where the user has *just* opened the app and expects to see *something* fast. A shorter ceiling means a hung connection drops them at the sign-in screen quickly instead of staring at a spinner.
+
+### Preserved behaviour
+- The `restoreStarted` volatile guard on `SplashView` (from B1) still prevents double-restore if the view ever gets re-shown.
+- `NavContext.get().setCurrentUser(user)` still fires from the same place — inside the success path of the async restore — so downstream views see a populated session.
+
+---
+
+## P2.5: Width-based dashboard sidebar toggle — DONE ✅
+
+### Files modified
+- `src/main/java/smartfarm/ui/DashboardController.java` — new `@FXML private VBox sidebar` field bound to the existing `fx:id="sidebar"` in `dashboard.fxml`; new public `setSidebarInline(boolean inline)` method toggles `sidebar.setVisible(inline) + setManaged(inline)` together so the legacy sidebar collapses out of the layout (not just visually hidden).
+- `src/main/java/smartfarm/ui/views/ShellView.java` — new `WIDE_BREAKPOINT = 900.0` constant, new `ChangeListener<Number> widthListener` field, new private `attachWidthListener` / `detachWidthListener` / `applyResponsiveChrome(double)` methods. Listener attached from `setOnShowing`, detached from `setOnHiding`, applied once up-front so the chrome matches the current width before the first user interaction.
+
+### Behaviour
+| Width | AppBar hamburger | Legacy sidebar |
+|-------|------------------|----------------|
+| `< 900 px` (phone / tablet portrait) | Visible | Collapsed (`visible=false managed=false`) |
+| `>= 900 px` (tablet landscape / desktop) | Hidden | Inflated inline |
+
+The threshold was chosen to catch iPad-portrait-and-up (768 px) when combined with system chrome while keeping standard phones (≤ 412 px logical width) on the drawer pattern.
+
+### Why the listener lifecycle matters
+The listener is attached only while `ShellView` is the active view. If the user signs out and the window is resized while on the sign-in screen, the width listener doesn't fire (it's detached) and so the sidebar / hamburger state can't bleed into views that have their own AppBar configuration. This was the bug-prone shape that made B3X's deferred "width-based dashboard sidebar toggle" parking note (see §B5 key deliverables) hard to land cleanly.
+
+### Verification suggestions
+- Launch wide (≥ 900 px) — legacy sidebar visible inline, no hamburger in the AppBar.
+- Launch narrow (< 900 px) — sidebar collapsed, hamburger present, drawer slides in on tap.
+- Drag the window across the 900 px boundary while signed in — sidebar and hamburger toggle live.
+- Sign out — sign-in shows without a hamburger (listener detached in `setOnHiding`).
+- Resize the window while on the sign-in screen — no chrome appears (listener is detached).
+- Sign back in — chrome reapplies based on the current width.
+
+---
+
+## P2.6 – P2.11 (pending — UX polish)
+
+These items remain on the Phase 2 backlog. Brief descriptions:
+
+- **P2.6** — `AlertController` master-detail full-width on wide viewports (closes the `TODO(phase-2)` in `alerts.fxml`).
+- **P2.7** — NavigationDrawer footer status dots (system / DB / sensors) mirroring the legacy sidebar status card.
+- **P2.8** — `DiseaseDetectionPage` "Take Photo" button using Gluon `PicturesService` in capture mode (the existing "Choose Image" button is already wired via B4/B8).
+- **P2.9** — `MonitoringController.setupTrendChart` wired to `LiveSensorData` with a bounded series (drop oldest data points beyond N — closes the `TODO(phase-2)` in `MonitoringController`).
+- **P2.10** — `cmbChartPeriod` listener wired so the chart re-bins when the user switches period.
+- **P2.11** — Adaptive launcher icons for Android 8.0+ (foreground + background layer XML drawables in `mipmap-anydpi-v26/`, replacing the static PNGs from B7 on capable Android versions).
+
+---
+
+## P2.12: Documentation sweep — DONE ✅
+
+This Phase 2 section + the parallel *Phase 2 — In Progress* subsection in `docs/STATUS.md` together close P2.12. The `## Status of Phase 2 tasks` checkbox list near the top of this file reflects the same matrix in compact form.
+
+Once P2.6–P2.11 land they should be appended here following the same `## P2.x: <name> — DONE ✅` pattern used above for P2.1–P2.5.
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md

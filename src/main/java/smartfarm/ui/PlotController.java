@@ -17,8 +17,8 @@ import smartfarm.dao.CropDAO;
 import smartfarm.dao.PlotDAO;
 import smartfarm.model.Crop;
 import smartfarm.model.Plot;
+import smartfarm.ui.async.AsyncCalls;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -504,54 +504,57 @@ public class PlotController {
     // ═══════════════ DB DATA LOADING ═══════════════
 
     private void loadPlotData() {
+        // P2.2: async. Fetch both lists on the DB executor; build all derived
+        // state (plot/crop map, row counts, summary cards) on the FX thread
+        // inside the apply lambda.
         PlotDAO plotDAO = new PlotDAO();
         CropDAO cropDAO = new CropDAO();
-        try {
-            List<Plot> plots = plotDAO.getAll();
-            List<Crop> crops = cropDAO.getAll();
+        AsyncCalls.runAndApply(
+                () -> new PlotData(plotDAO.getAll(), cropDAO.getAll()),
+                data -> {
+                    Map<Integer, String> plotCropMap = new HashMap<>();
+                    for (Crop c : data.crops()) {
+                        if (c.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
+                            plotCropMap.put(c.getPlotId(), c.getCropName());
+                        }
+                    }
 
-            // Build a map: plotId → crop name
-            Map<Integer, String> plotCropMap = new HashMap<>();
-            for (Crop c : crops) {
-                if (c.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
-                    plotCropMap.put(c.getPlotId(), c.getCropName());
+                    ObservableList<PlotRecord> records = FXCollections.observableArrayList();
+                    int cultivation = 0, available = 0, fallow = 0;
+
+                    for (Plot p : data.plots()) {
+                        String cropName = plotCropMap.getOrDefault(p.getPlotId(), "—");
+                        boolean hasCrop = !cropName.equals("—");
+                        String status = hasCrop ? "Under Cultivation" : "Available";
+                        if (hasCrop) cultivation++; else available++;
+
+                        String plotLabel = p.getName() + " - " + p.getLocation();
+                        String area = String.format("%.1f", p.getSizeAcres());
+                        String updated = p.getUpdatedAt() != null
+                                ? p.getUpdatedAt().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                                : "—";
+
+                        records.add(new PlotRecord(
+                                plotLabel, p.getLocation(), cropName, area,
+                                status, p.getSoilType(), hasCrop ? "Drip" : "—", updated
+                        ));
+                    }
+
+                    plotTable.setItems(records);
+                    lblTotalPlots.setText(String.valueOf(data.plots().size()));
+                    lblCultivation.setText(String.valueOf(cultivation));
+                    lblAvailable.setText(String.valueOf(available));
+                    lblFallow.setText(String.valueOf(fallow));
+                },
+                err -> {
+                    System.err.println("Failed to load plot data: " + err.getMessage());
+                    plotTable.setPlaceholder(new Label("Could not load plots from database"));
                 }
-            }
-
-            ObservableList<PlotRecord> records = FXCollections.observableArrayList();
-            int cultivation = 0, available = 0, fallow = 0;
-
-            for (Plot p : plots) {
-                String cropName = plotCropMap.getOrDefault(p.getPlotId(), "—");
-                boolean hasCrop = !cropName.equals("—");
-                String status = hasCrop ? "Under Cultivation" : "Available";
-                if (hasCrop) cultivation++; else available++;
-
-                String plotLabel = p.getName() + " - " + p.getLocation();
-                String area = String.format("%.1f", p.getSizeAcres());
-                String updated = p.getUpdatedAt() != null
-                        ? p.getUpdatedAt().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
-                        : "—";
-
-                records.add(new PlotRecord(
-                        plotLabel, p.getLocation(), cropName, area,
-                        status, p.getSoilType(), hasCrop ? "Drip" : "—", updated
-                ));
-            }
-
-            plotTable.setItems(records);
-
-            // Update summary cards
-            lblTotalPlots.setText(String.valueOf(plots.size()));
-            lblCultivation.setText(String.valueOf(cultivation));
-            lblAvailable.setText(String.valueOf(available));
-            lblFallow.setText(String.valueOf(fallow));
-
-        } catch (SQLException e) {
-            System.err.println("Failed to load plot data: " + e.getMessage());
-            plotTable.setPlaceholder(new Label("Could not load plots from database"));
-        }
+        );
     }
+
+    // P2.2: carrier for the async closure result.
+    private record PlotData(List<Plot> plots, List<Crop> crops) {}
 
     // ═══════════════ DATA MODEL ═══════════════
 

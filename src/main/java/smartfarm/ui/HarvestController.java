@@ -18,8 +18,8 @@ import smartfarm.dao.CropDAO;
 import smartfarm.dao.HarvestDAO;
 import smartfarm.model.Crop;
 import smartfarm.model.HarvestRecord;
+import smartfarm.ui.async.AsyncCalls;
 
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -44,26 +44,32 @@ public class HarvestController {
 
     @FXML
     public void initialize() {
-        loadCropCache();
+        // P2.2: loadCropCache + loadRecords are async; updateSummaryCards is
+        // driven from loadRecords's apply so it always reads fresh allRecords.
+        // Cell factories read cropCache per-render so they tolerate the empty
+        // cache during the in-flight loadCropCache.
         setupCellFactory();
-        loadRecords();
         setupFilters();
-        updateSummaryCards();
+        loadCropCache();
+        loadRecords();
     }
 
     private void loadCropCache() {
-        try {
-            for (Crop c : cropDAO.getAll()) {
-                cropCache.put(c.getCropId(), c);
-            }
-        } catch (SQLException | RuntimeException e) {
-            // cache stays empty if DB unreachable / not configured.
-            // RuntimeException catch covers the H5-pending DAOs whose
-            // getAll() can throw NullPointerException when DBConnection
-            // returns null (no creds). Matches the WorkerController
-            // pattern. TODO(phase-2 hagag-lane): drop RuntimeException
-            // once CropDAO has Hagag's null-guard sweep.
-        }
+        // P2.2: async. After cropCache populates, refresh the list so cells
+        // re-render with real crop names and plot labels.
+        AsyncCalls.runAndApply(
+                cropDAO::getAll,
+                crops -> {
+                    for (Crop c : crops) {
+                        cropCache.put(c.getCropId(), c);
+                    }
+                    harvestList.refresh();
+                },
+                err -> {
+                    // cache stays empty if DB unreachable / not configured
+                    System.err.println("Failed to load crop cache: " + err.getMessage());
+                }
+        );
     }
 
     /**
@@ -131,13 +137,22 @@ public class HarvestController {
     }
 
     private void loadRecords() {
-        try {
-            allRecords.setAll(harvestDAO.getAll());
-        } catch (SQLException | RuntimeException e) {
-            // Same defensive guard as loadCropCache().
-            allRecords.clear();
-        }
-        applyFilters();
+        // P2.2: async. updateSummaryCards moves here so it reads the just-
+        // populated allRecords. applyFilters drives the rendered list view.
+        AsyncCalls.runAndApply(
+                harvestDAO::getAll,
+                records -> {
+                    allRecords.setAll(records);
+                    applyFilters();
+                    updateSummaryCards();
+                },
+                err -> {
+                    allRecords.clear();
+                    applyFilters();
+                    updateSummaryCards();
+                    System.err.println("Failed to load harvest records: " + err.getMessage());
+                }
+        );
     }
 
     private void setupFilters() {
@@ -178,13 +193,13 @@ public class HarvestController {
     private void onRecordHarvest() {
         Dialog<HarvestRecord> dialog = createHarvestDialog(null);
         dialog.showAndWait().ifPresent(record -> {
-            try {
-                harvestDAO.save(record);
-                loadRecords();
-                updateSummaryCards();
-            } catch (SQLException e) {
-                showAlert("Error", "Failed to save: " + e.getMessage());
-            }
+            // P2.2: async save. loadRecords drives updateSummaryCards from its
+            // apply so we don't call it again here.
+            AsyncCalls.runAndApply(
+                    () -> { harvestDAO.save(record); return null; },
+                    ignored -> loadRecords(),
+                    err -> showAlert("Error", "Failed to save: " + err.getMessage())
+            );
         });
     }
 
@@ -192,14 +207,13 @@ public class HarvestController {
         if (record == null) return;
         Dialog<HarvestRecord> dialog = createHarvestDialog(record);
         dialog.showAndWait().ifPresent(updated -> {
-            try {
-                updated.setRecordId(record.getRecordId());
-                harvestDAO.update(updated);
-                loadRecords();
-                updateSummaryCards();
-            } catch (SQLException e) {
-                showAlert("Error", "Failed to update: " + e.getMessage());
-            }
+            updated.setRecordId(record.getRecordId());
+            // P2.2: async update.
+            AsyncCalls.runAndApply(
+                    () -> { harvestDAO.update(updated); return null; },
+                    ignored -> loadRecords(),
+                    err -> showAlert("Error", "Failed to update: " + err.getMessage())
+            );
         });
     }
 
@@ -209,15 +223,13 @@ public class HarvestController {
                 "Delete harvest record #" + record.getRecordId() + "?",
                 ButtonType.YES, ButtonType.NO);
         confirm.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.YES) {
-                try {
-                    harvestDAO.delete(record.getRecordId());
-                    loadRecords();
-                    updateSummaryCards();
-                } catch (SQLException e) {
-                    showAlert("Error", "Failed to delete: " + e.getMessage());
-                }
-            }
+            if (btn != ButtonType.YES) return;
+            // P2.2: async delete.
+            AsyncCalls.runAndApply(
+                    () -> { harvestDAO.delete(record.getRecordId()); return null; },
+                    ignored -> loadRecords(),
+                    err -> showAlert("Error", "Failed to delete: " + err.getMessage())
+            );
         });
     }
 

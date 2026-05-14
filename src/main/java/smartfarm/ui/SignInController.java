@@ -1,5 +1,8 @@
 package smartfarm.ui;
 
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import smartfarm.dao.WorkerDAO;
@@ -8,6 +11,7 @@ import smartfarm.model.Worker;
 import smartfarm.service.AuthService;
 import smartfarm.service.FingerprintService;
 import smartfarm.service.SessionManager;
+import smartfarm.ui.async.AsyncCalls;
 import smartfarm.ui.nav.AppView;
 import smartfarm.ui.nav.NavContext;
 import smartfarm.util.Logger;
@@ -44,13 +48,27 @@ public class SignInController {
             return;
         }
 
-        try {
-            User user = authService.signIn(email, password);
-            SessionManager.saveSession(email);
-            navigateToDashboard(user);
-        } catch (RuntimeException e) {
-            showError(e.getMessage());
-        }
+        // P2.4: async. AuthService.signIn blocks on a DB lookup; running it
+        // on the FX thread would freeze the UI while the JDBC round-trip is
+        // in flight. runWithBusy disables btnSignIn for the duration so the
+        // user can't double-submit; the 10s timeout protects against a hung
+        // DB connection (TimeoutException is delivered to onError).
+        lblError.setVisible(false);
+        AsyncCalls.runWithBusy(
+                btnSignIn,
+                () -> authService.signIn(email, password),
+                user -> {
+                    SessionManager.saveSession(email);
+                    navigateToDashboard(user);
+                },
+                err -> {
+                    if (err instanceof TimeoutException) {
+                        showError("Sign-in timed out. Check your connection and try again.");
+                    } else {
+                        showError(err.getMessage());
+                    }
+                },
+                Duration.ofSeconds(10));
     }
 
     @FXML

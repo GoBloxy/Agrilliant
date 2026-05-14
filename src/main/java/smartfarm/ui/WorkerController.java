@@ -20,8 +20,8 @@ import smartfarm.model.Task;
 import smartfarm.model.Worker;
 import smartfarm.service.FingerprintService;
 import smartfarm.service.WorkerService;
+import smartfarm.ui.async.AsyncCalls;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +35,9 @@ public class WorkerController {
 
     private final WorkerService workerService = new WorkerService(new WorkerDAO(), new TaskDAO());
     private final ObservableList<Worker> allWorkers = FXCollections.observableArrayList();
-    private List<Task> allTasks;
+    // P2.2: default to empty list so cell factories don't NPE while loadTasks is
+    // still in flight on the async executor.
+    private List<Task> allTasks = List.of();
 
     // Set by DashboardController so new workers get the correct manager
     private static int currentManagerId = 1;
@@ -43,19 +45,30 @@ public class WorkerController {
 
     @FXML
     public void initialize() {
+        // P2.2: loadTasks + loadWorkers are now async. loadWorkers's apply
+        // calls updateSummaryCards() once data lands, so we don't call it
+        // here (would read empty allWorkers and show all zeros until the
+        // async completes).
         loadTasks();
         setupCellFactory();
         setupFilters();
         loadWorkers();
-        updateSummaryCards();
     }
 
     private void loadTasks() {
-        try {
-            allTasks = new TaskDAO().getAll();
-        } catch (SQLException e) {
-            allTasks = List.of();
-        }
+        // P2.2: async. workerList.refresh() re-renders cells so the workload
+        // column picks up real counts once tasks land.
+        AsyncCalls.runAndApply(
+                () -> new TaskDAO().getAll(),
+                tasks -> {
+                    allTasks = tasks;
+                    workerList.refresh();
+                },
+                err -> {
+                    allTasks = List.of();
+                    System.err.println("Failed to load tasks: " + err.getMessage());
+                }
+        );
     }
 
     /**
@@ -123,12 +136,23 @@ public class WorkerController {
     }
 
     private void loadWorkers() {
-        try {
-            allWorkers.setAll(workerService.getAllWorkers());
-        } catch (RuntimeException e) {
-            allWorkers.clear();
-        }
-        applyFilters();
+        // P2.2: async. The earlier sync path called applyFilters + then
+        // updateSummaryCards from initialize(); both now run from the apply
+        // lambda so they see fresh data.
+        AsyncCalls.runAndApply(
+                workerService::getAllWorkers,
+                workers -> {
+                    allWorkers.setAll(workers);
+                    applyFilters();
+                    updateSummaryCards();
+                },
+                err -> {
+                    allWorkers.clear();
+                    applyFilters();
+                    updateSummaryCards();
+                    System.err.println("Failed to load workers: " + err.getMessage());
+                }
+        );
     }
 
     private void setupFilters() {
@@ -170,25 +194,30 @@ public class WorkerController {
     private void onAddWorker() {
         Dialog<Worker> dialog = createWorkerDialog(null);
         dialog.showAndWait().ifPresent(worker -> {
-            try {
-                workerService.addWorker(worker);
-                loadWorkers();
-                updateSummaryCards();
-            } catch (RuntimeException e) {
-                // Rollback: delete enrolled fingerprint from R307 if save failed
-                if (worker.getFingerprintId() != null && worker.getFingerprintId() > 0) {
-                    int fpId = worker.getFingerprintId();
-                    new Thread(() -> {
-                        FingerprintService fps = new FingerprintService();
-                        if (fps.autoConnect()) {
-                            fps.deleteTemplate(fpId);
-                            fps.disconnect();
-                            System.out.println("Rolled back fingerprint ID " + fpId + " from R307");
+            // P2.2: async add. loadWorkers() is itself async and calls
+            // updateSummaryCards from its apply, so we just trigger the reload
+            // on success. The fingerprint-rollback Thread.start() pattern is
+            // preserved as-is on the error path — it's a separate background
+            // thread that talks to the R307 over serial; not part of the
+            // agrilliant-db pool.
+            AsyncCalls.runAndApply(
+                    () -> { workerService.addWorker(worker); return null; },
+                    ignored -> loadWorkers(),
+                    err -> {
+                        if (worker.getFingerprintId() != null && worker.getFingerprintId() > 0) {
+                            int fpId = worker.getFingerprintId();
+                            new Thread(() -> {
+                                FingerprintService fps = new FingerprintService();
+                                if (fps.autoConnect()) {
+                                    fps.deleteTemplate(fpId);
+                                    fps.disconnect();
+                                    System.out.println("Rolled back fingerprint ID " + fpId + " from R307");
+                                }
+                            }).start();
                         }
-                    }).start();
-                }
-                showAlert("Error", e.getMessage());
-            }
+                        showAlert("Error", err.getMessage());
+                    }
+            );
         });
     }
 
@@ -196,14 +225,13 @@ public class WorkerController {
         if (worker == null) return;
         Dialog<Worker> dialog = createWorkerDialog(worker);
         dialog.showAndWait().ifPresent(updated -> {
-            try {
-                updated.setWorkerId(worker.getWorkerId());
-                workerService.updateWorkerData(updated);
-                loadWorkers();
-                updateSummaryCards();
-            } catch (RuntimeException e) {
-                showAlert("Error", e.getMessage());
-            }
+            updated.setWorkerId(worker.getWorkerId());
+            // P2.2: async update. updateSummaryCards is driven by loadWorkers.
+            AsyncCalls.runAndApply(
+                    () -> { workerService.updateWorkerData(updated); return null; },
+                    ignored -> loadWorkers(),
+                    err -> showAlert("Error", err.getMessage())
+            );
         });
     }
 
@@ -213,27 +241,29 @@ public class WorkerController {
                 "Delete " + worker.getFullName() + "?",
                 ButtonType.YES, ButtonType.NO);
         confirm.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.YES) {
-                try {
-                    // Delete fingerprint from R307 if enrolled
-                    if (worker.getFingerprintId() != null && worker.getFingerprintId() > 0) {
-                        int fpId = worker.getFingerprintId();
-                        new Thread(() -> {
-                            FingerprintService fps = new FingerprintService();
-                            if (fps.autoConnect()) {
-                                fps.deleteTemplate(fpId);
-                                fps.disconnect();
-                                System.out.println("Deleted fingerprint ID " + fpId + " from R307");
-                            }
-                        }).start();
+            if (btn != ButtonType.YES) return;
+
+            // Fire the R307 fingerprint delete first (on its own thread, talks
+            // to a serial device). It runs in parallel with the DB delete —
+            // matches the original ordering where both kicked off back-to-back.
+            if (worker.getFingerprintId() != null && worker.getFingerprintId() > 0) {
+                int fpId = worker.getFingerprintId();
+                new Thread(() -> {
+                    FingerprintService fps = new FingerprintService();
+                    if (fps.autoConnect()) {
+                        fps.deleteTemplate(fpId);
+                        fps.disconnect();
+                        System.out.println("Deleted fingerprint ID " + fpId + " from R307");
                     }
-                    workerService.deleteWorker(worker.getWorkerId());
-                    loadWorkers();
-                    updateSummaryCards();
-                } catch (RuntimeException e) {
-                    showAlert("Error", e.getMessage());
-                }
+                }).start();
             }
+
+            // P2.2: async delete. loadWorkers handles cards refresh.
+            AsyncCalls.runAndApply(
+                    () -> { workerService.deleteWorker(worker.getWorkerId()); return null; },
+                    ignored -> loadWorkers(),
+                    err -> showAlert("Error", err.getMessage())
+            );
         });
     }
 

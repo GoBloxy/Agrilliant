@@ -21,11 +21,14 @@ import smartfarm.model.Crop;
 import smartfarm.model.Plot;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/CropController.java
+=======
+import smartfarm.ui.async.AsyncCalls;
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/CropController.java
 import smartfarm.util.CSVExporter;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -90,18 +93,37 @@ public class CropController {
 
     @FXML
     public void initialize() {
+        // P2.2: setupTableColumns + setupFilters are sync. loadData is a
+        // single async closure that fetches plots+crops together and on the
+        // FX thread populates plotCache, allCrops, the plot filter dropdown,
+        // the table view, and the summary cards.
         setupTableColumns();
-        loadCrops();
         setupFilters();
-        updateSummaryCards();
-        loadPlotCache();
+        loadData();
     }
 
-    private void loadPlotCache() {
-        try {
-            for (Plot p : plotDAO.getAll()) plotCache.put(p.getPlotId(), p);
-        } catch (SQLException ignored) {}
+    /** Async fetch of both plot + crop lists, followed by full UI refresh. */
+    private void loadData() {
+        AsyncCalls.runAndApply(
+                () -> new CropData(plotDAO.getAll(), cropDAO.getAll()),
+                data -> {
+                    plotCache.clear();
+                    for (Plot p : data.plots()) plotCache.put(p.getPlotId(), p);
+                    allCrops.setAll(data.crops());
+                    refreshPlotFilter();
+                    applyFilters();
+                    updateSummaryCards();
+                },
+                err -> {
+                    allCrops.clear();
+                    applyFilters();
+                    updateSummaryCards();
+                    System.err.println("Failed to load crop data: " + err.getMessage());
+                }
+        );
     }
+
+    private record CropData(List<Plot> plots, List<Crop> crops) {}
 
     // ═══════════ TABLE SETUP ═══════════
 
@@ -207,8 +229,8 @@ public class CropController {
         detailView.setManaged(false);
         listView.setVisible(true);
         listView.setManaged(true);
-        loadCrops();
-        updateSummaryCards();
+        // P2.2: loadData refreshes plotCache + allCrops + summary cards in one closure.
+        loadData();
     }
 
     // ═══════════ DETAIL POPULATION ═══════════
@@ -380,13 +402,18 @@ public class CropController {
     @FXML
     private void onAdvanceStage() {
         if (selectedCrop == null || selectedCrop.getGrowthStage() == Crop.GrowthStage.HARVESTED) return;
+        // In-memory mutation runs synchronously first (matches original ordering).
+        // Capture target so a navigation away during the in-flight update doesn't
+        // cause a stale populateDetail to clobber the user's new view.
         selectedCrop.advanceStage();
-        try {
-            cropDAO.update(selectedCrop);
-            populateDetail(selectedCrop);
-        } catch (SQLException e) {
-            showAlert("Error", "Failed to advance stage: " + e.getMessage());
-        }
+        final Crop target = selectedCrop;
+        AsyncCalls.runAndApply(
+                () -> { cropDAO.update(target); return null; },
+                ignored -> {
+                    if (selectedCrop == target) populateDetail(target);
+                },
+                err -> showAlert("Error", "Failed to advance stage: " + err.getMessage())
+        );
     }
 
     // ═══════════ STAGE TIMELINE VISUAL ═══════════
@@ -579,92 +606,107 @@ public class CropController {
     // ═══════════ CARE HISTORY TAB ═══════════
 
     private void buildCareHistoryTab(Crop crop) {
+        // P2.2: async. Show a loading placeholder immediately on the FX thread,
+        // then fetch tasks on the DB executor. The apply guards on selectedCrop
+        // so a stale fetch (user moved on) doesn't render into the wrong tab.
         careEntries.getChildren().clear();
+        Label loadingLbl = new Label("Loading care history…");
+        loadingLbl.setStyle("-fx-font-size:13;-fx-text-fill:#9ca3af;-fx-padding:16 0;");
+        careEntries.getChildren().add(loadingLbl);
 
-        // Show relevant tasks for this crop's plot from the task table
-        try {
-            smartfarm.dao.TaskDAO taskDAO = new smartfarm.dao.TaskDAO();
-            List<smartfarm.model.Task> tasks = taskDAO.getAll();
-            List<smartfarm.model.Task> plotTasks = tasks.stream()
-                    .filter(t -> t.getPlotId() == crop.getPlotId())
-                    .sorted((a, b) -> {
-                        if (a.getDueDate() == null) return 1;
-                        if (b.getDueDate() == null) return -1;
-                        return b.getDueDate().compareTo(a.getDueDate());
-                    })
-                    .limit(10)
-                    .collect(Collectors.toList());
+        smartfarm.dao.TaskDAO taskDAO = new smartfarm.dao.TaskDAO();
+        AsyncCalls.runAndApply(
+                taskDAO::getAll,
+                tasks -> {
+                    if (selectedCrop != crop) return;
+                    careEntries.getChildren().clear();
 
-            if (plotTasks.isEmpty()) {
-                Label empty = new Label("No care activities recorded for this plot.");
-                empty.setStyle("-fx-font-size:13;-fx-text-fill:#9ca3af;-fx-padding:16 0;");
-                careEntries.getChildren().add(empty);
-                return;
-            }
+                    List<smartfarm.model.Task> plotTasks = tasks.stream()
+                            .filter(t -> t.getPlotId() == crop.getPlotId())
+                            .sorted((a, b) -> {
+                                if (a.getDueDate() == null) return 1;
+                                if (b.getDueDate() == null) return -1;
+                                return b.getDueDate().compareTo(a.getDueDate());
+                            })
+                            .limit(10)
+                            .collect(Collectors.toList());
 
-            for (smartfarm.model.Task task : plotTasks) {
-                HBox row = new HBox(12);
-                row.setAlignment(Pos.CENTER_LEFT);
-                row.setPadding(new Insets(10, 12, 10, 12));
-                row.setStyle("-fx-border-color:transparent transparent #f3f4f6 transparent;-fx-border-width:0 0 1 0;");
+                    if (plotTasks.isEmpty()) {
+                        Label empty = new Label("No care activities recorded for this plot.");
+                        empty.setStyle("-fx-font-size:13;-fx-text-fill:#9ca3af;-fx-padding:16 0;");
+                        careEntries.getChildren().add(empty);
+                        return;
+                    }
 
-                // Icon
-                String iconCode = task.getAlertType() != null && task.getAlertType().contains("IRRIGATION")
-                        ? "fth-droplet" : "fth-clipboard";
-                FontIcon icon = new FontIcon(iconCode);
-                icon.setIconSize(14);
-                icon.setIconColor(Color.web("#6b7280"));
+                    for (smartfarm.model.Task task : plotTasks) {
+                        HBox row = new HBox(12);
+                        row.setAlignment(Pos.CENTER_LEFT);
+                        row.setPadding(new Insets(10, 12, 10, 12));
+                        row.setStyle("-fx-border-color:transparent transparent #f3f4f6 transparent;-fx-border-width:0 0 1 0;");
 
-                // Description
-                VBox desc = new VBox(2);
-                HBox.setHgrow(desc, Priority.ALWAYS);
-                Label descLabel = new Label(task.getDescription());
-                descLabel.setStyle("-fx-font-size:12;-fx-font-weight:bold;-fx-text-fill:#111827;");
-                Label dateLabel = new Label(task.getDueDate() != null ? task.getDueDate().format(DATE_FMT) : "—");
-                dateLabel.setStyle("-fx-font-size:10;-fx-text-fill:#9ca3af;");
-                desc.getChildren().addAll(descLabel, dateLabel);
+                        String iconCode = task.getAlertType() != null && task.getAlertType().contains("IRRIGATION")
+                                ? "fth-droplet" : "fth-clipboard";
+                        FontIcon icon = new FontIcon(iconCode);
+                        icon.setIconSize(14);
+                        icon.setIconColor(Color.web("#6b7280"));
 
-                // Status badge
-                String tStatus = task.getStatus().name();
-                Label badge = new Label(tStatus);
-                badge.setStyle("-fx-font-size:10;-fx-font-weight:bold;-fx-padding:2 8;-fx-background-radius:8;" +
-                        (tStatus.equals("COMPLETED") ? "-fx-background-color:#d1fae5;-fx-text-fill:#065f46;" :
-                         tStatus.equals("IN_PROGRESS") ? "-fx-background-color:#dbeafe;-fx-text-fill:#1e40af;" :
-                         "-fx-background-color:#fef3c7;-fx-text-fill:#92400e;"));
+                        VBox desc = new VBox(2);
+                        HBox.setHgrow(desc, Priority.ALWAYS);
+                        Label descLabel = new Label(task.getDescription());
+                        descLabel.setStyle("-fx-font-size:12;-fx-font-weight:bold;-fx-text-fill:#111827;");
+                        Label dateLabel = new Label(task.getDueDate() != null ? task.getDueDate().format(DATE_FMT) : "—");
+                        dateLabel.setStyle("-fx-font-size:10;-fx-text-fill:#9ca3af;");
+                        desc.getChildren().addAll(descLabel, dateLabel);
 
-                row.getChildren().addAll(icon, desc, badge);
-                careEntries.getChildren().add(row);
-            }
-        } catch (SQLException e) {
-            Label err = new Label("Could not load care history.");
-            err.setStyle("-fx-font-size:13;-fx-text-fill:#dc2626;");
-            careEntries.getChildren().add(err);
-        }
+                        String tStatus = task.getStatus().name();
+                        Label badge = new Label(tStatus);
+                        badge.setStyle("-fx-font-size:10;-fx-font-weight:bold;-fx-padding:2 8;-fx-background-radius:8;" +
+                                (tStatus.equals("COMPLETED") ? "-fx-background-color:#d1fae5;-fx-text-fill:#065f46;" :
+                                 tStatus.equals("IN_PROGRESS") ? "-fx-background-color:#dbeafe;-fx-text-fill:#1e40af;" :
+                                 "-fx-background-color:#fef3c7;-fx-text-fill:#92400e;"));
+
+                        row.getChildren().addAll(icon, desc, badge);
+                        careEntries.getChildren().add(row);
+                    }
+                },
+                err -> {
+                    if (selectedCrop != crop) return;
+                    careEntries.getChildren().clear();
+                    Label errLbl = new Label("Could not load care history.");
+                    errLbl.setStyle("-fx-font-size:13;-fx-text-fill:#dc2626;");
+                    careEntries.getChildren().add(errLbl);
+                }
+        );
     }
 
     // ═══════════ FILTERS & DATA ═══════════
 
-    private void loadCrops() {
-        try {
-            allCrops.setAll(cropDAO.getAll());
-        } catch (SQLException e) {
-            allCrops.clear();
-        }
-        applyFilters();
-    }
-
     private void setupFilters() {
-        cmbPlot.getItems().add("All Plots");
-        allCrops.stream().map(c -> getPlotLabel(c.getPlotId())).distinct().sorted()
-                .forEach(p -> cmbPlot.getItems().add(p));
+        // P2.2: One-time setup of stage combo items + listeners. The plot
+        // dropdown items get refreshed by refreshPlotFilter() from loadData's
+        // apply, since plot labels depend on plotCache which loads async.
+        // Pre-existing bug fix: the old setupFilters was called more than once
+        // (from initialize + after each onAddCrop) which added duplicate items
+        // and duplicate listeners. Now setupFilters runs exactly once and the
+        // plot dropdown gets repopulated via refreshPlotFilter on each reload.
+        cmbPlot.getItems().setAll("All Plots");
         cmbPlot.setValue("All Plots");
         cmbPlot.setOnAction(e -> applyFilters());
 
-        cmbStage.getItems().addAll("All Stages", "Growing", "Ready", "At Risk", "Harvested");
+        cmbStage.getItems().setAll("All Stages", "Growing", "Ready", "At Risk", "Harvested");
         cmbStage.setValue("All Stages");
         cmbStage.setOnAction(e -> applyFilters());
 
         txtSearch.textProperty().addListener((obs, old, val) -> applyFilters());
+    }
+
+    /** Repopulates the plot filter dropdown from the current allCrops + plotCache. */
+    private void refreshPlotFilter() {
+        String prev = cmbPlot.getValue();
+        cmbPlot.getItems().setAll("All Plots");
+        allCrops.stream().map(c -> getPlotLabel(c.getPlotId())).distinct().sorted()
+                .forEach(p -> cmbPlot.getItems().add(p));
+        cmbPlot.setValue(prev != null && cmbPlot.getItems().contains(prev) ? prev : "All Plots");
     }
 
     private void applyFilters() {
@@ -715,14 +757,13 @@ public class CropController {
     private void onAddCrop() {
         Dialog<Crop> dialog = createCropDialog(null);
         dialog.showAndWait().ifPresent(crop -> {
-            try {
-                cropDAO.save(crop);
-                loadCrops();
-                updateSummaryCards();
-                setupFilters();
-            } catch (SQLException e) {
-                showAlert("Error", "Failed to save: " + e.getMessage());
-            }
+            // P2.2: async save. loadData refreshes plotCache + allCrops +
+            // plot filter + table + summary cards in one closure.
+            AsyncCalls.runAndApply(
+                    () -> { cropDAO.save(crop); return null; },
+                    ignored -> loadData(),
+                    err -> showAlert("Error", "Failed to save: " + err.getMessage())
+            );
         });
     }
 
@@ -730,14 +771,12 @@ public class CropController {
         if (crop == null) return;
         Dialog<Crop> dialog = createCropDialog(crop);
         dialog.showAndWait().ifPresent(updated -> {
-            try {
-                updated.setCropId(crop.getCropId());
-                cropDAO.update(updated);
-                loadCrops();
-                updateSummaryCards();
-            } catch (SQLException e) {
-                showAlert("Error", "Failed to update: " + e.getMessage());
-            }
+            updated.setCropId(crop.getCropId());
+            AsyncCalls.runAndApply(
+                    () -> { cropDAO.update(updated); return null; },
+                    ignored -> loadData(),
+                    err -> showAlert("Error", "Failed to update: " + err.getMessage())
+            );
         });
     }
 
@@ -747,15 +786,12 @@ public class CropController {
                 "Delete \"" + crop.getCropName() + "\"?",
                 ButtonType.YES, ButtonType.NO);
         confirm.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.YES) {
-                try {
-                    cropDAO.delete(crop.getCropId());
-                    loadCrops();
-                    updateSummaryCards();
-                } catch (SQLException e) {
-                    showAlert("Error", "Failed to delete: " + e.getMessage());
-                }
-            }
+            if (btn != ButtonType.YES) return;
+            AsyncCalls.runAndApply(
+                    () -> { cropDAO.delete(crop.getCropId()); return null; },
+                    ignored -> loadData(),
+                    err -> showAlert("Error", "Failed to delete: " + err.getMessage())
+            );
         });
     }
 

@@ -13,8 +13,8 @@ import smartfarm.dao.WorkerDAO;
 import smartfarm.model.Attendance;
 import smartfarm.model.Worker;
 import smartfarm.service.AttendanceService;
+import smartfarm.ui.async.AsyncCalls;
 
-import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -126,23 +126,31 @@ public class AttendancePage extends VBox {
     }
 
     private void refreshData() {
-        try {
-            List<Attendance> records = attendanceService.getAllRecords();
-            data.setAll(records);
-        } catch (Exception e) {
-            data.clear();
-            System.err.println("Failed to load attendance: " + e.getMessage());
-        }
+        // P2.2: async — JDBC off the FX thread; data populates ObservableList
+        // on the FX thread when complete.
+        AsyncCalls.runAndApply(
+                attendanceService::getAllRecords,
+                data::setAll,
+                err -> {
+                    data.clear();
+                    System.err.println("Failed to load attendance: " + err.getMessage());
+                }
+        );
     }
 
     private void loadWorkerNames() {
-        try {
-            List<Worker> workers = workerDAO.getAll();
-            for (Worker w : workers) {
-                workerNames.put(w.getWorkerId(), w.getFullName());
-            }
-        } catch (SQLException e) {
-            System.err.println("Failed to load worker names: " + e.getMessage());
-        }
+        // P2.2: async. table.refresh() forces the worker-name column to
+        // re-render once names land in the map — the cell factory reads
+        // `workerNames` per row, so refresh is enough; no rebinding.
+        AsyncCalls.runAndApply(
+                workerDAO::getAll,
+                workers -> {
+                    for (Worker w : workers) {
+                        workerNames.put(w.getWorkerId(), w.getFullName());
+                    }
+                    table.refresh();
+                },
+                err -> System.err.println("Failed to load worker names: " + err.getMessage())
+        );
     }
 }

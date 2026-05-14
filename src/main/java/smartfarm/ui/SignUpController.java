@@ -1,9 +1,13 @@
 package smartfarm.ui;
 
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import smartfarm.model.User;
 import smartfarm.service.AuthService;
+import smartfarm.ui.async.AsyncCalls;
 import smartfarm.ui.nav.AppView;
 
 public class SignUpController {
@@ -47,12 +51,23 @@ public class SignUpController {
 
         User.Role role = "Admin".equals(cmbRole.getValue()) ? User.Role.ADMIN : User.Role.MANAGER;
 
-        try {
-            authService.signUp(fullName, username, email, password, phone, role);
-            onGoToSignIn();
-        } catch (RuntimeException e) {
-            showError(e.getMessage());
-        }
+        // P2.4: async. AuthService.signUp performs a DB INSERT (and a
+        // uniqueness check) so it blocks the FX thread when called sync.
+        // runWithBusy disables btnSignUp for the duration; the 10s timeout
+        // surfaces a TimeoutException rather than leaving the button stuck.
+        lblError.setVisible(false);
+        AsyncCalls.runWithBusy(
+                btnSignUp,
+                () -> { authService.signUp(fullName, username, email, password, phone, role); return null; },
+                ignored -> onGoToSignIn(),
+                err -> {
+                    if (err instanceof TimeoutException) {
+                        showError("Sign-up timed out. Check your connection and try again.");
+                    } else {
+                        showError(err.getMessage());
+                    }
+                },
+                Duration.ofSeconds(10));
     }
 
     @FXML
