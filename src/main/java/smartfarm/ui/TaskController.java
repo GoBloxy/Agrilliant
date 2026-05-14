@@ -1,11 +1,16 @@
 package smartfarm.ui;
 
+import com.gluonhq.charm.glisten.control.CharmListCell;
+import com.gluonhq.charm.glisten.control.CharmListView;
+import com.gluonhq.charm.glisten.control.ListTile;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -26,8 +31,7 @@ public class TaskController {
     @FXML private Label lblTotalTasks, lblPending, lblInProgress, lblCompleted;
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbStatus;
-    @FXML private TableView<Task> taskTable;
-    @FXML private TableColumn<Task, String> colTask, colAssignedTo, colPlot, colDueDate, colPriority, colStatus, colActions;
+    @FXML private CharmListView<Task, String> taskList;
     @FXML private Button btnAddTask;
 
     private final TaskDAO taskDAO = new TaskDAO();
@@ -38,7 +42,7 @@ public class TaskController {
     @FXML
     public void initialize() {
         loadWorkerCache();
-        setupTableColumns();
+        setupCellFactory();
         loadTasks();
         setupFilters();
         updateSummaryCards();
@@ -54,86 +58,108 @@ public class TaskController {
         }
     }
 
-    private void setupTableColumns() {
-        taskTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colTask.setResizable(false);
-        colAssignedTo.setResizable(false);
-        colPlot.setResizable(false);
-        colDueDate.setResizable(false);
-        colPriority.setResizable(false);
-        colStatus.setResizable(false);
-        colActions.setResizable(false);
+    /**
+     * Builds each list row as a Gluon {@link ListTile}: a colour-coded
+     * status icon on the left, three text lines (description, assignee +
+     * plot, due date + priority + status), and advance / revert / delete
+     * icon buttons on the right. Advance and revert are disabled at the
+     * appropriate Status boundaries, matching the previous TableCell
+     * behaviour.
+     */
+    private void setupCellFactory() {
+        taskList.setCellFactory(view -> new TaskListCell());
+    }
 
-        colTask.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getDescription()));
-        colAssignedTo.setCellValueFactory(data -> {
-            List<Integer> ids = data.getValue().getWorkerIds();
-            if (ids == null || ids.isEmpty()) return new javafx.beans.property.SimpleStringProperty("Unassigned");
-            String names = ids.stream()
-                    .map(id -> {
-                        Worker w = workerCache.get(id);
-                        return w != null ? w.getFullName() : "Worker #" + id;
-                    })
-                    .collect(Collectors.joining(", "));
-            return new javafx.beans.property.SimpleStringProperty(names);
-        });
-        colPlot.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty("Plot " + data.getValue().getPlotId()));
-        colDueDate.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getDueDate() != null ? data.getValue().getDueDate().toString() : "--"));
-        colPriority.setCellValueFactory(data -> {
-            Task t = data.getValue();
+    private final class TaskListCell extends CharmListCell<Task> {
+        private final ListTile tile = new ListTile();
+        private final Button advanceBtn = new Button("", new FontIcon("fth-arrow-right"));
+        private final Button revertBtn  = new Button("", new FontIcon("fth-arrow-left"));
+        private final Button delBtn     = new Button("", new FontIcon("fth-trash-2"));
+        private final HBox actionBox    = new HBox(4, advanceBtn, revertBtn, delBtn);
+        private final FontIcon statusIcon = new FontIcon("fth-check-square");
+        private final StackPane statusBadge = new StackPane(statusIcon);
+
+        TaskListCell() {
+            advanceBtn.getStyleClass().add("icon-btn");
+            revertBtn.getStyleClass().add("icon-btn");
+            delBtn.getStyleClass().add("icon-btn");
+            actionBox.setAlignment(Pos.CENTER);
+            advanceBtn.setOnAction(e -> {
+                Task t = getItem();
+                if (t != null) onAdvanceStatus(t);
+            });
+            revertBtn.setOnAction(e -> {
+                Task t = getItem();
+                if (t != null) onRevertStatus(t);
+            });
+            delBtn.setOnAction(e -> {
+                Task t = getItem();
+                if (t != null) onDeleteTask(t);
+            });
+            tile.setSecondaryGraphic(actionBox);
+
+            statusIcon.setIconSize(20);
+            statusBadge.setStyle(
+                    "-fx-background-color:#e8f5e9;-fx-background-radius:10;"
+                    + "-fx-min-width:42;-fx-min-height:42;-fx-pref-width:42;-fx-pref-height:42;");
+            tile.setPrimaryGraphic(statusBadge);
+        }
+
+        @Override
+        public void updateItem(Task t, boolean empty) {
+            super.updateItem(t, empty);
+            if (empty || t == null) {
+                setText(null);
+                setGraphic(null);
+                return;
+            }
+
+            String desc = t.getDescription();
+            List<Integer> ids = t.getWorkerIds();
+            String assignee = (ids == null || ids.isEmpty())
+                    ? "Unassigned"
+                    : ids.stream()
+                            .map(id -> {
+                                Worker w = workerCache.get(id);
+                                return w != null ? w.getFullName() : "Worker #" + id;
+                            })
+                            .collect(Collectors.joining(", "));
+            String due = t.getDueDate() != null ? t.getDueDate().toString() : "--";
             String priority;
             if (t.isOverdue()) priority = "Overdue";
             else if (t.getDueDate() != null && t.getDueDate().isBefore(LocalDate.now().plusDays(2))) priority = "High";
             else if (t.getDueDate() != null && t.getDueDate().isBefore(LocalDate.now().plusDays(5))) priority = "Medium";
             else priority = "Low";
-            return new javafx.beans.property.SimpleStringProperty(priority);
-        });
-        colStatus.setCellValueFactory(data -> {
-            String s = data.getValue().getStatus().name();
-            return new javafx.beans.property.SimpleStringProperty(
-                    s.equals("IN_PROGRESS") ? "In Progress" : s.equals("DONE") ? "Done" : "Pending");
-        });
+            String s = t.getStatus().name();
+            String statusLabel = s.equals("IN_PROGRESS") ? "In Progress"
+                    : s.equals("DONE") ? "Done" : "Pending";
 
-        colActions.setCellFactory(col -> new TableCell<Task, String>() {
-            private final Button advanceBtn = new Button("", new FontIcon("fth-arrow-right"));
-            private final Button revertBtn = new Button("", new FontIcon("fth-arrow-left"));
-            private final Button delBtn = new Button("", new FontIcon("fth-trash-2"));
-            private final HBox box = new HBox(4, advanceBtn, revertBtn, delBtn);
-            {
-                advanceBtn.getStyleClass().add("icon-btn");
-                revertBtn.getStyleClass().add("icon-btn");
-                delBtn.getStyleClass().add("icon-btn");
-                advanceBtn.setOnAction(e -> {
-                    Task t = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (t != null) onAdvanceStatus(t);
-                });
-                revertBtn.setOnAction(e -> {
-                    Task t = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (t != null) onRevertStatus(t);
-                });
-                delBtn.setOnAction(e -> {
-                    Task t = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (t != null) onDeleteTask(t);
-                });
-            }
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    Task t = getTableRow().getItem();
-                    if (t != null) {
-                        advanceBtn.setDisable(t.getStatus() == Task.Status.DONE);
-                        revertBtn.setDisable(t.getStatus() == Task.Status.PENDING);
-                    }
-                    setGraphic(box);
-                }
-            }
-        });
+            // Status colour: same palette as the summary cards in tasks.fxml.
+            String bg = switch (t.getStatus()) {
+                case DONE        -> "#d1fae5";
+                case IN_PROGRESS -> "#dbeafe";
+                case PENDING     -> "#fef3c7";
+            };
+            String fg = switch (t.getStatus()) {
+                case DONE        -> "#065f46";
+                case IN_PROGRESS -> "#1d4ed8";
+                case PENDING     -> "#d97706";
+            };
+            statusBadge.setStyle(
+                    "-fx-background-color:" + bg + ";-fx-background-radius:10;"
+                    + "-fx-min-width:42;-fx-min-height:42;-fx-pref-width:42;-fx-pref-height:42;");
+            statusIcon.setIconColor(javafx.scene.paint.Color.web(fg));
+
+            tile.setTextLine(0, desc);
+            tile.setTextLine(1, assignee + "  ·  Plot " + t.getPlotId());
+            tile.setTextLine(2, "Due " + due + "  ·  " + priority + "  ·  " + statusLabel);
+
+            advanceBtn.setDisable(t.getStatus() == Task.Status.DONE);
+            revertBtn.setDisable(t.getStatus() == Task.Status.PENDING);
+
+            setText(null);
+            setGraphic(tile);
+        }
     }
 
     private void loadTasks() {
@@ -166,7 +192,7 @@ public class TaskController {
                     return true;
                 })
                 .collect(Collectors.toList());
-        taskTable.setItems(FXCollections.observableArrayList(filtered));
+        taskList.setItems(FXCollections.observableArrayList(filtered));
     }
 
     private void updateSummaryCards() {
