@@ -61,9 +61,8 @@
     <dependencies>
         <!-- =======================================================
              Dependencies common to BOTH desktop and Android builds.
-             Desktop-only deps (jSerialComm, JFreeChart) live in the
-             `desktop` profile below so the Android classpath stays
-             clean.
+             Desktop-only deps (jSerialComm) live in the `desktop`
+             profile below so the Android classpath stays clean.
              ======================================================= -->
 
         <!-- JavaFX (on Android, GluonFX bundles its own static build
@@ -233,8 +232,8 @@
     <profiles>
         <!-- ===========================================================
              DESKTOP profile (default).
-             Pulls in jSerialComm + JFreeChart, runs the shade plugin
-             at `package` phase to build the fat JAR for jpackage.
+             Pulls in jSerialComm, runs the shade plugin at `package`
+             phase to build the fat JAR for jpackage.
              =========================================================== -->
         <profile>
             <id>desktop</id>
@@ -254,19 +253,11 @@
                     <version>2.11.0</version>
                 </dependency>
 
-                <!-- JFreeChart — advanced charts. Currently unused in
-                     source but kept in the desktop profile until
-                     3bdelbary's B6 chart audit confirms removal. -->
-                <dependency>
-                    <groupId>org.jfree</groupId>
-                    <artifactId>jfreechart</artifactId>
-                    <version>1.5.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.jfree</groupId>
-                    <artifactId>jfreechart-fx</artifactId>
-                    <version>1.0.1</version>
-                </dependency>
+                <!-- JFreeChart was previously declared here. Dropped after
+                     B6 audit confirmed zero JFreeChart references in src/
+                     (the dashboard / monitoring screens use native
+                     javafx.scene.chart instead). Trims ~3 MB from the
+                     desktop fat-jar. See docs/MIGRATION_3BDELBARY.md §B6. -->
             </dependencies>
 
             <build>

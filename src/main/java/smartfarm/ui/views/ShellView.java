@@ -1,5 +1,8 @@
 package smartfarm.ui.views;
 
+import com.gluonhq.attach.lifecycle.LifecycleEvent;
+import com.gluonhq.attach.lifecycle.LifecycleService;
+import com.gluonhq.attach.util.Services;
 import com.gluonhq.charm.glisten.application.AppManager;
 import com.gluonhq.charm.glisten.control.AppBar;
 import com.gluonhq.charm.glisten.control.NavigationDrawer;
@@ -62,6 +65,10 @@ public class ShellView extends View {
      */
     private boolean drawerConfigured = false;
 
+    /** Set up flag — Gluon Attach LifecycleService PAUSE/RESUME hooks
+     *  are wired once per controller instance, not on every showing. */
+    private boolean lifecycleServiceWired = false;
+
     public ShellView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
@@ -76,7 +83,15 @@ public class ShellView extends View {
             Logger.d(TAG, "showing");
             configureAppBar();
             configureNavigationDrawerOnce();
+            wireLifecycleServiceOnce();
             pushCurrentUser();
+            // B9: re-attach the dashboard's clock + LiveSensorData listeners.
+            // Idempotent — first call is a near-no-op because initialize()
+            // already started them; later calls (post-logout → re-login,
+            // or LifecycleService RESUME) restart what stopLifecycle paused.
+            if (controller != null) {
+                controller.startLifecycle();
+            }
         });
         setOnHiding(e -> {
             Logger.d(TAG, "hiding");
@@ -86,6 +101,53 @@ public class ShellView extends View {
             appBar.setNavIcon(null);
             appBar.getActionItems().clear();
             appBar.setVisible(false);
+            // B9: stop the clock + detach LiveSensorData listeners while
+            // the shell is off-screen (logout). Safe even if the user
+            // re-enters via SHELL.switchTo() — startLifecycle above
+            // re-attaches.
+            if (controller != null) {
+                controller.stopLifecycle();
+            }
+        });
+    }
+
+    // --------------------------------------------------------------
+    // Gluon Attach LifecycleService — PAUSE/RESUME hand-off (B9 + B10).
+    //
+    // On Android, the OS suspends the JVM when the user switches away
+    // from the app. PAUSE fires just before that; RESUME fires when the
+    // app is foregrounded again. We use these to drive the dashboard's
+    // clock + LiveSensorData listeners — the dashboard goes idle while
+    // the app is in the background and comes back to life on resume.
+    //
+    // On desktop the service is a no-op (no-op service factory in
+    // attach-lifecycle for the host platform), so the .ifPresent guard
+    // simply skips the registration. No-op behaviour is correct for
+    // desktop, where the user is never "backgrounded" the same way.
+    //
+    // The hook is wired once per ShellView instance; the same service
+    // singleton is shared across the JVM and listener removal isn't
+    // needed because the ShellView lives for the whole session.
+    // --------------------------------------------------------------
+
+    private void wireLifecycleServiceOnce() {
+        if (lifecycleServiceWired) return;
+        lifecycleServiceWired = true;
+
+        Services.get(LifecycleService.class).ifPresent(svc -> {
+            svc.addListener(LifecycleEvent.PAUSE, () -> {
+                Logger.d(TAG, "LifecycleService PAUSE — stopping dashboard lifecycle");
+                if (controller != null) {
+                    controller.stopLifecycle();
+                }
+            });
+            svc.addListener(LifecycleEvent.RESUME, () -> {
+                Logger.d(TAG, "LifecycleService RESUME — restarting dashboard lifecycle");
+                if (controller != null) {
+                    controller.startLifecycle();
+                }
+            });
+            Logger.i(TAG, "LifecycleService wired (PAUSE/RESUME → DashboardController)");
         });
     }
 

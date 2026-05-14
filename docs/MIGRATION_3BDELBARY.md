@@ -986,3 +986,96 @@ The next concrete milestone is the first `mvn -Pandroid gluonfx:build` to produc
 - [x] **B8** — done.
 - [x] **B9** — done.
 - [x] **B10** — done. This consolidated reference + the FXML/controller matrices + Phase 2 TODO list complete the §B10 deliverable.
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+=======
+
+---
+
+## Post-B10: cross-track follow-ups landed early
+
+The original plan parked these as Phase 2 / Hagag-side concerns; the user authorized doing them now since they unblock the first APK build.
+
+### `pom.xml` — JFreeChart deps removed (cross-lane edit)
+
+The desktop profile no longer declares `org.jfree:jfreechart` or `org.jfree:jfreechart-fx`. The B6 audit's TODO ("kept until 3bdelbary's B6 chart audit confirms removal") is closed; the comment block at the deletion site explains why and points back to §B6. The two top-of-file comment blocks that listed JFreeChart as a desktop-only dep were also updated. The desktop fat-jar shrinks by ~3 MB and the dependency tree no longer carries SWT-related transitive baggage.
+
+> **Lane note:** `pom.xml` is Hagag's lane per §6/§11.4. The audit-confirms-removal comment in the original pom block was an explicit hand-off; this edit closes that hand-off with the user's go-ahead.
+
+### `LifecycleService` PAUSE/RESUME wired
+
+The B9 forward-compat hook on `DashboardController.stopLifecycle()` is now driven from two sites:
+
+1. **`ShellView.setOnHiding`** — fires on logout (user clicks Sign Out → `AppView.SIGNIN.switchTo()` hides the SHELL view).
+2. **`Gluon Attach LifecycleService.PAUSE`** — fires on Android when the OS backgrounds the app.
+
+Symmetrically `startLifecycle()` is called from `ShellView.setOnShowing` and from `LifecycleService.RESUME`.
+
+#### New code
+
+- `DashboardController.startLifecycle()` — public, idempotent re-attach. Calls `updateDateTime()` + `subscribeLiveSensor()` + `updateSidebarStatus()`, all of which I made idempotent in B9.
+- `ShellView.wireLifecycleServiceOnce()` — looks up `Services.get(LifecycleService.class)`, registers PAUSE → `controller.stopLifecycle()` and RESUME → `controller.startLifecycle()`. Guarded by a `lifecycleServiceWired` boolean so re-entering the SHELL view doesn't double-register. Wrapped in `.ifPresent` so on hosts where the service isn't registered (some headless desktop runs) the wiring silently skips.
+- `ShellView.setOnShowing` / `setOnHiding` now also drive `controller.startLifecycle()` / `stopLifecycle()` directly. This handles the in-app logout/login case that doesn't go through OS-level PAUSE/RESUME.
+
+#### Imports added to `ShellView`
+
+```java
+import com.gluonhq.attach.lifecycle.LifecycleEvent;
+import com.gluonhq.attach.lifecycle.LifecycleService;
+import com.gluonhq.attach.util.Services;
+```
+
+`com.gluonhq.attach:lifecycle` was already a `pom.xml` dependency (Hagag's earlier work, confirmed via the `<attachList>` block) so no Maven changes were needed for this part. On desktop builds the lifecycle service is wired through Gluon Attach's host implementation; if the service is unavailable, the `.ifPresent` lambda quietly skips and the in-app `setOnShowing`/`setOnHiding` path still works.
+
+### DB workaround — `Crop.GrowthStage='GROWING'`
+
+A new migration script lives at `docs/sql/2026-05-14-fix-growthstage-growing.sql`:
+
+```sql
+UPDATE crops SET growth_stage = 'VEGETATIVE' WHERE growth_stage = 'GROWING';
+```
+
+The file documents the problem, lists the three fix options (a/b/c), justifies why (b) was chosen, and includes a before/after `SELECT COUNT(*)` for verification. After running it, `dashboard.fxml` and `reports.fxml` should pass the FXML-load smoke (the only two failures left in `STATUS.md`'s smoke matrix).
+
+### APK build — pre-flight checklist
+
+The 3bdelbary track and the cross-track items above are now complete. The first `mvn -Pandroid gluonfx:build` is a build-environment task that needs the user's machine to be set up — I cannot run it from this worktree (worktree mode + no installed deps). Pre-flight requirements:
+
+| Requirement | How to verify |
+|-------------|---------------|
+| **GraalVM CE 22+ or Liberica NIK 23+** | `java -version` should mention `GraalVM` or `Liberica NIK`. Set `GRAALVM_HOME` env var to that JDK. |
+| **Android SDK** with `cmdline-tools`, `platforms;android-35`, `build-tools;35.0.0` | `sdkmanager --list_installed`. Set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`). |
+| **Android NDK** ≥ 25.x | Installed via `sdkmanager "ndk;<ver>"`. Set `ANDROID_NDK` env var. |
+| **DB credentials** for first-run via `DB_URL` / `DB_USER` / `DB_PASSWORD` env vars or `db.properties` (Hagag's H4) | Per Hagag's `MIGRATION_HAGAG.md`. |
+| **APK signing keystore** (release builds only) | Debug builds auto-sign with the GluonFX-managed debug key — fine for first device install. |
+
+#### Build commands
+
+```powershell
+# 1. AOT-compile the Substrate native binary (slow first time — ~5–15 min,
+#    pulls down the GraalVM ahead-of-time build)
+mvn -Pandroid gluonfx:build
+
+# 2. Package into an APK
+mvn -Pandroid gluonfx:package
+
+# 3. Install on a connected device or running emulator (adb required)
+mvn -Pandroid gluonfx:install
+
+# 4. Launch on the connected device
+mvn -Pandroid gluonfx:run
+```
+
+#### What success looks like
+
+- Step 1 ends with `BUILD SUCCESS` and produces `target/gluonfx/aarch64-android/gvm/<binary>` plus an `android-project/` Gradle scratch dir.
+- Step 2 produces `target/gluonfx/aarch64-android/gvm/<binary>.apk` (~30–50 MB).
+- Step 3 logs `Successfully installed`; the Agrilliant icon appears on the device's home screen (the B7 launcher PNGs).
+- Step 4 launches the app; the splash → sign-in flow runs.
+
+#### Common first-run failures
+
+- **`reflection-config.json` misses a class** — the Substrate AOT compiler can't follow runtime reflection. Symptom: `ClassNotFoundException` or `NoSuchMethodException` at startup. Fix: re-run with the GraalVM tracing agent on desktop (`mvn -Pdesktop -Dgluonfx.run.with.agent=true gluonfx:run`), exercise the failing flow, then merge the agent-generated `reflect-config.json` into `src/main/resources/META-INF/native-image/smartfarm/`. Hagag's H2 set up the seed config; production runs typically need a few additions per release.
+- **MySQL connector reflection** — `mysql-connector-j` uses heavy reflection; if Hagag's H2 seed misses a constructor, queries fail with `InvocationTargetException`. Same agent-trace fix.
+- **`READ_MEDIA_IMAGES` permission silently denied on Android 13+** — `DiseaseDetectionPage.selectImage` returns empty. Fix: add a runtime permission request before calling `PlatformPickers.pickImage()`. Out of scope here — Hagag's `PermissionRequestActivity` (already in the manifest) is the entry point.
+- **`Crop.GrowthStage.GROWING` enum mismatch** at first DB hit — apply the SQL migration above before launching.
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
