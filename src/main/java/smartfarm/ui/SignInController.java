@@ -36,6 +36,15 @@ public class SignInController {
         lblError.setManaged(false);
         txtEmail.setOnAction(e -> txtPassword.requestFocus());
         txtPassword.setOnAction(e -> onSignIn());
+
+        // Eager connect to the ESP32 in the background. Opening the serial port
+        // resets the ESP32 (USB DTR/RTS pulse), which wipes the in-firmware
+        // fingerprint cache. Doing it once at app startup means the reset happens
+        // while the user is still looking at the login screen — not in the middle
+        // of the login flow — so subsequent scans/caches survive.
+        new Thread(() -> {
+            try { fpService.autoConnect(); } catch (Exception ignored) {}
+        }, "FpEagerConnect").start();
     }
 
     @FXML

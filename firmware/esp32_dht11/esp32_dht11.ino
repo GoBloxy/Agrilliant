@@ -81,6 +81,12 @@ unsigned long lastFpCheck = 0;
 bool serialBridgeActive = false;       // True when desktop app is using R307 via serial
 unsigned long serialBridgeLastActivity = 0;  // Timestamp of last serial command (for auto-expiry)
 
+// Cache the most recent autonomous scan result so handleScan() can reuse it
+// when the login button is pressed right as (or just after) the autonomous scan runs.
+int  cachedFpId   = -1;
+unsigned long cachedFpTime = 0;
+#define FP_CACHE_MS 8000   // Reuse cached result within 8 seconds
+
 // SH1106 OLED (128x64, I2C on default SDA=21, SCL=22)
 U8G2_SH1106_128X64_NONAME_F_HW_I2C oled(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
@@ -339,13 +345,20 @@ void checkFingerprint() {
         oled.drawStr(10, 30, "Fingerprint");
         oled.drawStr(10, 45, "NOT RECOGNIZED");
         oled.sendBuffer();
-        delay(1500);
+        // Interruptible — exit early if a bridge command (LOCK/SCAN) arrives
+        unsigned long t = millis();
+        while (millis() - t < 1500) { if (Serial.available()) break; delay(50); }
         return;
     }
 
     int fpId = finger.fingerID;
     int confidence = finger.confidence;
     Serial.printf("Fingerprint matched! ID: %d (confidence: %d)\n", fpId, confidence);
+
+    // Cache result — if the Java login button was just pressed, handleScan()
+    // will pick this up instead of demanding a new scan on an empty sensor.
+    cachedFpId   = fpId;
+    cachedFpTime = millis();
 
     // Show on OLED
     char buf[32];
@@ -374,7 +387,13 @@ void checkFingerprint() {
         Serial.println("Cannot send fingerprint — server unreachable");
     }
 
-    delay(2000);  // Debounce — prevent multiple reads of same finger
+    // Interruptible debounce — if Java sends LOCK/SCAN, exit immediately so
+    // the bridge command is processed without a 2s delay.
+    unsigned long debounceStart = millis();
+    while (millis() - debounceStart < 2000) {
+        if (Serial.available()) break;
+        delay(50);
+    }
 }
 
 // ═══════════════ SERIAL BRIDGE COMMANDS ═══════════════
@@ -470,67 +489,72 @@ void handleSerialCommand(String cmd) {
 
 void handleScan() {
     Serial.println("SCAN_WAITING");
-    showOLED("[Login Scan]", "Place finger...");
 
-    // Wait up to 10 seconds for a finger
-    unsigned long start = millis();
-    uint8_t p = FINGERPRINT_NOFINGER;
-    while (millis() - start < 10000) {
-        p = finger.getImage();
-        if (p == FINGERPRINT_OK) break;
-        delay(100);
-    }
-    if (p != FINGERPRINT_OK) {
-        Serial.println("SCAN_FAIL:No finger");
-        showOLED("[Login Scan]", "No finger", "Timed out");
-        delay(1500);
-        return;
-    }
-
-    showOLED("[Login Scan]", "Processing...");
-    p = finger.image2Tz();
-    if (p != FINGERPRINT_OK) {
-        Serial.println("SCAN_FAIL:Image error");
-        showOLED("[Login Scan]", "Image error");
-        delay(1500);
-        return;
-    }
-
-    p = finger.fingerSearch();
-    if (p == FINGERPRINT_OK) {
+    // Fast path: the autonomous checkFingerprint() ran just before LOCK arrived,
+    // which is the common case when the user touches the sensor then clicks login.
+    // Reuse that cached result instead of asking for a new scan on an empty sensor.
+    if (cachedFpId > 0 && (millis() - cachedFpTime) < FP_CACHE_MS) {
         char buf[32];
-        snprintf(buf, sizeof(buf), "ID: %d  Conf: %d", finger.fingerID, finger.confidence);
-        Serial.println("SCAN_OK:" + String(finger.fingerID) + "," + String(finger.confidence));
+        int id = cachedFpId;
+        cachedFpId = -1;  // Consume so it isn't reused again
+        snprintf(buf, sizeof(buf), "ID: %d", id);
+        Serial.println("SCAN_OK:" + String(id) + ",100");
         showOLED("[Login Scan]", "Match found!", buf);
-        delay(1500);
+        delay(1000);
         return;
     }
 
-    // First search failed — give one retry: lift finger and scan again
-    showOLED("[Login Scan]", "Retry scan...");
-    start = millis();
-    while (millis() - start < 3000 && finger.getImage() != FINGERPRINT_NOFINGER) delay(100);
+    // Normal path: no cached result — prompt user to scan now.
+    for (int attempt = 1; attempt <= 2; attempt++) {
+        if (attempt == 1) showOLED("[Login Scan]", "Place finger...");
+        else              showOLED("[Login Scan]", "Place again...");
 
-    showOLED("[Login Scan]", "Place again...");
-    start = millis();
-    p = FINGERPRINT_NOFINGER;
-    while (millis() - start < 8000) {
-        p = finger.getImage();
-        if (p == FINGERPRINT_OK) break;
-        delay(100);
-    }
-    if (p == FINGERPRINT_OK && finger.image2Tz() == FINGERPRINT_OK && finger.fingerSearch() == FINGERPRINT_OK) {
-        char buf[32];
-        snprintf(buf, sizeof(buf), "ID: %d  Conf: %d", finger.fingerID, finger.confidence);
-        Serial.println("SCAN_OK:" + String(finger.fingerID) + "," + String(finger.confidence));
-        showOLED("[Login Scan]", "Match found!", buf);
-        delay(1500);
-        return;
+        // Wait up to 8 seconds for a finger on each attempt
+        unsigned long start = millis();
+        uint8_t p = FINGERPRINT_NOFINGER;
+        while (millis() - start < 8000) {
+            p = finger.getImage();
+            if (p == FINGERPRINT_OK) break;
+            delay(100);
+        }
+        if (p != FINGERPRINT_OK) {
+            Serial.println("SCAN_FAIL:No finger");
+            showOLED("[Login Scan]", "No finger", "Timed out");
+            delay(1000);
+            return;
+        }
+
+        showOLED("[Login Scan]", "Processing...");
+        p = finger.image2Tz();
+        if (p != FINGERPRINT_OK) {
+            if (attempt < 2) { delay(300); continue; }
+            Serial.println("SCAN_FAIL:Image error");
+            showOLED("[Login Scan]", "Image error");
+            delay(1000);
+            return;
+        }
+
+        p = finger.fingerSearch();
+        if (p == FINGERPRINT_OK) {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "ID: %d  Conf: %d", finger.fingerID, finger.confidence);
+            Serial.println("SCAN_OK:" + String(finger.fingerID) + "," + String(finger.confidence));
+            showOLED("[Login Scan]", "Match found!", buf);
+            delay(1500);
+            return;
+        }
+
+        if (attempt < 2) {
+            // Lift and retry
+            showOLED("[Login Scan]", "Retry...", "Lift finger");
+            unsigned long lift = millis();
+            while (millis() - lift < 2000 && finger.getImage() != FINGERPRINT_NOFINGER) delay(100);
+        }
     }
 
     Serial.println("SCAN_FAIL:Not recognized");
     showOLED("[Login Scan]", "Not recognized!");
-    delay(1500);
+    delay(1000);
 }
 
 void handleEnroll(int slot) {

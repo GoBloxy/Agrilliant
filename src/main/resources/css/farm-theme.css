@@ -295,6 +295,15 @@
     -fx-opacity: 0.9;
 }
 
+.plot-offline {
+    -fx-fill: #cbd5e1;
+    -fx-stroke: #94a3b8;
+    -fx-stroke-width: 2;
+    -fx-arc-width: 12;
+    -fx-arc-height: 12;
+    -fx-opacity: 0.7;
+}
+
 .plot-label {
     -fx-text-fill: white;
     -fx-font-weight: bold;

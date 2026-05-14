@@ -67,10 +67,10 @@ public class FingerprintService {
             String resp = waitForResponse("PONG", 3000);
             if (resp != null) {
                 connected = true;
-                // Lock R307 immediately — prevents autonomous check-in scan from firing
-                // during the window between connect() and the user placing their finger.
-                try { sendLine("LOCK"); waitForResponse("LOCKED", 2000); } catch (Exception ignored) {}
                 System.out.println("ESP32 connected on " + portName);
+                // Note: do NOT send LOCK here. The autonomous check-in scan must
+                // remain available between connections so its result can be cached
+                // by the firmware and reused when scanAndMatch() runs.
                 return true;
             }
 
@@ -136,11 +136,14 @@ public class FingerprintService {
             sendLine("LOCK");
             waitForResponse("LOCKED", 2000);
             sendLine("SCAN");
-            // Wait for final result (SCAN_OK or SCAN_FAIL), up to 15s
-            long deadline = System.currentTimeMillis() + 15000;
+            // Deadline must cover the firmware retry path:
+            //   first scan wait (10s) + lift wait (3s) + retry scan (8s) + slack = 25s
+            long deadline = System.currentTimeMillis() + 28000;
             while (System.currentTimeMillis() < deadline) {
-                String line = readLineWithTimeout(15000);
-                if (line == null) return -1;
+                long remaining = deadline - System.currentTimeMillis();
+                if (remaining <= 0) break;
+                String line = readLineWithTimeout(remaining);
+                if (line == null) break;
                 if (line.startsWith("SCAN_OK:")) {
                     // Format: SCAN_OK:<id>,<confidence>
                     String[] parts = line.substring(8).split(",");
