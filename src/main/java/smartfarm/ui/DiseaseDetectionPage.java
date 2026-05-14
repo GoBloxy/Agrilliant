@@ -1,5 +1,6 @@
 package smartfarm.ui;
 
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -130,6 +131,12 @@ public class DiseaseDetectionPage extends VBox {
         btnBrowse.setGraphic(createIcon("fth-upload", 14, "#374151"));
         btnBrowse.setOnAction(e -> selectImage());
 
+        Button btnCamera = new Button("Take Photo");
+        btnCamera.setStyle("-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 6; " +
+                "-fx-background-radius: 6; -fx-font-size: 13; -fx-padding: 8 18; -fx-cursor: hand;");
+        btnCamera.setGraphic(createIcon("fth-camera", 14, "#374151"));
+        btnCamera.setOnAction(e -> takePhoto());
+
         // Analyze button
         btnAnalyze.setStyle("-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-font-size: 14; " +
                 "-fx-font-weight: bold; -fx-padding: 10 32; -fx-background-radius: 8; -fx-cursor: hand;");
@@ -139,7 +146,7 @@ public class DiseaseDetectionPage extends VBox {
         // Status
         lblStatus.setStyle("-fx-font-size: 12; -fx-text-fill: #6b7280;");
 
-        HBox actionRow = new HBox(12, btnBrowse, btnAnalyze, spinner, lblStatus);
+        HBox actionRow = new HBox(12, btnBrowse, btnCamera, btnAnalyze, spinner, lblStatus);
         actionRow.setAlignment(Pos.CENTER_LEFT);
 
         VBox uploadCard = new VBox(16, previewPane, lblFileName, actionRow);
@@ -258,16 +265,33 @@ public class DiseaseDetectionPage extends VBox {
     // ═══════════════════════════════════════════════════════════════════
     private void selectImage() {
         Optional<File> picked = PlatformPickers.pickImage(getScene().getWindow());
-        picked.ifPresent(file -> {
-            selectedFile = file;
-            lblFileName.setText(file.getName() + "  (" + (file.length() / 1024) + " KB)");
-            imagePreview.setImage(new Image(file.toURI().toString()));
-            placeholder.setVisible(false);
-            placeholder.setManaged(false);
-            btnAnalyze.setDisable(false);
-            resultsContainer.setVisible(false);
-            resultsContainer.setManaged(false);
-        });
+        picked.ifPresent(this::applySelectedImage);
+    }
+
+    private void takePhoto() {
+        lblStatus.setText("Opening camera...");
+        lblStatus.setStyle("-fx-text-fill: #2563eb; -fx-font-size: 12;");
+        PlatformPickers.takePhoto(getScene().getWindow(), picked ->
+                Platform.runLater(() -> {
+                    if (picked.isPresent()) {
+                        applySelectedImage(picked.get());
+                    } else {
+                        lblStatus.setText("No photo captured.");
+                        lblStatus.setStyle("-fx-text-fill: #6b7280; -fx-font-size: 12;");
+                    }
+                }));
+    }
+
+    private void applySelectedImage(File file) {
+        selectedFile = file;
+        lblFileName.setText(file.getName() + "  (" + (file.length() / 1024) + " KB)");
+        imagePreview.setImage(new Image(file.toURI().toString()));
+        placeholder.setVisible(false);
+        placeholder.setManaged(false);
+        btnAnalyze.setDisable(false);
+        resultsContainer.setVisible(false);
+        resultsContainer.setManaged(false);
+        lblStatus.setText("");
     }
 
     private void runAnalysis() {

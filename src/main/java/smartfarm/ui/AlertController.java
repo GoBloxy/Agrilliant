@@ -1,6 +1,7 @@
 package smartfarm.ui;
 
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -36,6 +37,9 @@ public class AlertController {
 
     // ── Summary Cards ──
     @FXML private Label lblCritical, lblWarnings, lblResolved, lblUnresolved;
+
+    @FXML private VBox rootPane;
+    @FXML private VBox listSection;
 
     // ── Alert Table ──
     @FXML private TableView<Alert> alertTable;
@@ -78,6 +82,9 @@ public class AlertController {
     private ObservableList<Alert> masterList;
     private FilteredList<Alert> filteredList;
     private Alert currentSelectedAlert = null;
+    private ChangeListener<Number> detailWidthListener;
+
+    private static final double DETAIL_STACK_BREAKPOINT = 700.0;
 
     private static final DateTimeFormatter TIME_FMT =
             DateTimeFormatter.ofPattern("MMM d, yyyy  hh:mm a");
@@ -92,6 +99,7 @@ public class AlertController {
 
         setupFilters();
         setupColumns();
+        setupResponsiveDetailLayout();
         loadAlerts();
 
         // Listen for table selection changes
@@ -100,6 +108,32 @@ public class AlertController {
                 showAlertDetails(newSel);
             }
         });
+        if (rootPane.getScene() != null) {
+            rootPane.getScene().widthProperty().addListener(detailWidthListener);
+            applyDetailLayout();
+        }
+    }
+
+    private void setupResponsiveDetailLayout() {
+        detailWidthListener = (obs, oldWidth, newWidth) -> applyDetailLayout();
+        rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (oldScene != null) {
+                oldScene.widthProperty().removeListener(detailWidthListener);
+            }
+            if (newScene != null) {
+                newScene.widthProperty().addListener(detailWidthListener);
+                applyDetailLayout();
+            }
+        });
+    }
+
+    private void applyDetailLayout() {
+        boolean detailOpen = currentSelectedAlert != null && detailPane.isVisible();
+        boolean narrow = rootPane.getScene() != null
+                && rootPane.getScene().getWidth() < DETAIL_STACK_BREAKPOINT;
+        boolean showList = !detailOpen || !narrow;
+        listSection.setVisible(showList);
+        listSection.setManaged(showList);
     }
 
     private void setupFilters() {
@@ -282,6 +316,7 @@ public class AlertController {
         currentSelectedAlert = alert;
         detailPane.setVisible(true);
         detailPane.setManaged(true);
+        applyDetailLayout();
 
         // Header
         lblDetailSeverity.setText(alert.getSeverity().name());
@@ -318,6 +353,7 @@ public class AlertController {
         detailPane.setManaged(false);
         alertTable.getSelectionModel().clearSelection();
         currentSelectedAlert = null;
+        applyDetailLayout();
     }
 
     @FXML

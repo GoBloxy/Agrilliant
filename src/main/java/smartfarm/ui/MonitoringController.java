@@ -1,5 +1,6 @@
 package smartfarm.ui;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +15,7 @@ import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
 import smartfarm.ui.async.AsyncCalls;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -57,6 +59,14 @@ public class MonitoringController {
     private ChangeListener<Number> tempListener;
     private ChangeListener<Number> humListener;
     private ChangeListener<Number> soilListener;
+    private XYChart.Series<String, Number> trendTempSeries;
+    private XYChart.Series<String, Number> trendHumSeries;
+    private boolean trendAppendScheduled;
+    private int trendSampleIndex;
+
+    private static final int TREND_MAX_POINTS = 96;
+    private static final DateTimeFormatter TREND_TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final DateTimeFormatter TREND_DATE_TIME_FMT = DateTimeFormatter.ofPattern("MM-dd HH:mm");
 
     @FXML
     public void initialize() {
@@ -86,11 +96,13 @@ public class MonitoringController {
             float t = newVal.floatValue();
             lblTemp.setText(String.format("%.1f°C", t));
             lblTempSub.setText(t > 35 ? "High" : t < 10 ? "Low" : "Normal");
+            scheduleTrendAppend();
         };
         humListener = (obs, oldVal, newVal) -> {
             float h = newVal.floatValue();
             lblHum.setText(String.format("%.0f%%", h));
             lblHumSub.setText(h > 80 ? "High" : h < 30 ? "Low" : "Normal");
+            scheduleTrendAppend();
         };
         soilListener = (obs, oldVal, newVal) -> {
             float s = newVal.floatValue();
@@ -101,6 +113,11 @@ public class MonitoringController {
         live.temperatureProperty().addListener(tempListener);
         live.humidityProperty().addListener(humListener);
         live.soilMoistureProperty().addListener(soilListener);
+
+        if (!Float.isNaN(live.temperatureProperty().get())
+                || !Float.isNaN(live.humidityProperty().get())) {
+            scheduleTrendAppend();
+        }
 
         // B9 lifecycle: auto-detach when this controller's scene graph is
         // unmounted. DashboardController.loadFxmlPage replaces the page
@@ -134,36 +151,68 @@ public class MonitoringController {
     }
 
     private void setupTrendChart() {
-        // TODO(phase-2): currently static mock data. When wiring live sensor
-        // updates here, cap each XYChart.Series.getData().size() at N (e.g.
-        // 100) by trimming from the head before appending — JavaFX charts
-        // hold strong refs to every data node so unbounded growth blows up
-        // memory on long-running monitoring sessions. LiveSensorData.update
-        // already marshals onto the FX thread via Platform.runLater, so the
-        // append itself is thread-safe.
-        XYChart.Series<String, Number> tempSeries = new XYChart.Series<>();
-        tempSeries.setName("Temperature (°C)");
-        tempSeries.getData().add(new XYChart.Data<>("12:00 AM", 22));
-        tempSeries.getData().add(new XYChart.Data<>("3:00 AM", 20));
-        tempSeries.getData().add(new XYChart.Data<>("6:00 AM", 21));
-        tempSeries.getData().add(new XYChart.Data<>("9:00 AM", 26));
-        tempSeries.getData().add(new XYChart.Data<>("12:00 PM", 32));
-        tempSeries.getData().add(new XYChart.Data<>("3:00 PM", 34));
-        tempSeries.getData().add(new XYChart.Data<>("6:00 PM", 30));
-        tempSeries.getData().add(new XYChart.Data<>("9:00 PM", 25));
+        trendTempSeries = new XYChart.Series<>();
+        trendTempSeries.setName("Temperature (°C)");
+        trendHumSeries = new XYChart.Series<>();
+        trendHumSeries.setName("Humidity (%)");
+        trendChart.getData().clear();
+        trendChart.getData().add(trendTempSeries);
+        trendChart.getData().add(trendHumSeries);
+        cmbChartPeriod.valueProperty().addListener((obs, oldPeriod, newPeriod) -> resetTrendChart());
+    }
 
-        XYChart.Series<String, Number> humSeries = new XYChart.Series<>();
-        humSeries.setName("Humidity (%)");
-        humSeries.getData().add(new XYChart.Data<>("12:00 AM", 70));
-        humSeries.getData().add(new XYChart.Data<>("3:00 AM", 75));
-        humSeries.getData().add(new XYChart.Data<>("6:00 AM", 78));
-        humSeries.getData().add(new XYChart.Data<>("9:00 AM", 65));
-        humSeries.getData().add(new XYChart.Data<>("12:00 PM", 55));
-        humSeries.getData().add(new XYChart.Data<>("3:00 PM", 50));
-        humSeries.getData().add(new XYChart.Data<>("6:00 PM", 60));
-        humSeries.getData().add(new XYChart.Data<>("9:00 PM", 72));
+    private void scheduleTrendAppend() {
+        if (trendAppendScheduled) return;
+        trendAppendScheduled = true;
+        Platform.runLater(this::appendTrendSnapshot);
+    }
 
-        trendChart.getData().addAll(tempSeries, humSeries);
+    private void resetTrendChart() {
+        trendSampleIndex = 0;
+        trendAppendScheduled = false;
+        trendTempSeries.getData().clear();
+        trendHumSeries.getData().clear();
+        appendTrendSnapshot();
+    }
+
+    private void appendTrendSnapshot() {
+        trendAppendScheduled = false;
+        if (trendTempSeries == null || trendHumSeries == null) return;
+
+        LiveSensorData live = LiveSensorData.getInstance();
+        float temperature = live.temperatureProperty().get();
+        float humidity = live.humidityProperty().get();
+        if (Float.isNaN(temperature) && Float.isNaN(humidity)) return;
+
+        String label = formatTrendLabel(LocalDateTime.now(), trendSampleIndex++);
+        int maxPoints = maxTrendPoints();
+        if (!Float.isNaN(temperature)) {
+            appendBounded(trendTempSeries, label, temperature, maxPoints);
+        }
+        if (!Float.isNaN(humidity)) {
+            appendBounded(trendHumSeries, label, humidity, maxPoints);
+        }
+    }
+
+    private void appendBounded(XYChart.Series<String, Number> series, String label, Number value, int maxPoints) {
+        series.getData().add(new XYChart.Data<>(label, value));
+        while (series.getData().size() > maxPoints) {
+            series.getData().remove(0);
+        }
+    }
+
+    private int maxTrendPoints() {
+        String period = cmbChartPeriod.getValue();
+        if ("7 Days".equals(period)) return 84;
+        if ("30 Days".equals(period)) return 90;
+        return TREND_MAX_POINTS;
+    }
+
+    private String formatTrendLabel(LocalDateTime now, int sampleIndex) {
+        DateTimeFormatter fmt = "24 Hours".equals(cmbChartPeriod.getValue())
+                ? TREND_TIME_FMT
+                : TREND_DATE_TIME_FMT;
+        return now.format(fmt) + " #" + sampleIndex;
     }
 
     private void setupStatusChart() {

@@ -13,7 +13,7 @@ The Agrilliant desktop JavaFX app is being migrated to Android via Gluon Mobile 
 - **3bdelbary's track (B1–B10):** Complete.
 - **Post-B10 cross-track follow-ups (user-authorized):** JFreeChart deps removed from `pom.xml`; Gluon Attach `LifecycleService` PAUSE/RESUME wired to `DashboardController.startLifecycle()`/`stopLifecycle()`; `Crop.GrowthStage='GROWING'` SQL workaround migration script committed at `docs/sql/2026-05-14-fix-growthstage-growing.sql`. The repo is now ready for the first `mvn -Pandroid gluonfx:build`.
 - **Build environment (Windows-friendly, user-authorized):** GitHub Actions workflow at `.github/workflows/android-build.yml` builds the APK on a Linux cloud runner so Windows-host developers don't need WSL2. Local-Linux fallback path is `scripts/wsl-setup-android-build-env.sh` (one-shot installer for WSL2 Ubuntu). Docs at `docs/CI_ANDROID_BUILD.md` (cloud) and `scripts/README.md` (local).
-- **Phase 2 (3bdelbary, in progress):** P2.1–P2.5 landed — `AsyncCalls` helper + 44 DAO call sites across 13 controllers refactored off the FX thread, auth flow timeouts (10 s sign-in/up, 5 s splash restore), and the width-driven dashboard sidebar / hamburger toggle at the 900 px breakpoint. P2.6–P2.12 (UX polish + doc sweep) still pending.
+- **Phase 2 (3bdelbary):** P2.1–P2.12 landed — async DAO sweep, auth-flow timeouts, responsive dashboard chrome, alert detail responsive stacking, drawer footer status dots, camera capture, live bounded monitoring chart, chart-period reset, adaptive Android launcher icons, and doc sweep are complete.
 
 The app compiles cleanly on both profiles and boots through Splash → SignIn on desktop. No Android APK has been built yet (needs GraalVM + Android SDK toolchain).
 
@@ -49,8 +49,8 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 | Fix | `CropController.colVariety` NPE — dropped dead `@FXML` field + its 2 references (column had no backing model field) | Done |
 | B4 | Replace 8 `FileChooser` call sites: 7 CSV exports → `CSVExporter.saveCsv()`, 1 image picker → `PlatformPickers.pickImage()` | Done |
 | B5 | `css/mobile.css` with ≥48dp touch targets, 16 px base font, `CharmListView`/drawer row bumps. Loaded only on Android via `Constants.IS_ANDROID` branch in `Main.postInit` | Done |
-| B6 | JFreeChart audit — 0 references in `src/`; FX-thread safety of `MonitoringController.subscribeLiveSensor` confirmed via `LiveSensorData.update` → `Platform.runLater`; defensive `TODO(phase-2)` added in `setupTrendChart` for bounded-series rule | Done |
-| B7 | 10 Android launcher PNGs (5 densities mdpi → xxxhdpi × square + round variants) generated from `images/logo.png` and committed under `src/android/res/mipmap-*/`. Two side-by-side generators ship: Java (`smartfarm.ui.tools.LauncherIconGenerator`) and PowerShell (`generate-launcher-icons.ps1`). Both use the shared `smartfarm.ui.platform.PngEncoder` / `System.Drawing` to produce byte-equivalent layouts — `#2e7d32` background, logo at 72% edge, circular clip on round variant. | Done |
+| B6 | JFreeChart audit — 0 references in `src/`; FX-thread safety of `MonitoringController.subscribeLiveSensor` confirmed via `LiveSensorData.update` → `Platform.runLater`; bounded-series chart follow-up later closed in P2.9 | Done |
+| B7 | Android launcher icon tooling: Java (`smartfarm.ui.tools.LauncherIconGenerator`) + PowerShell (`generate-launcher-icons.ps1`) generators retained for static PNG density buckets; P2.11 now provides committed adaptive XML launcher resources under `src/android/res/` for the manifest icons. | Done |
 | B8 | `smartfarm.ui.platform.PlatformPickers` with Gluon `PicturesService` on Android, `FileChooser` on desktop, pure-Java PNG encoder for Substrate-safe persistence | Done |
 | B9 | Lifecycle hooks sweep: zero `stage.setOn*` patterns in `ui/` (B1/B2 already eliminated); `MonitoringController` listener leak across `loadFxmlPage` page swaps fixed via `sceneProperty()` auto-detach; `DashboardController` `Timeline` + 5 `LiveSensorData` listeners promoted to instance fields with new public `stopLifecycle()` method ready for Phase 2 `LifecycleService.PAUSE` wiring | Done |
 | B10 | Final consolidation: per-FXML status matrix (12 rows), per-controller status matrix (17 rows), 4 Gluon View status, consolidated Phase 2 TODO list (async / lifecycle / layout / assets / tests / frozen-model), cross-track items waiting on Hagag, read-only-imports recap, complete file inventory across the track. See `docs/MIGRATION_3BDELBARY.md` §B10. | Done |
@@ -97,7 +97,7 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 #### B6 Key Deliverables
 - Verified `src/` has zero JFreeChart references (`jfree`, `JFreeChart`, `ChartFactory`, `ChartPanel`, `XYPlot`, `JFreeChart-FX`). The B3-era survey had already moved away from it; B6 is the formal sign-off.
 - Verified `MonitoringController.subscribeLiveSensor` fires UI setters on the FX thread — the indirection runs through `LiveSensorData.update(...)`, which wraps its property mutations in `Platform.runLater`.
-- Added defensive `TODO(phase-2)` block comment in `MonitoringController.setupTrendChart()` documenting the bounded-series rule for the next engineer wiring real live data (cap series at N, trim from head before append). The current chart is mock-only so unbounded growth doesn't manifest, but the comment captures the gotcha.
+- Added defensive `TODO(phase-2)` block comment in `MonitoringController.setupTrendChart()` documenting the bounded-series rule for the next engineer wiring real live data. That follow-up is now closed by P2.9 — the chart uses `LiveSensorData` with capped series and trims from the head before appending.
 - **Hagag follow-up:** `pom.xml` desktop profile still declares `org.jfree:jfreechart:1.5.4` + `org.jfree:jfreechart-fx:1.0.1` with a comment waiting on exactly this audit. Safe to drop now — trims ~3 MB from the desktop fat-jar.
 
 #### B7 Key Deliverables
@@ -105,7 +105,7 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 - `PlatformPickers` refactored to delegate to `PngEncoder` — ~60 fewer lines, identical behaviour.
 - New `smartfarm.ui.tools.LauncherIconGenerator` (JavaFX `Application`) — reads `images/logo.png`, renders 5 densities (mdpi 48 → xxxhdpi 192) × 2 variants (square + round), writes via `PngEncoder` to `src/android/res/mipmap-*/ic_launcher{,_round}.png`. Run via `mvn -Pdesktop compile exec:java`.
 - New `src/main/java/smartfarm/ui/tools/generate-launcher-icons.ps1` — PowerShell mirror using `System.Drawing` for environments without the full Maven toolchain. Used to produce the committed PNGs.
-- **10 launcher PNG bitmaps generated and committed** at:
+- **Launcher PNG generator output target (optional static fallback) remains:**
   ```
   src/android/res/mipmap-mdpi/ic_launcher.png        (48×48)
   src/android/res/mipmap-mdpi/ic_launcher_round.png  (48×48)
@@ -114,7 +114,7 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
   src/android/res/mipmap-xxhdpi/...                  (144×144)
   src/android/res/mipmap-xxxhdpi/...                 (192×192)
   ```
-  Each icon is the `#2e7d32` brand-green background with the bird logo centred at 72% of the edge. Round variants use an antialiased circular background with a clip path so the logo can't bleed outside the disc.
+  The generator renders the `#2e7d32` brand-green background with the bird logo centred at 72% of the edge. P2.11 adds the committed adaptive XML icon resources that currently satisfy the Android manifest references.
 
 #### B9 Key Deliverables
 - **Audit clean for `stage.setOn*` / `windowProperty` patterns** — zero hits across `src/main/java/smartfarm/ui` (B1/B2 already eliminated them). All 4 Gluon Views (`SplashView`, `SignInView`, `SignUpView`, `ShellView`) use `setOnShowing` / `setOnHiding`.
@@ -125,9 +125,9 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
   - New public `stopLifecycle()` method stops the clock and removes all 5 listeners. Idempotent. Documented as the intended hook for Phase 2's Gluon Attach `LifecycleService.PAUSE` event.
 - **Rotation safety confirmed.** `AndroidManifest.xml` declares `android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize"` on the launcher activity, so orientation changes don't tear down and rebuild the Activity / JVM. The field-backed `Timeline` provides defense-in-depth for any future scenario where the JVM does restart.
 
-### Phase 2 — In Progress (3bdelbary)
+### Phase 2 — Complete (3bdelbary)
 
-Phase 2 picks up the async / lifecycle / layout follow-ups parked at the end of Phase 1. Goals: keep the FX thread free during every DB round-trip, harden the auth flow against hung connections, and make the dashboard feel native on both tablet-landscape (sidebar) and phone-portrait (drawer) widths.
+Phase 2 picked up the async / lifecycle / layout follow-ups parked at the end of Phase 1. The completed goals are: keep the FX thread free during every DB round-trip, harden the auth flow against hung connections, make the dashboard feel native on tablet-landscape and phone-portrait widths, and finish the UX polish items from P2.6–P2.11.
 
 | Task | Description | Status |
 |------|-------------|--------|
@@ -138,13 +138,13 @@ Phase 2 picks up the async / lifecycle / layout follow-ups parked at the end of 
 | P2.3c | `TaskController` + `CropController` — 16 sites (incl. filter-setup duplication bug fix) | Done |
 | P2.4 | Auth flow async + timeouts: `SignInController` (10 s) / `SignUpController` (10 s) / `SplashView` (5 s) | Done |
 | P2.5 | Width-based dashboard sidebar toggle — 900 px breakpoint listener on `Scene.widthProperty()` | Done |
-| P2.6 | `AlertController` master-detail full-width on wide viewports | Pending |
-| P2.7 | NavigationDrawer footer status dots (system / DB / sensors) | Pending |
-| P2.8 | `DiseaseDetectionPage` "Take Photo" button (Gluon `PicturesService` — capture mode) | Pending |
-| P2.9 | `MonitoringController.setupTrendChart` → `LiveSensorData` with bounded series | Pending |
-| P2.10 | `cmbChartPeriod` listener wired | Pending |
-| P2.11 | Adaptive launcher icons (Android 8.0+ foreground/background layers) | Pending |
-| P2.12 | This doc + `MIGRATION_3BDELBARY.md` Phase 2 section | In progress |
+| P2.6 | `AlertController` responsive master-detail — phone-width selections hide the list for a full-width detail screen | Done |
+| P2.7 | NavigationDrawer footer status dots (system / DB / sensors) | Done |
+| P2.8 | `DiseaseDetectionPage` "Take Photo" button (Gluon `PicturesService` — capture mode) | Done |
+| P2.9 | `MonitoringController.setupTrendChart` → `LiveSensorData` with bounded series | Done |
+| P2.10 | `cmbChartPeriod` listener wired | Done |
+| P2.11 | Adaptive launcher icons (Android 8.0+ foreground/background layers) | Done |
+| P2.12 | This doc + `MIGRATION_3BDELBARY.md` Phase 2 section | Done |
 
 #### P2.1–P2.3 Key Deliverables (async sweep)
 - New helper `src/main/java/smartfarm/ui/async/AsyncCalls.java` with six entry points: `runAndApply` (3 overloads incl. a `Duration` timeout), `runWithBusy` (3 overloads incl. a `Duration` timeout), `runFireAndForget`, `runFireAndForgetThen`. All marshal the success / error consumer back to the FX thread via `Platform.runLater` and unwrap `CompletionException` / `ExecutionException` so callers see the real `SQLException` / `TimeoutException`.
@@ -163,12 +163,20 @@ Phase 2 picks up the async / lifecycle / layout follow-ups parked at the end of 
 - Listener lifecycle is the correctness win — detaching on hide stops chrome from bleeding into sign-in / sign-up if the user resizes the window during auth.
 - 900 px breakpoint catches iPad-portrait-and-up (768 px) while keeping standard phones (≤ 412 px logical width) on the drawer pattern.
 
+#### P2.6–P2.11 Key Deliverables (UX polish)
+- `alerts.fxml` now exposes `rootPane` + `listSection`; `AlertController` attaches a scene-width listener and hides the list while details are open below the 700 px breakpoint, giving phone users a full-width detail screen with the existing close button returning to the list.
+- `ShellView`'s NavigationDrawer footer now mirrors the legacy sidebar's system / database / IoT sensor statuses. `DashboardController.getSidebarStatus()` provides the snapshot; the drawer footer refreshes on shell show and active-sensor changes.
+- `DiseaseDetectionPage` adds a **Take Photo** button. `PlatformPickers.takePhoto(...)` uses Gluon Attach `PicturesService.asyncTakePhoto(true)` on Android, persists the returned image/file path, and falls back to the desktop file chooser on desktop.
+- `MonitoringController.setupTrendChart()` now owns live temperature/humidity series fed by `LiveSensorData`; appends are debounced onto the FX thread and capped (`TREND_MAX_POINTS`, with period-specific caps) by trimming oldest points before appending.
+- `cmbChartPeriod` now resets/re-bins the live chart when switching between 24 Hours / 7 Days / 30 Days so future labels and caps match the selected period.
+- Android adaptive launcher icon resources now live under `src/android/res/`: foreground/background vector drawables plus `mipmap-anydpi-v26/ic_launcher.xml` and `ic_launcher_round.xml`.
+
 ### Build Verification
 
 | Gate | Result |
 |------|--------|
-| `mvn -Pdesktop clean compile` | BUILD SUCCESS (79 sources) |
-| `mvn -Pandroid clean compile` | BUILD SUCCESS (75 sources) |
+| `mvn -Pdesktop clean compile` | BUILD SUCCESS (83 sources) |
+| `mvn -Pandroid clean compile` | BUILD SUCCESS (79 sources) |
 | FXML load smoke (with DB) | **9/12 pass** (retested 2026-05-14 with real MySQL at 139.59.153.80) |
 | Boot smoke (desktop) | Splash → SignIn end-to-end, FarmServer starts |
 | Boot smoke (android profile) | Splash → SignIn end-to-end, FarmServer skipped (correct) |
@@ -181,9 +189,9 @@ Nothing on 3bdelbary's Phase 1 list. All B-tasks are complete and the post-B10 c
 
 The only remaining work is environmental — running the actual APK build on a host with GraalVM + Android SDK + NDK installed. See `docs/MIGRATION_3BDELBARY.md` *Post-B10 → APK build pre-flight checklist* for the exact command sequence and common first-run failure modes.
 
-### Cross-track items still pending (low priority)
+### Cross-track follow-ups (low priority)
 - **`exec-maven-plugin` for the launcher generator (optional)** — would let the team run `mvn exec:java -Dexec.mainClass=smartfarm.ui.tools.LauncherIconGenerator`. The PowerShell variant (`src/main/java/smartfarm/ui/tools/generate-launcher-icons.ps1`) is the working alternative that needs no Maven plumbing.
-- **Phase 2 async DAO sweep** — **Done in P2.1–P2.3c** (44 sites across 13 controllers via `AsyncCalls`). See the *Phase 2 — In Progress* section above and `docs/MIGRATION_3BDELBARY.md` for details.
+- **Phase 2 async DAO sweep** — **Done in P2.1–P2.3c** (44 sites across 13 controllers via `AsyncCalls`). See the *Phase 2 — Complete* section above and `docs/MIGRATION_3BDELBARY.md` for details.
 
 ---
 
@@ -237,7 +245,7 @@ The ShellView drawer + AppBar configuration is compile-verified but has not been
 The full `mvn -Pandroid gluonfx:build` → APK pipeline has not been run. Requires:
 - GraalVM / Liberica NIK installed
 - Android SDK + NDK available
-- B7 launcher icons in place (otherwise manifest references fail)
+- Launcher icon resources in place (P2.11 adaptive icons satisfy the manifest references)
 
 ### 5. `FarmServer.class` Still Leaks into Android Build
 
@@ -245,16 +253,14 @@ The full `mvn -Pandroid gluonfx:build` → APK pipeline has not been run. Requir
 
 ---
 
-## Phase 2 TODOs (14 in-code markers)
+## Phase 2 TODOs (12 in-code markers)
 
 | Category | Count | Description | Tracked by |
 |----------|-------|-------------|------------|
 | DAO cached-connection field → per-method call | 11 | One per DAO: `AdminDAO`, `AlertDAO`, `AttendanceDAO`, `CropDAO`, `DeviceDAO`, `HarvestDAO`, `ManagerDAO`, `PlotDAO`, `SensorDAO`, `TaskDAO`, `WorkerDAO` | Hagag lane — not in 3bdelbary P2.x |
 | `NavContext` unit tests | 1 | Awaiting JUnit/Surefire in pom.xml | Hagag lane (test framework) |
-| `MonitoringController.setupTrendChart` bounded series | 1 | Cap each `XYChart.Series` at N data points, trim from head before append | **P2.9** (scheduled) |
-| `alerts.fxml` master-detail pattern | 1 | Phone users get full-width detail screen via stacked View | **P2.6** (scheduled) |
 
-Note: the **44 `AsyncCalls.runAsync` / `runWithBusy` call sites added in P2.1–P2.3c are not `TODO(phase-2)` markers** — they're completed refactors. The 14 markers above are the remaining qualitative items the original Phase 1 deliverables flagged for future work.
+Note: the **44 `AsyncCalls.runAsync` / `runWithBusy` call sites added in P2.1–P2.3c are not `TODO(phase-2)` markers** — they're completed refactors. P2.6 and P2.9 also closed the two UI-lane `TODO(phase-2)` markers from `alerts.fxml` and `MonitoringController`; the 12 markers above are the remaining Hagag/test-framework items.
 
 Additional Phase 2 items from the migration docs (not in-code):
 - Wire `DBConnection.closeQuietly()` into `Main#stop()` and a Gluon `LifecycleEvent.DESTROY` listener
@@ -310,4 +316,4 @@ a0c06d5 [3bdelbary] B2.7 fix: SPLASH registers under HOME_VIEW so Glisten mounts
    Idempotent. The script reports row counts before and after.
 4. **Trigger the cloud build** — Actions tab → "Android APK Build" → Run workflow → pick `mobile-app` → Run. First run ≈20–40 min.
 5. **Download the `agrilliant-apk` artifact** from the completed run, then `adb install` on a device with USB debugging on.
-6. **Continue Phase 2 UX polish (P2.6 → P2.11)** — the async sweep (P2.1–P2.3c), auth-flow timeouts (P2.4), and responsive sidebar (P2.5) are landed. The remaining items are layout / asset / chart wiring polish; see the *Phase 2 — In Progress* matrix above and `docs/MIGRATION_3BDELBARY.md` for per-task specifics.
+6. **Device/visual smoke P2.6 → P2.11** — verify the alert detail breakpoint, drawer footer status rows, camera capture, live monitoring chart, chart-period reset, and adaptive launcher icon on a real Android device after the APK build.

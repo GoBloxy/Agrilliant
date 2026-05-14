@@ -20,11 +20,14 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
 import org.kordamp.ikonli.javafx.FontIcon;
 import smartfarm.model.User;
+import smartfarm.service.LiveSensorData;
 import smartfarm.service.SessionManager;
 import smartfarm.ui.DashboardController;
 import smartfarm.ui.DashboardController.NavTarget;
+import smartfarm.ui.DashboardController.SidebarStatus;
 import smartfarm.ui.nav.AppView;
 import smartfarm.ui.nav.NavContext;
 import smartfarm.util.Logger;
@@ -70,6 +73,13 @@ public class ShellView extends View {
     /** Set up flag — Gluon Attach LifecycleService PAUSE/RESUME hooks
      *  are wired once per controller instance, not on every showing. */
     private boolean lifecycleServiceWired = false;
+    private Label drawerSystemStatus;
+    private Label drawerDbStatus;
+    private Label drawerSensorStatus;
+    private Circle drawerDotSystem;
+    private Circle drawerDotDb;
+    private Circle drawerDotSensors;
+    private ChangeListener<Number> drawerSensorStatusListener;
 
     /**
      * P2.5: viewport-width threshold above which the legacy sidebar inflates
@@ -112,6 +122,8 @@ public class ShellView extends View {
             if (controller != null) {
                 controller.startLifecycle();
             }
+            attachDrawerStatusListener();
+            refreshDrawerFooterStatus();
             // P2.5: width-driven sidebar + hamburger toggling. Attached here
             // so it only fires while ShellView is the active view; detached
             // in setOnHiding to keep chrome from bleeding into sign-in /
@@ -130,6 +142,7 @@ public class ShellView extends View {
             appBar.setNavIcon(null);
             appBar.getActionItems().clear();
             appBar.setVisible(false);
+            detachDrawerStatusListener();
             // B9: stop the clock + detach LiveSensorData listeners while
             // the shell is off-screen (logout). Safe even if the user
             // re-enters via SHELL.switchTo() — startLifecycle above
@@ -281,6 +294,22 @@ public class ShellView extends View {
         footer.setPadding(new Insets(12, 16, 16, 16));
         footer.getStyleClass().add("drawer-footer");
 
+        drawerDotSystem = new Circle(4);
+        drawerDotDb = new Circle(4);
+        drawerDotSensors = new Circle(4);
+        drawerSystemStatus = new Label("Online");
+        drawerDbStatus = new Label("Connected");
+        drawerSensorStatus = new Label("0 Active");
+
+        VBox statusCard = new VBox(6);
+        statusCard.setPadding(new Insets(10));
+        statusCard.setStyle("-fx-background-color:#f3f4f6;-fx-background-radius:8;");
+        statusCard.getChildren().addAll(
+                drawerStatusRow("System Status", drawerDotSystem, drawerSystemStatus),
+                drawerStatusRow("Database", drawerDotDb, drawerDbStatus),
+                drawerStatusRow("IoT Sensors", drawerDotSensors, drawerSensorStatus)
+        );
+
         Button signOut = new Button("Sign Out", new FontIcon("fth-log-out"));
         signOut.setMaxWidth(Double.MAX_VALUE);
         signOut.getStyleClass().add("btn-secondary");
@@ -291,8 +320,45 @@ public class ShellView extends View {
         version.setMaxWidth(Double.MAX_VALUE);
         version.setAlignment(Pos.CENTER);
 
-        footer.getChildren().addAll(signOut, version);
+        footer.getChildren().addAll(statusCard, signOut, version);
         return footer;
+    }
+
+    private Node drawerStatusRow(String title, Circle dot, Label value) {
+        dot.getStyleClass().setAll("status-dot-offline");
+        Label titleLabel = new Label(title);
+        titleLabel.setStyle("-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#374151;");
+        value.setStyle("-fx-font-size:10;-fx-text-fill:#2e7d32;");
+        VBox text = new VBox(0, titleLabel, value);
+        HBox row = new HBox(8, dot, text);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
+    }
+
+    private void attachDrawerStatusListener() {
+        if (drawerSensorStatusListener != null) return;
+        drawerSensorStatusListener = (obs, oldVal, newVal) -> refreshDrawerFooterStatus();
+        LiveSensorData.getInstance().activeSensorsProperty().addListener(drawerSensorStatusListener);
+    }
+
+    private void detachDrawerStatusListener() {
+        if (drawerSensorStatusListener == null) return;
+        LiveSensorData.getInstance().activeSensorsProperty().removeListener(drawerSensorStatusListener);
+        drawerSensorStatusListener = null;
+    }
+
+    private void refreshDrawerFooterStatus() {
+        if (controller == null || drawerSystemStatus == null) return;
+        SidebarStatus status = controller.getSidebarStatus();
+        applyDrawerStatus(drawerDotSystem, drawerSystemStatus, status.system(), status.systemOnline());
+        applyDrawerStatus(drawerDotDb, drawerDbStatus, status.database(), status.databaseOnline());
+        applyDrawerStatus(drawerDotSensors, drawerSensorStatus, status.sensors(), status.sensorsOnline());
+    }
+
+    private void applyDrawerStatus(Circle dot, Label label, String text, boolean online) {
+        dot.getStyleClass().setAll(online ? "status-dot-online" : "status-dot-offline");
+        label.setText(text);
+        label.setStyle("-fx-font-size:10;-fx-text-fill:" + (online ? "#2e7d32" : "#dc2626") + ";");
     }
 
     private NavigationDrawer.Item drawerItem(String title, String iconLiteral, NavTarget target) {

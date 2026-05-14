@@ -3,6 +3,7 @@ package smartfarm.ui.platform;
 import com.gluonhq.attach.pictures.PicturesService;
 import com.gluonhq.attach.storage.StorageService;
 import com.gluonhq.attach.util.Services;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -15,6 +16,8 @@ import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * Cross-platform image picker for 3bdelbary's UI lane.
@@ -62,6 +65,14 @@ public final class PlatformPickers {
         return pickImageDesktop(owner);
     }
 
+    public static void takePhoto(Window owner, Consumer<Optional<File>> callback) {
+        if (Constants.IS_ANDROID) {
+            takePhotoAndroid(callback);
+            return;
+        }
+        callback.accept(pickImageDesktop(owner));
+    }
+
     // ---------------------------------------------------------------
     // Desktop branch
     // ---------------------------------------------------------------
@@ -104,6 +115,55 @@ public final class PlatformPickers {
         } catch (IOException e) {
             Logger.e(TAG, "Failed to persist picked image", e);
             return Optional.empty();
+        }
+    }
+
+    private static void takePhotoAndroid(Consumer<Optional<File>> callback) {
+        Optional<PicturesService> svc;
+        try {
+            svc = Services.get(PicturesService.class);
+        } catch (Throwable t) {
+            Logger.e(TAG, "PicturesService unavailable", t);
+            callback.accept(Optional.empty());
+            return;
+        }
+        if (svc.isEmpty()) {
+            Logger.w(TAG, "PicturesService not registered on this platform");
+            callback.accept(Optional.empty());
+            return;
+        }
+
+        PicturesService pictures = svc.get();
+        AtomicReference<ChangeListener<Image>> listenerRef = new AtomicReference<>();
+        ChangeListener<Image> listener = (obs, oldImage, image) -> {
+            pictures.imageProperty().removeListener(listenerRef.get());
+            if (image == null) {
+                Logger.i(TAG, "User cancelled camera capture or no image returned");
+                callback.accept(Optional.empty());
+                return;
+            }
+            try {
+                Optional<File> original = pictures.getImageFile();
+                if (original.isPresent()) {
+                    callback.accept(original);
+                    return;
+                }
+                File out = writePng(image);
+                Logger.i(TAG, "Wrote captured image → " + out);
+                callback.accept(Optional.of(out));
+            } catch (IOException e) {
+                Logger.e(TAG, "Failed to persist captured image", e);
+                callback.accept(Optional.empty());
+            }
+        };
+        listenerRef.set(listener);
+        pictures.imageProperty().addListener(listener);
+        try {
+            pictures.asyncTakePhoto(true);
+        } catch (Throwable t) {
+            pictures.imageProperty().removeListener(listener);
+            Logger.e(TAG, "Camera capture failed", t);
+            callback.accept(Optional.empty());
         }
     }
 

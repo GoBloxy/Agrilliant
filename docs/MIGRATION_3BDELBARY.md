@@ -733,7 +733,7 @@ Re-run the generator after any change; commit the new PNGs.
 | `PlatformPickers` refactored to use `PngEncoder` — behaviour preserved, class shrank | ✅ |
 
 ### Phase 2 follow-ups
-- Adaptive icons (`mipmap-anydpi-v26/ic_launcher.xml` + foreground/background drawables) would scale better on Android 8+'s round/squircle/teardrop launcher masks than the current legacy PNG approach. Out of scope for Phase 1 — current PNGs are still valid and supported through Android 14.
+- Adaptive icons (`mipmap-anydpi-v26/ic_launcher.xml` + foreground/background drawables) — closed by P2.11.
 - Splash screen drawable: §B7 of the migration doc also mentions "Add a splash screen image referencing the existing logo." The in-app splash (`SplashView` from B1) covers the user-visible splash; what's missing is the brief native pre-FX splash that some Gluon apps show during the Substrate binary cold start. Low-priority polish — defer to Phase 2.
 
 ---
@@ -867,31 +867,31 @@ Legend: ✅ done · — not applicable · ⚠ has Phase 2 TODO.
 
 ### Consolidated Phase 2 TODO list
 
-Cross-cutting concerns surfaced during B1–B9 that intentionally land in Phase 2 (after both tracks merge to `main` and the `model/` freeze lifts):
+Cross-cutting concerns surfaced during B1–B9. The 3bdelbary-owned items in this list are now closed by P2.1–P2.12; the remaining items are Hagag/model/test-framework follow-ups.
 
 **Async / thread-safety**
-- Wrap every DAO call site in `DBConnection.runAsync(...)` (Hagag's H4) — every controller marked ⚠ in the table above. This is the bulk of Phase 2 work.
-- `AuthService.restoreSession()` is synchronous and could hang `SplashView` on a slow MySQL — give it a timeout/cancel path.
-- `AuthService.authenticate()` runs on FX thread in `SignInController.onSignIn` — wrap.
-- `cmbChartPeriod` ComboBox in `MonitoringController` ("24 Hours" / "7 Days" / "30 Days") has no listener wired today — once `setupTrendChart` is wired to live data, hook it to drive a `SensorDAO.getRecent(period)` query and rebuild the series.
+- DAO call-site async sweep — closed by P2.1–P2.3c.
+- `AuthService.restoreSession()` splash timeout — closed by P2.4.
+- `AuthService.authenticate()` sign-in/sign-up timeout wrappers — closed by P2.4.
+- `cmbChartPeriod` ComboBox listener — closed by P2.10.
 
 **Lifecycle**
-- Wire Gluon Attach `LifecycleService` in `Main` to dispatch PAUSE/RESUME → `DashboardController.stopLifecycle()` and a future `startLifecycle()` (cross-track; `Main` is in 3bdelbary's lane but `LifecycleService` registration is typically Hagag-side per the H10 work).
+- Wire Gluon Attach `LifecycleService` to dispatch PAUSE/RESUME → `DashboardController.stopLifecycle()` / `startLifecycle()` — closed by the Post-B10 follow-up in `ShellView`.
 - Apply the `sceneProperty()` auto-detach pattern to any future sub-page that subscribes to a service singleton (mirror the B9 fix in `MonitoringController`).
-- `MonitoringController.setupTrendChart` is currently static mock data — wire to real `LiveSensorData` updates and cap each series at ~100 points by trimming from the head before appending. See `TODO(phase-2)` block comment in the source.
+- `MonitoringController.setupTrendChart` live bounded chart — closed by P2.9.
 
 **Layout / UX polish**
-- Width-based dashboard sidebar toggle: `Scene.widthProperty()` listener in `DashboardController` (or `ShellView`) that flips `sidebar.setVisible/Managed(...)` + `topbar.setVisible/Managed(...)` back on at ≥800 dp. The hidden FXML structure is preserved so this is a one-line per element.
-- AlertController master-detail: push `detailPane` as a stacked `View` onto `AppManager` when a row is tapped, so phone users get a full-width detail screen instead of a stacked section under the list.
+- Width-based dashboard sidebar toggle — closed by P2.5.
+- AlertController master-detail full-width phone detail — closed by P2.6.
 - Long-press / tap-handler on the AppBar user-name label → profile / sign-out menu (referenced in `ShellView.configureAppBar`).
-- Surface system status (DB / sensors / online dots) in the `NavigationDrawer` footer — currently shows only "Version 1.0.0".
+- Surface system status (DB / sensors / online dots) in the `NavigationDrawer` footer — closed by P2.7.
 - Visual smoke on a 5" / 6.5" Android emulator to confirm the 84 dp `.list-tile` size hits 48 dp action buttons cleanly without truncating the 3-line text — manual gate, no Phase 1 harness.
 
 **Assets**
-- Adaptive icons (`mipmap-anydpi-v26/ic_launcher.xml` + foreground/background drawables) for cleaner Android 8+ launcher masks. Current legacy PNGs work through Android 14.
+- Adaptive icons (`mipmap-anydpi-v26/ic_launcher.xml` + foreground/background drawables) for cleaner Android 8+ launcher masks — closed by P2.11.
 - Native pre-FX splash drawable (Substrate cold-start splash before the JVM is up). The in-app `SplashView` covers the user-visible splash; this is just the brief pre-FX bit.
 - Cleanup of old picked PNGs in `picked-images/` private storage (B8) — low priority, sandboxed.
-- `PicturesService.takePhoto(boolean savePhoto)` entry next to "Browse Image" in `DiseaseDetectionPage` — re-use the existing `PngEncoder` helper.
+- `PicturesService` camera-capture entry next to "Browse Image" in `DiseaseDetectionPage` — closed by P2.8.
 
 **Tests**
 - `NavContext` unit tests pending JUnit/Surefire in `pom.xml` (Hagag's lane).
@@ -982,7 +982,7 @@ The next concrete milestone is the first `mvn -Pandroid gluonfx:build` to produc
 - [x] **B4** — done.
 - [x] **B5** — done.
 - [x] **B6** — done.
-- [x] **B7** — done. PNGs generated and committed.
+- [x] **B7** — done. Launcher icon generators/tooling landed; P2.11 now supplies committed adaptive icon resources.
 - [x] **B8** — done.
 - [x] **B9** — done.
 - [x] **B10** — done. This consolidated reference + the FXML/controller matrices + Phase 2 TODO list complete the §B10 deliverable.
@@ -995,12 +995,12 @@ The next concrete milestone is the first `mvn -Pandroid gluonfx:build` to produc
 - [x] **P2.3c** — `TaskController` + `CropController` (16 sites + filter-setup duplication fix).
 - [x] **P2.4** — Auth flow async + 10 s / 5 s timeouts (`SignInController`, `SignUpController`, `SplashView`).
 - [x] **P2.5** — Width-based dashboard sidebar toggle (900 px breakpoint listener).
-- [ ] **P2.6** — `AlertController` master-detail full-width on wide viewports.
-- [ ] **P2.7** — NavigationDrawer footer status dots.
-- [ ] **P2.8** — `DiseaseDetectionPage` "Take Photo" button (capture mode).
-- [ ] **P2.9** — `MonitoringController.setupTrendChart` → `LiveSensorData` with bounded series.
-- [ ] **P2.10** — `cmbChartPeriod` listener.
-- [ ] **P2.11** — Adaptive launcher icons (Android 8.0+ foreground/background layers).
+- [x] **P2.6** — `AlertController` responsive master-detail full-width phone detail.
+- [x] **P2.7** — NavigationDrawer footer status dots.
+- [x] **P2.8** — `DiseaseDetectionPage` "Take Photo" button (capture mode).
+- [x] **P2.9** — `MonitoringController.setupTrendChart` → `LiveSensorData` with bounded series.
+- [x] **P2.10** — `cmbChartPeriod` listener.
+- [x] **P2.11** — Adaptive launcher icons (Android 8.0+ foreground/background layers).
 - [x] **P2.12** — This Phase 2 section + `STATUS.md` Phase 2 subsection.
 
 ---
@@ -1123,11 +1123,11 @@ mvn -Pandroid gluonfx:run
 
 ---
 
-## Phase 2 — In Progress (3bdelbary lane)
+## Phase 2 — Complete (3bdelbary lane)
 
 Phase 2 picks up the async / lifecycle / layout follow-ups parked at the end of Phase 1 (see the `⚠` rows in §B10's per-controller matrix). The goals are: keep the FX thread free during every DB round-trip so the UI never stalls on a slow connection; harden the auth flow against hung connections with explicit timeouts; and make the dashboard feel native on both tablet-landscape (sidebar) and phone-portrait (drawer) widths.
 
-The track is structured as P2.1 → P2.12. P2.1–P2.5 (the high-priority block) are landed; P2.6–P2.11 are UX polish items and P2.12 is this documentation sweep.
+The track is structured as P2.1 → P2.12. P2.1–P2.5 landed the high-priority async/auth/responsive-chrome block; P2.6–P2.11 landed the UX polish block; P2.12 is this documentation sweep.
 
 ---
 
@@ -1274,21 +1274,80 @@ The listener is attached only while `ShellView` is the active view. If the user 
 
 ---
 
-## P2.6 – P2.11 (pending — UX polish)
+## P2.6: AlertController responsive master-detail — DONE ✅
 
-These items remain on the Phase 2 backlog. Brief descriptions:
+### Files modified
+- `src/main/resources/fxml/alerts.fxml` — root now has `fx:id="rootPane"`; list section now has `fx:id="listSection"`; the stale `TODO(phase-2)` comment is closed.
+- `src/main/java/smartfarm/ui/AlertController.java` — new `DETAIL_STACK_BREAKPOINT = 700.0`, retained `ChangeListener<Number> detailWidthListener`, and `setupResponsiveDetailLayout()` / `applyDetailLayout()` methods.
 
-- **P2.6** — `AlertController` master-detail full-width on wide viewports (closes the `TODO(phase-2)` in `alerts.fxml`).
-- **P2.7** — NavigationDrawer footer status dots (system / DB / sensors) mirroring the legacy sidebar status card.
-- **P2.8** — `DiseaseDetectionPage` "Take Photo" button using Gluon `PicturesService` in capture mode (the existing "Choose Image" button is already wired via B4/B8).
-- **P2.9** — `MonitoringController.setupTrendChart` wired to `LiveSensorData` with a bounded series (drop oldest data points beyond N — closes the `TODO(phase-2)` in `MonitoringController`).
-- **P2.10** — `cmbChartPeriod` listener wired so the chart re-bins when the user switches period.
-- **P2.11** — Adaptive launcher icons for Android 8.0+ (foreground + background layer XML drawables in `mipmap-anydpi-v26/`, replacing the static PNGs from B7 on capable Android versions).
+### Behaviour
+- Wide layouts keep the B3X stacked shape: list on top, detail below, both visible while an alert is selected.
+- Below 700 px, selecting an alert hides the list section (`visible=false managed=false`) and shows the detail pane at full width.
+- Tapping the existing close button clears selection, hides the detail pane, and restores the list.
+- The width listener is attached/detached through the root scene property so the controller does not hold a stale `Scene` after page swaps.
+
+---
+
+## P2.7: NavigationDrawer footer status dots — DONE ✅
+
+### Files modified
+- `src/main/java/smartfarm/ui/DashboardController.java` — new `SidebarStatus` record + `getSidebarStatus()` snapshot method, derived from the same labels/dots that drive the legacy sidebar status card.
+- `src/main/java/smartfarm/ui/views/ShellView.java` — drawer footer now includes System / Database / IoT Sensors rows with status dots and labels above Sign Out + Version.
+
+### Behaviour
+- Drawer footer mirrors the legacy sidebar status card for narrow/mobile layouts where the inline sidebar is collapsed.
+- Footer status refreshes on every shell show, after `DashboardController.startLifecycle()` rechecks DB/sensor state.
+- A retained `activeSensorsProperty` listener refreshes the drawer footer when the live active-sensor count changes; it is detached from `ShellView.setOnHiding` alongside the existing width listener.
+
+---
+
+## P2.8: DiseaseDetectionPage Take Photo button — DONE ✅
+
+### Files modified
+- `src/main/java/smartfarm/ui/DiseaseDetectionPage.java` — upload action row now has a **Take Photo** button next to **Browse Image**; both paths feed the shared `applySelectedImage(File)` helper before analysis.
+- `src/main/java/smartfarm/ui/platform/PlatformPickers.java` — new `takePhoto(Window, Consumer<Optional<File>>)` API. Desktop falls back to the JavaFX file chooser; Android uses Gluon Attach `PicturesService.asyncTakePhoto(true)`, then returns `PicturesService.getImageFile()` or persists the returned `Image` through `PngEncoder` under private storage.
+
+### Docs checked
+- Context7 / Gluon Attach 4.0.23 docs confirm `PicturesService.asyncTakePhoto(boolean savePhoto)`, `imageProperty()`, and `getImageFile()` for camera capture.
+
+---
+
+## P2.9: MonitoringController live bounded trend chart — DONE ✅
+
+### Files modified
+- `src/main/java/smartfarm/ui/MonitoringController.java` — `setupTrendChart()` no longer seeds static mock points. It creates retained temperature/humidity series fields and appends live snapshots from `LiveSensorData`.
+
+### Behaviour
+- Temperature/humidity property listeners call `scheduleTrendAppend()`, which debounces multiple property updates into one `Platform.runLater` append after `LiveSensorData.update(...)` has finished setting the latest values.
+- `appendBounded(...)` caps each series and removes oldest points from the head before appending new points, closing the B6 `TODO(phase-2)` bounded-series marker.
+- `TREND_MAX_POINTS` is 96 for the 24-hour view; the longer period selections use their own caps to avoid unbounded JavaFX chart node growth.
+
+---
+
+## P2.10: cmbChartPeriod listener — DONE ✅
+
+### Files modified
+- `src/main/java/smartfarm/ui/MonitoringController.java` — `cmbChartPeriod.valueProperty().addListener(...)` now calls `resetTrendChart()`.
+
+### Behaviour
+- Switching between `24 Hours`, `7 Days`, and `30 Days` clears the current live chart window and appends a fresh current snapshot if one exists.
+- Future points use period-appropriate labels (`HH:mm:ss` for 24-hour, `MM-dd HH:mm` for longer periods) and the selected period's cap.
+
+---
+
+## P2.11: Adaptive launcher icons — DONE ✅
+
+### Files created
+- `src/android/res/drawable/ic_launcher_background.xml` — brand-green vector background layer.
+- `src/android/res/drawable/ic_launcher_foreground.xml` — white leaf/stem vector foreground layer.
+- `src/android/res/mipmap-anydpi-v26/ic_launcher.xml` — adaptive icon referencing the foreground/background layers.
+- `src/android/res/mipmap-anydpi-v26/ic_launcher_round.xml` — round adaptive icon referencing the same layers.
+
+### Docs checked
+- Context7 / Android Developers docs confirm adaptive icons use `<adaptive-icon>` resources with `<background>` and `<foreground>` layers, and the manifest already points at `android:icon="@mipmap/ic_launcher"` plus `android:roundIcon="@mipmap/ic_launcher_round"`.
 
 ---
 
 ## P2.12: Documentation sweep — DONE ✅
 
-This Phase 2 section + the parallel *Phase 2 — In Progress* subsection in `docs/STATUS.md` together close P2.12. The `## Status of Phase 2 tasks` checkbox list near the top of this file reflects the same matrix in compact form.
-
-Once P2.6–P2.11 land they should be appended here following the same `## P2.x: <name> — DONE ✅` pattern used above for P2.1–P2.5.
+This Phase 2 section + the parallel *Phase 2 — Complete* subsection in `docs/STATUS.md` together close P2.12. The `## Status of Phase 2 tasks` checkbox list near the top of this file reflects the same matrix in compact form. P2.6–P2.11 are now documented above using the same `## P2.x: <name> — DONE ✅` pattern as P2.1–P2.5.

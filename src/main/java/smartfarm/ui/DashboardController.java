@@ -828,6 +828,24 @@ public class DashboardController {
         dotSensors.getStyleClass().setAll(count > 0 ? "status-dot-online" : "status-dot-offline");
     }
 
+    public SidebarStatus getSidebarStatus() {
+        return new SidebarStatus(
+                lblSystemStatus.getText(),
+                lblDbStatus.getText(),
+                lblSensorStatus.getText(),
+                dotSystem.getStyleClass().contains("status-dot-online"),
+                dotDb.getStyleClass().contains("status-dot-online"),
+                dotSensors.getStyleClass().contains("status-dot-online"));
+    }
+
+    public record SidebarStatus(
+            String system,
+            String database,
+            String sensors,
+            boolean systemOnline,
+            boolean databaseOnline,
+            boolean sensorsOnline) {}
+
     // ═══════════════ LIVE SENSOR SUBSCRIPTION ═══════════════
 
     private void subscribeLiveSensor() {

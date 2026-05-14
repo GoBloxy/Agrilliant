@@ -8,23 +8,18 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
-  Alerts Page — list of alerts on top, detail card below.
+  Alerts Page — responsive alert list + detail card.
 
   Stacks vertically so it works on phone width (was a side-by-side HBox
   with a 380dp fixed-width detail pane that ate the screen on mobile).
-  On desktop the same vertical layout reads fine — detail is below the
-  list, both visible without scrolling on a typical 900dp window.
-
-  TODO(phase-2): consider a true master-detail mobile pattern where the
-  detail pane is a stacked View pushed onto AppManager when a row is
-  tapped, so phone users get a full-width detail screen instead of a
-  cramped section below the list. That requires AlertController changes.
+  AlertController hides the list section below its narrow-detail breakpoint
+  while a row is selected, so phone users get a full-width detail screen.
 -->
-<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.AlertController"
+<VBox xmlns:fx="http://javafx.com/fxml" fx:id="rootPane" fx:controller="smartfarm.ui.AlertController"
       spacing="14" styleClass="content-pane">
 
     <!-- ═══════════════ LIST SECTION (Filters, Cards, Table) ═══════════════ -->
-    <VBox spacing="14" VBox.vgrow="ALWAYS">
+    <VBox fx:id="listSection" spacing="14" VBox.vgrow="ALWAYS">
         <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
         <!-- Filters bar: FlowPane wraps controls onto multiple rows on narrow screens. -->
