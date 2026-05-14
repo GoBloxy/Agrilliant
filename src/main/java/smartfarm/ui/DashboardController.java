@@ -1,6 +1,7 @@
 package smartfarm.ui;
 
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -95,6 +96,19 @@ public class DashboardController {
     private ContextMenu userMenu;
     private Button activeNavButton;
     private smartfarm.model.User currentUser;
+
+    // ─── B9 lifecycle handles ──────────────────────────────────────
+    // Promoted to fields so stopLifecycle() can cleanly tear them
+    // down. The shell caches this controller for the JVM lifetime
+    // today so they never actually leak, but having the hook in place
+    // means Phase 2's LifecycleService.PAUSE wiring (Hagag-track) is
+    // a one-line addition on ShellView's side rather than a refactor.
+    private javafx.animation.Timeline clock;
+    private ChangeListener<Number>  liveTempListener;
+    private ChangeListener<Number>  liveHumListener;
+    private ChangeListener<Number>  liveSoilListener;
+    private ChangeListener<String>  liveDeviceListener;
+    private ChangeListener<Number>  activeSensorsListener;
 
     // DAOs
     private final AlertDAO alertDAO = new AlertDAO();
@@ -674,11 +688,17 @@ public class DashboardController {
     // ═══════════════ DATE/TIME ═══════════════
 
     private void updateDateTime() {
-        javafx.animation.Timeline clock = new javafx.animation.Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.ZERO, e -> {
-            LocalDateTime now = LocalDateTime.now();
-            lblDate.setText(now.format(DateTimeFormatter.ofPattern("MMM d, yyyy")));
-            lblTime.setText(now.format(DateTimeFormatter.ofPattern("hh:mm:ss a")));
-        }), new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1)));
+        // B9: keep the Timeline reachable via the `clock` field so
+        // stopLifecycle() can pause it. Idempotent — re-entering does
+        // not start a second timeline.
+        if (clock != null) return;
+        clock = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.ZERO, e -> {
+                    LocalDateTime now = LocalDateTime.now();
+                    lblDate.setText(now.format(DateTimeFormatter.ofPattern("MMM d, yyyy")));
+                    lblTime.setText(now.format(DateTimeFormatter.ofPattern("hh:mm:ss a")));
+                }),
+                new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1)));
         clock.setCycleCount(javafx.animation.Animation.INDEFINITE);
         clock.play();
     }
@@ -724,9 +744,10 @@ public class DashboardController {
 
         LiveSensorData live = LiveSensorData.getInstance();
         updateSensorDot(live.activeSensorsProperty().get());
-        live.activeSensorsProperty().addListener((obs, oldVal, newVal) ->
-            updateSensorDot(newVal.intValue())
-        );
+        if (activeSensorsListener == null) {
+            activeSensorsListener = (obs, oldVal, newVal) -> updateSensorDot(newVal.intValue());
+            live.activeSensorsProperty().addListener(activeSensorsListener);
+        }
     }
 
     private void updateSensorDot(int count) {
@@ -739,10 +760,19 @@ public class DashboardController {
     private void subscribeLiveSensor() {
         LiveSensorData live = LiveSensorData.getInstance();
 
-        live.temperatureProperty().addListener((obs, oldVal, newVal) -> updateTemperature(newVal.floatValue()));
-        live.humidityProperty().addListener((obs, oldVal, newVal) -> updateHumidity(newVal.floatValue()));
-        live.soilMoistureProperty().addListener((obs, oldVal, newVal) -> updateSoilMoisture(newVal.floatValue()));
-        live.deviceIdProperty().addListener((obs, oldVal, newVal) -> updatePlotLabels(newVal));
+        // B9: capture listener instances so stopLifecycle() can detach.
+        // Guard against a double-subscribe (e.g. if startLifecycle
+        // is called twice without an intervening stop).
+        if (liveTempListener == null) {
+            liveTempListener   = (obs, oldVal, newVal) -> updateTemperature(newVal.floatValue());
+            liveHumListener    = (obs, oldVal, newVal) -> updateHumidity(newVal.floatValue());
+            liveSoilListener   = (obs, oldVal, newVal) -> updateSoilMoisture(newVal.floatValue());
+            liveDeviceListener = (obs, oldVal, newVal) -> updatePlotLabels(newVal);
+            live.temperatureProperty().addListener(liveTempListener);
+            live.humidityProperty().addListener(liveHumListener);
+            live.soilMoistureProperty().addListener(liveSoilListener);
+            live.deviceIdProperty().addListener(liveDeviceListener);
+        }
 
         float t = live.temperatureProperty().get();
         float h = live.humidityProperty().get();
@@ -752,6 +782,50 @@ public class DashboardController {
         if (!Float.isNaN(h)) updateHumidity(h);
         if (!Float.isNaN(s)) updateSoilMoisture(s);
         if (dev != null && !dev.equals("--")) updatePlotLabels(dev);
+    }
+
+    /**
+     * B9 lifecycle teardown — stops the clock Timeline and detaches all
+     * listeners from the shared {@code LiveSensorData} singleton.
+     *
+     * <p>Idempotent: safe to call multiple times in a row, or before
+     * lifecycle has started. Pairs naturally with a future
+     * {@code startLifecycle()} that re-runs {@link #updateDateTime()}
+     * + {@link #subscribeLiveSensor()} + {@link #updateSidebarStatus()}.
+     *
+     * <p>Not called automatically by {@code ShellView} today because the
+     * shell caches this controller for the JVM lifetime (only one
+     * dashboard ever lives). Phase 2's Gluon Attach {@code LifecycleService}
+     * integration is the intended trigger: wire {@code PAUSE} →
+     * {@code stopLifecycle()} and {@code RESUME} → a re-attach hook so
+     * the dashboard goes idle while the OS has the app backgrounded.
+     */
+    public void stopLifecycle() {
+        if (clock != null) {
+            clock.stop();
+            clock = null;
+        }
+        LiveSensorData live = LiveSensorData.getInstance();
+        if (liveTempListener != null) {
+            live.temperatureProperty().removeListener(liveTempListener);
+            liveTempListener = null;
+        }
+        if (liveHumListener != null) {
+            live.humidityProperty().removeListener(liveHumListener);
+            liveHumListener = null;
+        }
+        if (liveSoilListener != null) {
+            live.soilMoistureProperty().removeListener(liveSoilListener);
+            liveSoilListener = null;
+        }
+        if (liveDeviceListener != null) {
+            live.deviceIdProperty().removeListener(liveDeviceListener);
+            liveDeviceListener = null;
+        }
+        if (activeSensorsListener != null) {
+            live.activeSensorsProperty().removeListener(activeSensorsListener);
+            activeSensorsListener = null;
+        }
     }
 
     private void updateTemperature(float t) {

@@ -1,5 +1,6 @@
 package smartfarm.ui;
 
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -45,6 +46,16 @@ public class MonitoringController {
     @FXML private PieChart statusChart;
     @FXML private Label lblNormalCount, lblWarningCount, lblCriticalCount, lblOfflineCount;
 
+    // ─── B9 lifecycle: keep listener references so subscribeLiveSensor's
+    //     side effects on the shared LiveSensorData singleton can be
+    //     undone when this controller's scene graph is unmounted (e.g.
+    //     when DashboardController.loadFxmlPage swaps in a different
+    //     page). Without this, every visit to the Monitoring tab leaks
+    //     one set of listeners and keeps the old controller alive. ─
+    private ChangeListener<Number> tempListener;
+    private ChangeListener<Number> humListener;
+    private ChangeListener<Number> soilListener;
+
     @FXML
     public void initialize() {
         // Initialize ComboBoxes
@@ -69,23 +80,55 @@ public class MonitoringController {
     private void subscribeLiveSensor() {
         LiveSensorData live = LiveSensorData.getInstance();
 
-        live.temperatureProperty().addListener((obs, oldVal, newVal) -> {
+        tempListener = (obs, oldVal, newVal) -> {
             float t = newVal.floatValue();
             lblTemp.setText(String.format("%.1f°C", t));
             lblTempSub.setText(t > 35 ? "High" : t < 10 ? "Low" : "Normal");
-        });
-
-        live.humidityProperty().addListener((obs, oldVal, newVal) -> {
+        };
+        humListener = (obs, oldVal, newVal) -> {
             float h = newVal.floatValue();
             lblHum.setText(String.format("%.0f%%", h));
             lblHumSub.setText(h > 80 ? "High" : h < 30 ? "Low" : "Normal");
-        });
-
-        live.soilMoistureProperty().addListener((obs, oldVal, newVal) -> {
+        };
+        soilListener = (obs, oldVal, newVal) -> {
             float s = newVal.floatValue();
             lblSoil.setText(String.format("%.0f%%", s));
             lblSoilSub.setText(s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal");
+        };
+
+        live.temperatureProperty().addListener(tempListener);
+        live.humidityProperty().addListener(humListener);
+        live.soilMoistureProperty().addListener(soilListener);
+
+        // B9 lifecycle: auto-detach when this controller's scene graph is
+        // unmounted. DashboardController.loadFxmlPage replaces the page
+        // root's parent's children, which clears the scene from this
+        // subtree. sceneProperty fires once (old → null) at that point;
+        // we react by removing our listeners from the LiveSensorData
+        // singleton so the controller becomes GC-eligible. The scene
+        // listener itself is owned by lblTemp, which is GC'd with the
+        // rest of the subtree — no chain-of-references leak.
+        lblTemp.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) {
+                unsubscribeLiveSensor();
+            }
         });
+    }
+
+    private void unsubscribeLiveSensor() {
+        LiveSensorData live = LiveSensorData.getInstance();
+        if (tempListener != null) {
+            live.temperatureProperty().removeListener(tempListener);
+            tempListener = null;
+        }
+        if (humListener != null) {
+            live.humidityProperty().removeListener(humListener);
+            humListener = null;
+        }
+        if (soilListener != null) {
+            live.soilMoistureProperty().removeListener(soilListener);
+            soilListener = null;
+        }
     }
 
     private void setupTrendChart() {

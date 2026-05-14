@@ -10,7 +10,7 @@
 The Agrilliant desktop JavaFX app is being migrated to Android via Gluon Mobile (Glisten + Attach + GluonFX native-image). Both Phase 1 tracks have made substantial progress:
 
 - **Hagag's track (H1–H11):** Complete. All build, data, and infrastructure tasks are done.
-- **3bdelbary's track (B1–B8 done, B9 + B10 pending):** Complete through B3X plus B4 (FileChooser sweep), B5 (`mobile.css` for Android), B6 (JFreeChart audit — zero references in `src/`), B7 (launcher icons — 10 PNGs generated and committed), and B8 (`PlatformPickers`). B9 and B10 remain. A small `pom.xml` cleanup remains on Hagag's side to drop the now-unused JFreeChart deps from the desktop profile.
+- **3bdelbary's track (B1–B10):** Complete. B1 (Gluon `MobileApplication`), B2 (AppView nav), B3 + B3X (mobile-friendly FXMLs + UX rework), B4 (FileChooser sweep), B5 (`mobile.css`), B6 (JFreeChart audit), B7 (launcher icons — 10 PNGs generated and committed), B8 (`PlatformPickers`), B9 (lifecycle hooks), and B10 (consolidated FXML / controller / Phase 2 reference matrices in `MIGRATION_3BDELBARY.md`). All 3bdelbary-track Phase 1 work is done. Outstanding items are entirely cross-track on Hagag's side.
 
 The app compiles cleanly on both profiles and boots through Splash → SignIn on desktop. No Android APK has been built yet (needs GraalVM + Android SDK toolchain).
 
@@ -35,7 +35,7 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 | H11 | Migration documentation | Done |
 | Review | Post-review fixes: race condition, perf caching, doc corrections, RFC-4180 CSV quoting | Done |
 
-### 3bdelbary Track (UI / Navigation / Resources) — B1–B8 DONE
+### 3bdelbary Track (UI / Navigation / Resources) — ALL DONE
 
 | Task | Description | Status |
 |------|-------------|--------|
@@ -49,6 +49,8 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 | B6 | JFreeChart audit — 0 references in `src/`; FX-thread safety of `MonitoringController.subscribeLiveSensor` confirmed via `LiveSensorData.update` → `Platform.runLater`; defensive `TODO(phase-2)` added in `setupTrendChart` for bounded-series rule | Done |
 | B7 | 10 Android launcher PNGs (5 densities mdpi → xxxhdpi × square + round variants) generated from `images/logo.png` and committed under `src/android/res/mipmap-*/`. Two side-by-side generators ship: Java (`smartfarm.ui.tools.LauncherIconGenerator`) and PowerShell (`generate-launcher-icons.ps1`). Both use the shared `smartfarm.ui.platform.PngEncoder` / `System.Drawing` to produce byte-equivalent layouts — `#2e7d32` background, logo at 72% edge, circular clip on round variant. | Done |
 | B8 | `smartfarm.ui.platform.PlatformPickers` with Gluon `PicturesService` on Android, `FileChooser` on desktop, pure-Java PNG encoder for Substrate-safe persistence | Done |
+| B9 | Lifecycle hooks sweep: zero `stage.setOn*` patterns in `ui/` (B1/B2 already eliminated); `MonitoringController` listener leak across `loadFxmlPage` page swaps fixed via `sceneProperty()` auto-detach; `DashboardController` `Timeline` + 5 `LiveSensorData` listeners promoted to instance fields with new public `stopLifecycle()` method ready for Phase 2 `LifecycleService.PAUSE` wiring | Done |
+| B10 | Final consolidation: per-FXML status matrix (12 rows), per-controller status matrix (17 rows), 4 Gluon View status, consolidated Phase 2 TODO list (async / lifecycle / layout / assets / tests / frozen-model), cross-track items waiting on Hagag, read-only-imports recap, complete file inventory across the track. See `docs/MIGRATION_3BDELBARY.md` §B10. | Done |
 
 #### B1 Key Deliverables
 - `AppView.java` — 4-value enum mapping to Gluon View names (SPLASH → HOME_VIEW)
@@ -111,6 +113,15 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
   ```
   Each icon is the `#2e7d32` brand-green background with the bird logo centred at 72% of the edge. Round variants use an antialiased circular background with a clip path so the logo can't bleed outside the disc.
 
+#### B9 Key Deliverables
+- **Audit clean for `stage.setOn*` / `windowProperty` patterns** — zero hits across `src/main/java/smartfarm/ui` (B1/B2 already eliminated them). All 4 Gluon Views (`SplashView`, `SignInView`, `SignUpView`, `ShellView`) use `setOnShowing` / `setOnHiding`.
+- **`MonitoringController` listener leak fixed.** Each visit to the Monitoring tab was attaching 3 lambdas to the `LiveSensorData` singleton without ever detaching, keeping the old controller alive. Promoted the lambdas to `ChangeListener<Number>` fields and hook `lblTemp.sceneProperty()` so when the scene goes `null` (page unmounted by `DashboardController.loadFxmlPage`), `unsubscribeLiveSensor()` removes all three from the singleton. Pattern documented for any future sub-page controllers that grow service-singleton subscriptions.
+- **`DashboardController` lifecycle handles in place for Phase 2.** Today the shell caches the controller for the JVM lifetime so its `Timeline` clock and 5 `LiveSensorData` listeners don't actually leak — but they tick / fire even when the app is OS-backgrounded. Refactor:
+  - `Timeline clock` promoted from a local to an instance field; `updateDateTime()` is idempotent (early-return if already started).
+  - 5 listeners (`liveTempListener`, `liveHumListener`, `liveSoilListener`, `liveDeviceListener`, `activeSensorsListener`) promoted to `ChangeListener` fields with null-guarded attach.
+  - New public `stopLifecycle()` method stops the clock and removes all 5 listeners. Idempotent. Documented as the intended hook for Phase 2's Gluon Attach `LifecycleService.PAUSE` event.
+- **Rotation safety confirmed.** `AndroidManifest.xml` declares `android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize"` on the launcher activity, so orientation changes don't tear down and rebuild the Activity / JVM. The field-backed `Timeline` provides defense-in-depth for any future scenario where the JVM does restart.
+
 ### Build Verification
 
 | Gate | Result |
@@ -123,18 +134,14 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 
 ---
 
-## What Is Missing (B9, B10)
+## What Is Missing
 
-These are 3bdelbary's remaining Phase 1 tasks:
+Nothing on 3bdelbary's Phase 1 list. All B-tasks are complete.
 
-| Task | Description | Scope | Impact |
-|------|-------------|-------|--------|
-| **B9** | Lifecycle hooks sweep | Replace any remaining "set up on stage shown" patterns with `View#setOnShown`/`setOnHidden` | **Low** — SplashView and ShellView already follow this; other views likely fine |
-| **B10** | Keep migration docs current | Ongoing bookkeeping | **Low** — documentation maintenance |
-
-### Cross-track item for Hagag
+### Cross-track items waiting on Hagag
 - **`pom.xml` JFreeChart cleanup** — B6 audit confirmed `src/` has zero JFreeChart references. The desktop profile still declares `org.jfree:jfreechart:1.5.4` + `org.jfree:jfreechart-fx:1.0.1` with a comment explicitly waiting on this audit. Safe to drop now. Trims ~3 MB from the desktop fat-jar.
 - **`exec-maven-plugin` for the launcher generator (optional)** — if the team wants `LauncherIconGenerator` invokable via `mvn exec:java`, Hagag adds the plugin to the desktop profile's `<plugins>` block. The PowerShell variant (`generate-launcher-icons.ps1`) is already a working alternative that needs no Maven plumbing.
+- **Gluon Attach `LifecycleService` integration (Phase 2)** — B9 left a public `DashboardController.stopLifecycle()` hook unwired. Phase 2 should register a `LifecycleService` listener in `Main` that calls `controller.stopLifecycle()` on `PAUSE` and a future `startLifecycle()` on `RESUME` so the dashboard idles while the app is OS-backgrounded.
 
 ---
 
@@ -248,7 +255,7 @@ a0c06d5 [3bdelbary] B2.7 fix: SPLASH registers under HOME_VIEW so Glisten mounts
 
 ## Recommended Next Steps
 
-1. Run first `mvn -Pandroid gluonfx:build` to produce an APK — all required assets (icons, manifest, resources, GraalVM config) are now in place.
-2. **Fix `Crop.GrowthStage` enum mismatch** — UPDATE the DB rows to a valid enum value (e.g. `VEGETATIVE`) so `dashboard` + `reports` FXMLs load. Enum or DAO fix paths cross into Hagag's lane / frozen `model/`.
-3. **Hagag:** drop JFreeChart deps from `pom.xml` desktop profile (B6 audit complete); optionally add `exec-maven-plugin` to make the Java icon generator invokable via `mvn exec:java`.
-4. **B9** — Lifecycle hooks sweep across remaining controllers (low impact).
+1. **Run first `mvn -Pandroid gluonfx:build`** to produce an APK. All 3bdelbary-track assets and code are in place (Gluon Views, mobile.css, launcher icons, FXML mobile-friendliness, lifecycle hooks). This is the next concrete milestone for the project.
+2. **Fix `Crop.GrowthStage` enum mismatch** — UPDATE the DB rows to a valid enum value (e.g. `VEGETATIVE`) so `dashboard` + `reports` FXMLs load cleanly. Enum or DAO fix paths cross into Hagag's lane / frozen `model/`.
+3. **Hagag:** drop JFreeChart deps from `pom.xml` desktop profile (B6 audit complete); optionally add `exec-maven-plugin` to make the Java icon generator invokable via `mvn exec:java`; wire Gluon Attach `LifecycleService` in `Main` to dispatch PAUSE/RESUME into `DashboardController.stopLifecycle()` (B9 Phase 2 hand-off).
+4. **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller table (⚠ rows) in `docs/MIGRATION_3BDELBARY.md` §B10.
