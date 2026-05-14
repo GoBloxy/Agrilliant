@@ -4,9 +4,10 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import com.gluonhq.charm.glisten.control.CharmListView?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.LogsController"
-      spacing="16" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+      spacing="16" styleClass="content-pane">
     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
     <HBox alignment="CENTER_LEFT" spacing="12">
@@ -87,14 +88,6 @@
     <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
         <Label text="System Logs" styleClass="card-title"/>
-        <TableView fx:id="logTable" VBox.vgrow="ALWAYS" prefHeight="400">
-            <columns>
-                <TableColumn fx:id="colTimestamp" text="Timestamp"  prefWidth="150"/>
-                <TableColumn fx:id="colType"      text="Type"       prefWidth="80"/>
-                <TableColumn fx:id="colSource"    text="Source"     prefWidth="120"/>
-                <TableColumn fx:id="colMessage"   text="Message"    prefWidth="280"/>
-                <TableColumn fx:id="colUser"      text="User"       prefWidth="100"/>
-            </columns>
-        </TableView>
+        <CharmListView fx:id="logList" VBox.vgrow="ALWAYS"/>
     </VBox>
 </VBox>
