@@ -25,6 +25,10 @@
         
         <Region HBox.hgrow="ALWAYS"/>
         
+        <Button fx:id="btnRefreshCards" onAction="#onRefreshCards" styleClass="btn-secondary">
+            <tooltip><Tooltip text="Refresh sensor cards now"/></tooltip>
+            <graphic><FontIcon iconLiteral="fth-refresh-cw" iconSize="14"/></graphic>
+        </Button>
         <MenuButton fx:id="btnAutoRefresh" text="Auto Refresh" styleClass="btn-secondary">
             <graphic><FontIcon iconLiteral="fth-refresh-cw" iconSize="14"/></graphic>
             <items>

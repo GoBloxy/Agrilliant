@@ -945,26 +945,11 @@ public class DashboardController {
 
     /**
      * Populates the Live Environmental Monitor cards.
-     * Reads from LiveSensorData (in-memory, real-time) first; falls back to
-     * the most recent DB row if no live data has arrived yet (e.g. on first load
-     * before the first TCP/MQTT message is processed).
+     * Always queries the DB first — the DB is shared across all machines so remote
+     * clients get the latest persisted reading even if their LiveSensorData is stale.
+     * Falls back to in-memory LiveSensorData if the DB returns nothing.
      */
     private void refreshSensorLabels() {
-        LiveSensorData live = LiveSensorData.getInstance();
-        float t = live.temperatureProperty().get();
-        float h = live.humidityProperty().get();
-        float s = live.soilMoistureProperty().get();
-        String dev = live.deviceIdProperty().get();
-
-        if (!Float.isNaN(t) && !Float.isNaN(h)) {
-            updateTemperature(t);
-            updateHumidity(h);
-            if (!Float.isNaN(s)) updateSoilMoisture(s);
-            if (dev != null && !dev.equals("--")) updatePlotLabels(dev);
-            return;
-        }
-
-        // Live data not available yet — pull the most recent row from DB
         try {
             List<SensorReading> recent = sensorDAO.getRecent(1);
             if (!recent.isEmpty()) {
@@ -972,10 +957,22 @@ public class DashboardController {
                 updateTemperature(r.getTemperature());
                 updateHumidity(r.getHumidity());
                 if (!Float.isNaN(r.getSoilMoisture())) updateSoilMoisture(r.getSoilMoisture());
+                return;
             }
         } catch (SQLException e) {
-            System.err.println("refreshSensorLabels: DB fallback failed: " + e.getMessage());
+            System.err.println("refreshSensorLabels: DB query failed: " + e.getMessage());
         }
+
+        // Fallback to in-memory live data
+        LiveSensorData live = LiveSensorData.getInstance();
+        float t = live.temperatureProperty().get();
+        float h = live.humidityProperty().get();
+        float s = live.soilMoistureProperty().get();
+        String dev = live.deviceIdProperty().get();
+        if (!Float.isNaN(t)) updateTemperature(t);
+        if (!Float.isNaN(h)) updateHumidity(h);
+        if (!Float.isNaN(s)) updateSoilMoisture(s);
+        if (dev != null && !dev.equals("--")) updatePlotLabels(dev);
     }
 
     private void subscribeLiveSensor() {
@@ -998,6 +995,24 @@ public class DashboardController {
                 tempSeries.setName(newVal ? "Temperature (°F)" : "Temperature (°C)");
             }
         });
+
+        // Polling fallback for remote clients: ChangeListeners only fire on value change,
+        // so if the same reading arrives twice (stable environment) the cards go stale.
+        // This Timeline re-applies whatever is in LiveSensorData every 5 seconds.
+        javafx.animation.Timeline sensorPoll = new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(javafx.util.Duration.seconds(5), e -> {
+                float t2 = live.temperatureProperty().get();
+                float h2 = live.humidityProperty().get();
+                float s2 = live.soilMoistureProperty().get();
+                String dev2 = live.deviceIdProperty().get();
+                if (!Float.isNaN(t2)) updateTemperature(t2);
+                if (!Float.isNaN(h2)) updateHumidity(h2);
+                if (!Float.isNaN(s2)) updateSoilMoisture(s2);
+                if (dev2 != null && !dev2.equals("--")) updatePlotLabels(dev2);
+            })
+        );
+        sensorPoll.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        sensorPoll.play();
 
         float t = live.temperatureProperty().get();
         float h = live.humidityProperty().get();

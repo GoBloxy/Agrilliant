@@ -23,6 +23,8 @@ import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
 
 import java.sql.SQLException;
+
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,6 +39,7 @@ public class MonitoringController {
     @FXML private ComboBox<String> cmbPlots;
     @FXML private DatePicker datePicker;
     @FXML private MenuButton btnAutoRefresh;
+    @FXML private Button btnRefreshCards;
 
     @FXML private Label lblTemp, lblTempSub;
     @FXML private Label lblHum, lblHumSub;
@@ -191,6 +194,56 @@ public class MonitoringController {
         });
 
         // Show current values immediately
+        float t = live.temperatureProperty().get();
+        float h = live.humidityProperty().get();
+        float s = live.soilMoistureProperty().get();
+        if (!Float.isNaN(t)) { lblTemp.setText(String.format("%.1f", t)); lblTempSub.setText(t > 35 ? "High" : t < 10 ? "Low" : "Normal"); }
+        if (!Float.isNaN(h)) { lblHum.setText(String.format("%.0f", h)); lblHumSub.setText(h > 80 ? "High" : h < 30 ? "Low" : "Normal"); }
+        if (!Float.isNaN(s)) { lblSoil.setText(String.format("%.0f", s)); lblSoilSub.setText(s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal"); }
+
+        // Polling fallback for remote clients: re-applies LiveSensorData every 5s
+        // so cards stay current even when the same value arrives repeatedly.
+        Timeline livePoll = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
+            float t2 = live.temperatureProperty().get();
+            float h2 = live.humidityProperty().get();
+            float s2 = live.soilMoistureProperty().get();
+            if (!Float.isNaN(t2)) { lblTemp.setText(String.format("%.1f", t2)); lblTempSub.setText(t2 > 35 ? "High" : t2 < 10 ? "Low" : "Normal"); }
+            if (!Float.isNaN(h2)) { lblHum.setText(String.format("%.0f", h2)); lblHumSub.setText(h2 > 80 ? "High" : h2 < 30 ? "Low" : "Normal"); }
+            if (!Float.isNaN(s2)) { lblSoil.setText(String.format("%.0f", s2)); lblSoilSub.setText(s2 < 30 ? "Dry" : s2 > 85 ? "Wet" : "Normal"); }
+        }));
+        livePoll.setCycleCount(Animation.INDEFINITE);
+        livePoll.play();
+    }
+
+    // ═══════════════ MANUAL REFRESH ═══════════════
+
+    @FXML
+    private void onRefreshCards() {
+        refreshCards();
+    }
+
+    /**
+     * Refresh the top summary cards from the DB — reliable for remote clients
+     * since the DB is shared. Falls back to in-memory LiveSensorData if no DB row exists.
+     */
+    private void refreshCards() {
+        try {
+            SensorDAO dao = new SensorDAO();
+            List<SensorReading> recent = dao.getRecent(1);
+            if (!recent.isEmpty()) {
+                SensorReading r = recent.get(0);
+                float t = r.getTemperature();
+                float h = r.getHumidity();
+                float s = r.getSoilMoisture();
+                if (!Float.isNaN(t)) { lblTemp.setText(String.format("%.1f", t)); lblTempSub.setText(t > 35 ? "High" : t < 10 ? "Low" : "Normal"); }
+                if (!Float.isNaN(h)) { lblHum.setText(String.format("%.0f", h)); lblHumSub.setText(h > 80 ? "High" : h < 30 ? "Low" : "Normal"); }
+                if (!Float.isNaN(s)) { lblSoil.setText(String.format("%.0f", s)); lblSoilSub.setText(s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal"); }
+                return;
+            }
+        } catch (SQLException e) {
+            System.err.println("refreshCards: DB query failed: " + e.getMessage());
+        }
+        LiveSensorData live = LiveSensorData.getInstance();
         float t = live.temperatureProperty().get();
         float h = live.humidityProperty().get();
         float s = live.soilMoistureProperty().get();

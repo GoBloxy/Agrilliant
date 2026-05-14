@@ -67,6 +67,9 @@ public class FingerprintService {
             String resp = waitForResponse("PONG", 3000);
             if (resp != null) {
                 connected = true;
+                // Lock R307 immediately — prevents autonomous check-in scan from firing
+                // during the window between connect() and the user placing their finger.
+                try { sendLine("LOCK"); waitForResponse("LOCKED", 2000); } catch (Exception ignored) {}
                 System.out.println("ESP32 connected on " + portName);
                 return true;
             }

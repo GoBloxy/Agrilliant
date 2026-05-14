@@ -497,17 +497,39 @@ void handleScan() {
     }
 
     p = finger.fingerSearch();
-    if (p != FINGERPRINT_OK) {
-        Serial.println("SCAN_FAIL:Not recognized");
-        showOLED("[Login Scan]", "Not recognized!");
+    if (p == FINGERPRINT_OK) {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "ID: %d  Conf: %d", finger.fingerID, finger.confidence);
+        Serial.println("SCAN_OK:" + String(finger.fingerID) + "," + String(finger.confidence));
+        showOLED("[Login Scan]", "Match found!", buf);
         delay(1500);
         return;
     }
 
-    char buf[32];
-    snprintf(buf, sizeof(buf), "ID: %d  Conf: %d", finger.fingerID, finger.confidence);
-    Serial.println("SCAN_OK:" + String(finger.fingerID) + "," + String(finger.confidence));
-    showOLED("[Login Scan]", "Match found!", buf);
+    // First search failed — give one retry: lift finger and scan again
+    showOLED("[Login Scan]", "Retry scan...");
+    start = millis();
+    while (millis() - start < 3000 && finger.getImage() != FINGERPRINT_NOFINGER) delay(100);
+
+    showOLED("[Login Scan]", "Place again...");
+    start = millis();
+    p = FINGERPRINT_NOFINGER;
+    while (millis() - start < 8000) {
+        p = finger.getImage();
+        if (p == FINGERPRINT_OK) break;
+        delay(100);
+    }
+    if (p == FINGERPRINT_OK && finger.image2Tz() == FINGERPRINT_OK && finger.fingerSearch() == FINGERPRINT_OK) {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "ID: %d  Conf: %d", finger.fingerID, finger.confidence);
+        Serial.println("SCAN_OK:" + String(finger.fingerID) + "," + String(finger.confidence));
+        showOLED("[Login Scan]", "Match found!", buf);
+        delay(1500);
+        return;
+    }
+
+    Serial.println("SCAN_FAIL:Not recognized");
+    showOLED("[Login Scan]", "Not recognized!");
     delay(1500);
 }
 

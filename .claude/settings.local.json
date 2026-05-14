@@ -3,7 +3,8 @@
     "allow": [
       "Bash(rtk find *)",
       "Bash(dir \"D:\\\\University\\\\Agrilliant\\\\src\\\\main\\\\java\\\\smartfarm\\\\ui\")",
-      "Skill(superpowers:systematic-debugging)"
+      "Skill(superpowers:systematic-debugging)",
+      "Bash(rtk ls *)"
     ]
   }
 }
