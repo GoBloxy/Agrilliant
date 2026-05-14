@@ -1,0 +1,3 @@
+[submodule "superpowers-mcp"]
+	path = superpowers-mcp
+	url = https://github.com/erophames/superpowers-mcp.git
