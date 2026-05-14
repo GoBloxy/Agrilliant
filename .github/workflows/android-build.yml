@@ -1,0 +1,289 @@
+# =============================================================================
+# Android APK build — GitHub Actions
+#
+# Builds the Agrilliant Android APK on a Linux runner using GluonFX, so
+# Windows-host developers can produce APKs without needing WSL / Linux locally.
+#
+# Triggers:
+#   - Manual:        Actions tab → "Android APK Build" → Run workflow
+#   - Push:          mobile-app branch (only when build-relevant files change)
+#
+# Outputs:
+#   - APK uploaded as the `agrilliant-apk` artifact, downloadable from the
+#     workflow run summary for 14 days.
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions):
+#   DB_URL                  e.g. jdbc:mysql://139.59.153.80:3306/agrilliant?useSSL=false&serverTimezone=UTC
+#   DB_USER                 your MySQL user
+#   DB_PASSWORD             your MySQL password
+#   MQTT_BROKER             e.g. ssl://abc123.s1.eu.hivemq.cloud:8883
+#   MQTT_USERNAME           HiveMQ Cloud user (empty for open brokers)
+#   MQTT_PASSWORD           HiveMQ Cloud pass (empty for open brokers)
+#   CROP_HEALTH_API_KEY     Kindwise crop.health API key
+#
+# Optional Secrets (leave blank for defaults):
+#   MQTT_TOPIC_PREFIX       default "agrilliant/sensors"
+#   MQTT_CLIENT_ID_PREFIX   default "agrilliant-"
+#   MQTT_QOS                default "1"
+#
+# Notes:
+#   - Free-tier ubuntu-latest runners have 7 GB RAM. GraalVM native-image
+#     AOT for a JavaFX app may OOM on 7 GB. If you see OOMKilled, switch
+#     the `runs-on` line below to a paid 16 GB runner (ubuntu-latest-l).
+#   - First build is slow (~20–40 min) because native-image downloads ~600 MB
+#     of cached AOT data. Subsequent builds with the cache are ~10–15 min.
+#   - APK is debug-signed by GluonFX's bundled key; fine for sideload testing,
+#     not for Play Store upload.
+# =============================================================================
+name: Android APK Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply_sql_migration:
+        description: "Skip native test — APK still depends on the GROWING→VEGETATIVE SQL on your MySQL"
+        required: false
+        default: "false"
+  push:
+    branches: [mobile-app]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/android-build.yml'
+
+permissions:
+  contents: read
+
+env:
+  GRAALVM_VERSION: '21.0.2'           # GraalVM CE Java version
+  GRAALVM_DISTRIBUTION: 'graalvm-community'
+  ANDROID_SDK_PLATFORM: '34'
+  ANDROID_BUILD_TOOLS: '34.0.0'
+  ANDROID_NDK_VERSION: '26.1.10909125'
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+
+    steps:
+      # -----------------------------------------------------------------
+      # 1. Checkout
+      # -----------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # -----------------------------------------------------------------
+      # 2. Linux build deps (GluonFX Substrate native-image prerequisites)
+      # -----------------------------------------------------------------
+      - name: Install apt build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            gcc g++ make pkg-config \
+            libstdc++-12-dev \
+            libfreetype6-dev libpango1.0-dev \
+            libx11-dev libxtst-dev libgtk-3-dev \
+            libavcodec-dev libavformat-dev libasound2-dev \
+            zlib1g-dev
+
+      # -----------------------------------------------------------------
+      # 3. GraalVM CE (native-image is bundled in CE 21+, no `components`)
+      # -----------------------------------------------------------------
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ env.GRAALVM_VERSION }}
+          distribution: ${{ env.GRAALVM_DISTRIBUTION }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+
+      - name: Verify GraalVM toolchain
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME"
+          echo "GRAALVM_HOME=$GRAALVM_HOME"
+          # gluonfx-maven-plugin specifically reads GRAALVM_HOME; setup-graalvm
+          # sets it but pin it explicitly in case of action version drift.
+          echo "GRAALVM_HOME=${GRAALVM_HOME:-$JAVA_HOME}" >> $GITHUB_ENV
+          java -version
+          native-image --version
+
+      # -----------------------------------------------------------------
+      # 4. Android SDK
+      # -----------------------------------------------------------------
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: >
+            platform-tools
+            platforms;android-${{ env.ANDROID_SDK_PLATFORM }}
+            build-tools;${{ env.ANDROID_BUILD_TOOLS }}
+            ndk;${{ env.ANDROID_NDK_VERSION }}
+
+      - name: Export ANDROID_NDK env var
+        run: echo "ANDROID_NDK=${ANDROID_HOME}/ndk/${{ env.ANDROID_NDK_VERSION }}" >> $GITHUB_ENV
+
+      # -----------------------------------------------------------------
+      # 5. Materialise gitignored .properties files from GitHub Secrets
+      # -----------------------------------------------------------------
+      - name: Generate src/main/resources/db.properties
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
+            echo "::error::Missing one of DB_URL / DB_USER / DB_PASSWORD secrets"
+            exit 1
+          fi
+          cat > src/main/resources/db.properties <<EOF
+          db.url=$DB_URL
+          db.user=$DB_USER
+          db.password=$DB_PASSWORD
+          EOF
+          echo "db.properties written ($(wc -c < src/main/resources/db.properties) bytes)"
+
+      - name: Generate src/main/resources/mqtt.properties
+        env:
+          MQTT_BROKER: ${{ secrets.MQTT_BROKER }}
+          MQTT_USERNAME: ${{ secrets.MQTT_USERNAME }}
+          MQTT_PASSWORD: ${{ secrets.MQTT_PASSWORD }}
+          MQTT_TOPIC_PREFIX: ${{ secrets.MQTT_TOPIC_PREFIX }}
+          MQTT_CLIENT_ID_PREFIX: ${{ secrets.MQTT_CLIENT_ID_PREFIX }}
+          MQTT_QOS: ${{ secrets.MQTT_QOS }}
+        run: |
+          if [ -z "$MQTT_BROKER" ]; then
+            echo "::warning::Missing MQTT_BROKER secret, using dummy value to prevent build failure"
+            MQTT_BROKER="tcp://127.0.0.1:1883"
+          fi
+          cat > src/main/resources/mqtt.properties <<EOF
+          mqtt.broker=$MQTT_BROKER
+          mqtt.topic.prefix=${MQTT_TOPIC_PREFIX:-agrilliant/sensors}
+          mqtt.client.id.prefix=${MQTT_CLIENT_ID_PREFIX:-agrilliant-}
+          mqtt.qos=${MQTT_QOS:-1}
+          mqtt.username=$MQTT_USERNAME
+          mqtt.password=$MQTT_PASSWORD
+          EOF
+          echo "mqtt.properties written ($(wc -c < src/main/resources/mqtt.properties) bytes)"
+
+      - name: Generate src/main/resources/crop-health.properties
+        env:
+          CROP_HEALTH_API_KEY: ${{ secrets.CROP_HEALTH_API_KEY }}
+        run: |
+          if [ -z "$CROP_HEALTH_API_KEY" ]; then
+            echo "::warning::CROP_HEALTH_API_KEY not set — disease-detection feature will be disabled in the APK"
+            CROP_HEALTH_API_KEY="DISABLED"
+          fi
+          cat > src/main/resources/crop-health.properties <<EOF
+          api.key=$CROP_HEALTH_API_KEY
+          EOF
+
+      # -----------------------------------------------------------------
+      # 6. Cheap gate — compile both profiles
+      # -----------------------------------------------------------------
+      - name: Sanity compile (desktop profile)
+        run: mvn -B -Pdesktop clean test-compile
+
+      - name: Sanity compile (android profile)
+        run: mvn -B -Pandroid clean compile
+
+      # -----------------------------------------------------------------
+      # 7. GluonFX AOT build (slow — 15–35 min depending on cache)
+      # -----------------------------------------------------------------
+      - name: GluonFX build (AOT native-image)
+        run: mvn -B -Pandroid gluonfx:build
+
+      # -----------------------------------------------------------------
+      # 7b. ON FAILURE: dump every gluonfx log inline (visible in Actions UI)
+      # -----------------------------------------------------------------
+      - name: Dump GluonFX process logs inline (on failure)
+        if: failure()
+        run: |
+          echo "::group::Directory listing of target/gluonfx"
+          find target/gluonfx -maxdepth 4 -type f 2>/dev/null | sort || true
+          echo "::endgroup::"
+
+          echo "::group::Last 200 lines of every *.log under target/gluonfx"
+          find target/gluonfx -name '*.log' 2>/dev/null | while read -r f; do
+            echo "────── $f ──────"
+            tail -n 200 "$f" 2>/dev/null || true
+            echo
+          done
+          echo "::endgroup::"
+
+          echo "::group::Last 100 lines of native-image text output (if any)"
+          find target/gluonfx -name 'native-image*' -type f 2>/dev/null | while read -r f; do
+            echo "────── $f ──────"
+            tail -n 100 "$f" 2>/dev/null || true
+            echo
+          done
+          echo "::endgroup::"
+
+      # -----------------------------------------------------------------
+      # 7c. ON FAILURE: upload the full log set as a debug artifact
+      # -----------------------------------------------------------------
+      - name: Upload GluonFX logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gluonfx-failure-logs
+          path: |
+            target/gluonfx/**/*.log
+            target/gluonfx/**/native-image*
+            target/gluonfx/**/svm_err_*
+            target/gluonfx/**/*.json
+          retention-days: 14
+          if-no-files-found: warn
+
+      # -----------------------------------------------------------------
+      # 8. Package APK
+      # -----------------------------------------------------------------
+      - name: GluonFX package (APK)
+        run: mvn -B -Pandroid gluonfx:package
+
+      # -----------------------------------------------------------------
+      # 9. Locate and upload the APK
+      # -----------------------------------------------------------------
+      - name: Locate APK
+        id: locate
+        run: |
+          APK_PATH=$(find target/gluonfx -name '*.apk' -print -quit)
+          if [ -z "$APK_PATH" ]; then
+            echo "::error::No APK found under target/gluonfx — gluonfx:package may have failed"
+            find target/gluonfx -maxdepth 3 -type f
+            exit 1
+          fi
+          echo "Found: $APK_PATH ($(du -h "$APK_PATH" | cut -f1))"
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "apk_name=$(basename "$APK_PATH")" >> $GITHUB_OUTPUT
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agrilliant-apk
+          path: ${{ steps.locate.outputs.apk_path }}
+          retention-days: 14
+          if-no-files-found: error
+
+      # -----------------------------------------------------------------
+      # 10. Job summary
+      # -----------------------------------------------------------------
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "# Agrilliant Android Build"
+            echo ""
+            echo "**APK:** \`${{ steps.locate.outputs.apk_name }}\`"
+            echo ""
+            echo "**Status:** ${{ job.status }}"
+            echo ""
+            echo "## Next steps"
+            echo "1. Download the \`agrilliant-apk\` artifact from this run."
+            echo "2. Apply the SQL migration on your MySQL: \`docs/sql/2026-05-14-fix-growthstage-growing.sql\`"
+            echo "3. \`adb install <downloaded-apk>\` on a device with USB debugging on."
+            echo "4. Stream logs while testing: \`adb logcat -s GraalVM:V GluonAttach:V Agrilliant:V\`"
+          } >> $GITHUB_STEP_SUMMARY
