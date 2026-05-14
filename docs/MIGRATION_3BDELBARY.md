@@ -64,13 +64,52 @@ The two interactive runtime checks (plan §13, §14) need to be done by you on a
 
 ---
 
-## Status of B2–B10
-- [ ] **B2** — Replace `Stage` navigation with `AppManager.switchView(...)`. ~17 controller touches. `NavContext` already in place (B1.1).
+## B2: Replace Stage navigation with AppManager switch — DONE ✅
+
+### Approach
+B2 in this codebase splits cleanly into two kinds of navigation:
+
+- **AppManager-level (top-of-stack swaps)** — Sign-In ↔ Sign-Up ↔ Shell ↔ logout. Three controllers had `stage.getScene().setRoot(loader.load(...))` patterns. All four nav paths now go through `AppView.<name>.switchTo()` (B1.2).
+- **Inner content swap inside the dashboard** — `DashboardController.loadFxmlPage(fxmlPath, navBtn)` swaps the inner `pageContainer.getChildren()`. This was never Stage-level — it just replaces a Node inside the existing scene. Left as-is for B2; B3/B4 may revisit when porting to mobile.
+
+### Files modified
+- `src/main/java/smartfarm/ui/views/ShellView.java` — was a stub Welcome label; now loads `dashboard.fxml`, caches the `DashboardController`, hides the Gluon AppBar while shell is on screen, and pushes the current user from `NavContext` on every `setOnShowing`.
+- `src/main/java/smartfarm/ui/SignInController.java` — `navigateToDashboard` is now `NavContext.get().setCurrentUser(user); AppView.SHELL.switchTo();`. `onGoToSignUp` is now `AppView.SIGNUP.switchTo()`. Dropped `javafx.stage.Stage`, `javafx.fxml.FXMLLoader`, `javafx.scene.Parent`, `javafx.scene.Scene` imports. `findWorkerByFingerprint` catch now uses `Logger.e(TAG, ..., e)` for consistency with the H5 sweep style.
+- `src/main/java/smartfarm/ui/SignUpController.java` — `onGoToSignIn` is now `AppView.SIGNIN.switchTo()`. Dropped same imports.
+- `src/main/java/smartfarm/ui/DashboardController.java` — `onLogout` is now `SessionManager.clearSession(); NavContext.get().clear(); AppView.SIGNIN.switchTo();`. Dropped `javafx.stage.Stage`, `javafx.scene.Parent` imports. (FXMLLoader stays for `loadFxmlPage` inner swap.)
+
+### Commits
+```
+80de960 [3bdelbary] B2.1 ShellView wraps dashboard.fxml + injects user from NavContext
+25e3404 [3bdelbary] B2.2 SignInController nav via AppView + NavContext (drop Stage)
+cacccb0 [3bdelbary] B2.3 SignUpController nav via AppView (drop Stage)
+aa320f5 [3bdelbary] B2.4 DashboardController logout via NavContext + AppView (drop Stage)
+```
+
+### Verification (B2 done state)
+| Gate | Result |
+|------|--------|
+| `grep -rn "import javafx.stage.Stage" src/main/java/smartfarm/ui` | **0 matches** |
+| `grep -rnE "setScene\\(|stage\\.getScene\\(\\)\\.setRoot|primaryStage" src/main/java/smartfarm/ui` | **0 matches** |
+| `mvn -Pdesktop clean compile` | BUILD SUCCESS — 79 sources |
+| `mvn -Pandroid clean compile` | BUILD SUCCESS — 75 sources |
+| Lane diff vs B1 final (`00e972b..HEAD`) | 4 files, all in `ui/` (3bdelbary's lane) |
+
+### Cross-track notes
+- `FileChooser` is still imported in `DashboardController`, `LogsController`, `ReportsController`, `CropController`, `DiseaseDetectionPage` — that's B4's job to replace with `CSVExporter.saveCsv(...)` (already exists from Hagag's H8) and `PlatformPickers.pickImage()` (delivered in B8).
+- `DashboardController.loadFxmlPage` (inner page swap) still uses `FXMLLoader.load(...)` per-click. That's fine for now — the loaded FXMLs have their own controllers wired via `fx:controller`. B3 may collapse this into a `View`-per-page model if the team decides each inner page should also be a Gluon View (it doesn't need to be; the inner pages are content, not full-screen states).
+
+### Phase 2 TODOs added in this batch
+- None. Existing TODOs (NavContext unit tests, AuthService async wrap) still stand; no new ones introduced.
+
+---
+
+## Status of B3–B10
 - [ ] **B3** — 12 FXML files made mobile-friendly. Touch targets, `ScrollPane` wrap, `TableView` → `CharmListView` where appropriate.
-- [ ] **B4** — 17 controllers updated. Remove `Stage`, replace `FileChooser` with `CSVExporter.saveCsv(...)` (already exists from H8) + a new `PlatformPickers.pickImage()` helper (delivered in B8).
+- [ ] **B4** — Sweep controllers: replace `FileChooser` (CSV export in Dashboard/Logs/Reports/Crop) with `CSVExporter.saveCsv(...)`. Replace `FileChooser.showOpenDialog` (DiseaseDetectionPage) with `PlatformPickers.pickImage()` (delivered in B8).
 - [ ] **B5** — Add `css/mobile.css`. Keep AtlantaFX PrimerLight as base.
 - [ ] **B6** — Drop any remaining JFreeChart use (already absent from `src/main/java`; double-check leftover imports in dashboard/monitoring).
 - [ ] **B7** — Launcher icons mdpi → xxxhdpi under `src/android/res/mipmap-*/` to satisfy Hagag's manifest refs (`@mipmap/ic_launcher`, `@mipmap/ic_launcher_round`).
 - [ ] **B8** — Image picker via Gluon Attach `Pictures` (Hagag added the dep in `a911016`). Create `smartfarm.ui.platform.PlatformPickers` with `pickImage()` returning `File`.
-- [ ] **B9** — Lifecycle hooks: `View#setOnShown`/`setOnHidden` instead of "set up on stage shown" patterns. (`SplashView` already follows this; sweep the rest.)
+- [ ] **B9** — Lifecycle hooks: `View#setOnShown`/`setOnHidden` instead of "set up on stage shown" patterns. (`SplashView` and `ShellView` already follow this; sweep the rest.)
 - [ ] **B10** — Keep this file current as we go.
