@@ -4,9 +4,10 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import com.gluonhq.charm.glisten.control.CharmListView?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.HarvestController"
-      spacing="16" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+      spacing="16" styleClass="content-pane">
     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
     <HBox alignment="CENTER_LEFT" spacing="12">
@@ -82,16 +83,6 @@
     <VBox styleClass="card" VBox.vgrow="ALWAYS" spacing="10">
         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
         <Label text="All Harvest Records" styleClass="card-title"/>
-        <TableView fx:id="harvestTable" VBox.vgrow="ALWAYS" prefHeight="400">
-            <columns>
-                <TableColumn fx:id="colCrop"     text="Crop"          prefWidth="150"/>
-                <TableColumn fx:id="colPlot"     text="Plot"          prefWidth="120"/>
-                <TableColumn fx:id="colQuantity" text="Quantity (kg)" prefWidth="120"/>
-                <TableColumn fx:id="colDate"     text="Date"          prefWidth="120"/>
-                <TableColumn fx:id="colQuality"  text="Quality"       prefWidth="90"/>
-                <TableColumn fx:id="colRevenue"  text="Revenue"       prefWidth="100"/>
-                <TableColumn fx:id="colActions"  text="Actions"       prefWidth="100"/>
-            </columns>
-        </TableView>
+        <CharmListView fx:id="harvestList" VBox.vgrow="ALWAYS"/>
     </VBox>
 </VBox>
