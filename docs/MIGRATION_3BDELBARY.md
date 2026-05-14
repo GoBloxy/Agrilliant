@@ -987,7 +987,10 @@ The next concrete milestone is the first `mvn -Pandroid gluonfx:build` to produc
 - [x] **B9** — done.
 - [x] **B10** — done. This consolidated reference + the FXML/controller matrices + Phase 2 TODO list complete the §B10 deliverable.
 <<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
 =======
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 
 ---
 
@@ -1036,18 +1039,58 @@ UPDATE crops SET growth_stage = 'VEGETATIVE' WHERE growth_stage = 'GROWING';
 
 The file documents the problem, lists the three fix options (a/b/c), justifies why (b) was chosen, and includes a before/after `SELECT COUNT(*)` for verification. After running it, `dashboard.fxml` and `reports.fxml` should pass the FXML-load smoke (the only two failures left in `STATUS.md`'s smoke matrix).
 
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
 ### APK build — pre-flight checklist
 
 The 3bdelbary track and the cross-track items above are now complete. The first `mvn -Pandroid gluonfx:build` is a build-environment task that needs the user's machine to be set up — I cannot run it from this worktree (worktree mode + no installed deps). Pre-flight requirements:
+=======
+### APK build — three paths
+
+The 3bdelbary track and the cross-track items above are now complete. The first `mvn -Pandroid gluonfx:build` needs a **Linux host** because GluonFX's Substrate + GraalVM native-image cross-compile toolchain does not run natively on Windows. The team can pick from three paths:
+
+1. **Cloud build (recommended for Windows users)** — push to GitHub, click "Run workflow", download the APK as an Actions artifact. Zero local Linux setup. See `docs/CI_ANDROID_BUILD.md` for the one-time GitHub Secrets setup. Workflow file: `.github/workflows/android-build.yml`.
+2. **WSL2 + Ubuntu (local Linux on Windows)** — install WSL2, run `scripts/wsl-setup-android-build-env.sh` inside Ubuntu, then `mvn -Pandroid gluonfx:build` natively. Faster iteration than cloud once set up; ~1 hr first-time setup. See `scripts/README.md`.
+3. **Native Linux / macOS** — run `scripts/wsl-setup-android-build-env.sh` on any Ubuntu 22.04+ machine, or follow the equivalent steps for macOS from Gluon's docs.
+
+Pre-flight requirements (paths 2 + 3 only — the cloud path has none on your machine):
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 
 | Requirement | How to verify |
 |-------------|---------------|
 | **GraalVM CE 22+ or Liberica NIK 23+** | `java -version` should mention `GraalVM` or `Liberica NIK`. Set `GRAALVM_HOME` env var to that JDK. |
 | **Android SDK** with `cmdline-tools`, `platforms;android-35`, `build-tools;35.0.0` | `sdkmanager --list_installed`. Set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`). |
 | **Android NDK** ≥ 25.x | Installed via `sdkmanager "ndk;<ver>"`. Set `ANDROID_NDK` env var. |
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
 | **DB credentials** for first-run via `DB_URL` / `DB_USER` / `DB_PASSWORD` env vars or `db.properties` (Hagag's H4) | Per Hagag's `MIGRATION_HAGAG.md`. |
 | **APK signing keystore** (release builds only) | Debug builds auto-sign with the GluonFX-managed debug key — fine for first device install. |
 
+=======
+| **APK signing keystore** (release builds only) | Debug builds auto-sign with the GluonFX-managed debug key — fine for first device install. |
+
+#### Properties files — gitignored secrets must be copied in before the build
+
+`gluonfx:build` packages the contents of `src/main/resources/` into the APK at AOT-compile time. The four secret-bearing properties files are gitignored (only their `.example` templates are committed). Before invoking `gluonfx:build`, copy your real files into the build's resources directory:
+
+| Source (your local secrets) | Destination (in this repo) | Loaded by |
+|-----------------------------|----------------------------|-----------|
+| your real `db.properties` | `src/main/resources/db.properties` | `smartfarm.util.DBConnection` (H4) — but only as the third fallback layer; env vars `DB_URL`/`DB_USER`/`DB_PASSWORD` and Gluon Settings keys `db.url`/`db.user`/`db.password` take precedence. |
+| your real `mqtt.properties` | `src/main/resources/mqtt.properties` | `smartfarm.server.MqttBridge` + `smartfarm.server.MqttSensorSubscriber` |
+| your real `crop-health.properties` | `src/main/resources/crop-health.properties` | `smartfarm.service.PlantIdService` (Kindwise Crop.health API) |
+| `thresholds.properties` (already committed) | already in place | `smartfarm.util.ThresholdConfig` (H10) |
+
+```powershell
+# One-shot copy from your main checkout into the worktree before building.
+# (Adjust paths to match your layout.)
+Copy-Item c:\Users\moham\Agrilliant\src\main\resources\db.properties           src\main\resources\db.properties
+Copy-Item c:\Users\moham\Agrilliant\src\main\resources\mqtt.properties         src\main\resources\mqtt.properties
+Copy-Item c:\Users\moham\Agrilliant\src\main\resources\crop-health.properties  src\main\resources\crop-health.properties
+```
+
+**Security note for production APKs:** baking real credentials into the APK is fine for a personal / dev build but is *not* the recommended deployment pattern. The credential-layering chain (env vars → Gluon Settings → properties) is specifically designed so that release APKs can ship with the properties files containing placeholders and the user enters real values into Gluon Settings on first launch (typed via a Settings screen). Phase 2 should add that Settings UI.
+
+The pre-flight checklist below assumes a dev/internal build where the properties files are in place.
+
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 #### Build commands
 
 ```powershell
@@ -1078,4 +1121,7 @@ mvn -Pandroid gluonfx:run
 - **MySQL connector reflection** — `mysql-connector-j` uses heavy reflection; if Hagag's H2 seed misses a constructor, queries fail with `InvocationTargetException`. Same agent-trace fix.
 - **`READ_MEDIA_IMAGES` permission silently denied on Android 13+** — `DiseaseDetectionPage.selectImage` returns empty. Fix: add a runtime permission request before calling `PlatformPickers.pickImage()`. Out of scope here — Hagag's `PermissionRequestActivity` (already in the manifest) is the entry point.
 - **`Crop.GrowthStage.GROWING` enum mismatch** at first DB hit — apply the SQL migration above before launching.
+<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
+=======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md

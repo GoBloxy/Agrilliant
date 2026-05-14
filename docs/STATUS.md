@@ -10,12 +10,19 @@
 The Agrilliant desktop JavaFX app is being migrated to Android via Gluon Mobile (Glisten + Attach + GluonFX native-image). Both Phase 1 tracks have made substantial progress:
 
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 - **Hagag's track (H1–H11):** Complete. All build, data, and infrastructure tasks are done.
 - **3bdelbary's track (B1–B10):** Complete. B1 (Gluon `MobileApplication`), B2 (AppView nav), B3 + B3X (mobile-friendly FXMLs + UX rework), B4 (FileChooser sweep), B5 (`mobile.css`), B6 (JFreeChart audit), B7 (launcher icons — 10 PNGs generated and committed), B8 (`PlatformPickers`), B9 (lifecycle hooks), and B10 (consolidated FXML / controller / Phase 2 reference matrices in `MIGRATION_3BDELBARY.md`). All 3bdelbary-track Phase 1 work is done. Outstanding items are entirely cross-track on Hagag's side.
 =======
 - **Hagag's track (H1–H11):** Complete.
 - **3bdelbary's track (B1–B10):** Complete.
 - **Post-B10 cross-track follow-ups (user-authorized):** JFreeChart deps removed from `pom.xml`; Gluon Attach `LifecycleService` PAUSE/RESUME wired to `DashboardController.startLifecycle()`/`stopLifecycle()`; `Crop.GrowthStage='GROWING'` SQL workaround migration script committed at `docs/sql/2026-05-14-fix-growthstage-growing.sql`. The repo is now ready for the first `mvn -Pandroid gluonfx:build`.
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+- **Hagag's track (H1–H11):** Complete.
+- **3bdelbary's track (B1–B10):** Complete.
+- **Post-B10 cross-track follow-ups (user-authorized):** JFreeChart deps removed from `pom.xml`; Gluon Attach `LifecycleService` PAUSE/RESUME wired to `DashboardController.startLifecycle()`/`stopLifecycle()`; `Crop.GrowthStage='GROWING'` SQL workaround migration script committed at `docs/sql/2026-05-14-fix-growthstage-growing.sql`. The repo is now ready for the first `mvn -Pandroid gluonfx:build`.
+- **Build environment (Windows-friendly, user-authorized):** GitHub Actions workflow at `.github/workflows/android-build.yml` builds the APK on a Linux cloud runner so Windows-host developers don't need WSL2. Local-Linux fallback path is `scripts/wsl-setup-android-build-env.sh` (one-shot installer for WSL2 Ubuntu). Docs at `docs/CI_ANDROID_BUILD.md` (cloud) and `scripts/README.md` (local).
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 
 The app compiles cleanly on both profiles and boots through Splash → SignIn on desktop. No Android APK has been built yet (needs GraalVM + Android SDK toolchain).
@@ -142,6 +149,7 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 
 ## What Is Missing
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 
 Nothing on 3bdelbary's Phase 1 list. All B-tasks are complete.
 
@@ -150,6 +158,8 @@ Nothing on 3bdelbary's Phase 1 list. All B-tasks are complete.
 - **`exec-maven-plugin` for the launcher generator (optional)** — if the team wants `LauncherIconGenerator` invokable via `mvn exec:java`, Hagag adds the plugin to the desktop profile's `<plugins>` block. The PowerShell variant (`generate-launcher-icons.ps1`) is already a working alternative that needs no Maven plumbing.
 - **Gluon Attach `LifecycleService` integration (Phase 2)** — B9 left a public `DashboardController.stopLifecycle()` hook unwired. Phase 2 should register a `LifecycleService` listener in `Main` that calls `controller.stopLifecycle()` on `PAUSE` and a future `startLifecycle()` on `RESUME` so the dashboard idles while the app is OS-backgrounded.
 =======
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 
 Nothing on 3bdelbary's Phase 1 list. All B-tasks are complete and the post-B10 cross-track items the user pulled forward (JFreeChart pom cleanup, LifecycleService wiring, SQL migration) are also done.
 
@@ -158,6 +168,9 @@ The only remaining work is environmental — running the actual APK build on a h
 ### Cross-track items still pending (low priority)
 - **`exec-maven-plugin` for the launcher generator (optional)** — would let the team run `mvn exec:java -Dexec.mainClass=smartfarm.ui.tools.LauncherIconGenerator`. The PowerShell variant (`src/main/java/smartfarm/ui/tools/generate-launcher-icons.ps1`) is the working alternative that needs no Maven plumbing.
 - **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller `⚠` rows in `docs/MIGRATION_3BDELBARY.md` §B10.
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
 
 ---
@@ -273,17 +286,29 @@ a0c06d5 [3bdelbary] B2.7 fix: SPLASH registers under HOME_VIEW so Glisten mounts
 ## Recommended Next Steps
 
 <<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 1. **Run first `mvn -Pandroid gluonfx:build`** to produce an APK. All 3bdelbary-track assets and code are in place (Gluon Views, mobile.css, launcher icons, FXML mobile-friendliness, lifecycle hooks). This is the next concrete milestone for the project.
 2. **Fix `Crop.GrowthStage` enum mismatch** — UPDATE the DB rows to a valid enum value (e.g. `VEGETATIVE`) so `dashboard` + `reports` FXMLs load cleanly. Enum or DAO fix paths cross into Hagag's lane / frozen `model/`.
 3. **Hagag:** drop JFreeChart deps from `pom.xml` desktop profile (B6 audit complete); optionally add `exec-maven-plugin` to make the Java icon generator invokable via `mvn exec:java`; wire Gluon Attach `LifecycleService` in `Main` to dispatch PAUSE/RESUME into `DashboardController.stopLifecycle()` (B9 Phase 2 hand-off).
 4. **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller table (⚠ rows) in `docs/MIGRATION_3BDELBARY.md` §B10.
 =======
 1. **Apply the SQL migration** to fix `Crop.GrowthStage='GROWING'` so `dashboard` + `reports` FXMLs load:
+=======
+1. **Push `mobile-app` branch to GitHub** so the Actions workflow becomes available.
+2. **Add GitHub Secrets** for DB / MQTT / Crop.health (see the secrets table in `docs/CI_ANDROID_BUILD.md`). Without these the cloud build fails fast in step 5 with a clear error.
+3. **Apply the SQL migration** to fix `Crop.GrowthStage='GROWING'` on your MySQL so the app's `dashboard` + `reports` FXMLs load:
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
    ```
    mysql -h <host> -u <user> -p <db> < docs/sql/2026-05-14-fix-growthstage-growing.sql
    ```
    Idempotent. The script reports row counts before and after.
+<<<<<<< C:/Users/moham/Agrilliant/docs/STATUS.md
 2. **Run first `mvn -Pandroid gluonfx:build`** on a host with GraalVM CE 22+ / Liberica NIK 23+, Android SDK (`platforms;android-35`, `build-tools;35.0.0`), and Android NDK ≥ 25.x installed. Walkthrough + failure modes in `docs/MIGRATION_3BDELBARY.md` *Post-B10 → APK build pre-flight checklist*.
 3. **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller `⚠` rows in `docs/MIGRATION_3BDELBARY.md` §B10.
 4. **(Optional) `exec-maven-plugin`** in the desktop profile so the Java launcher-icon generator is `mvn exec:java`-invokable. Not needed for the APK build.
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md
+=======
+4. **Trigger the cloud build** — Actions tab → "Android APK Build" → Run workflow → pick `mobile-app` → Run. First run ≈20–40 min.
+5. **Download the `agrilliant-apk` artifact** from the completed run, then `adb install` on a device with USB debugging on.
+6. **Phase 2 async DAO sweep** — wrap every DAO call site in `DBConnection.runAsync(...)`. See the per-controller `⚠` rows in `docs/MIGRATION_3BDELBARY.md` §B10.
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/STATUS.md

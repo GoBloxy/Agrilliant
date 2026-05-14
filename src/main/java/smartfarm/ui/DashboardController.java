@@ -786,7 +786,10 @@ public class DashboardController {
 
     /**
 <<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
 =======
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      * B9 lifecycle re-attach — restarts the clock and re-subscribes to
      * {@code LiveSensorData}. Pairs with {@link #stopLifecycle()}.
      *
@@ -812,11 +815,15 @@ public class DashboardController {
     }
 
     /**
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      * B9 lifecycle teardown — stops the clock Timeline and detaches all
      * listeners from the shared {@code LiveSensorData} singleton.
      *
      * <p>Idempotent: safe to call multiple times in a row, or before
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
 <<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
      * lifecycle has started. Pairs naturally with a future
      * {@code startLifecycle()} that re-runs {@link #updateDateTime()}
@@ -829,12 +836,17 @@ public class DashboardController {
      * {@code stopLifecycle()} and {@code RESUME} → a re-attach hook so
      * the dashboard goes idle while the OS has the app backgrounded.
 =======
+=======
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      * lifecycle has started. Pairs with {@link #startLifecycle()}.
      *
      * <p>Wired by {@code ShellView.setOnHiding} (handles user logout) and
      * by {@code Main}'s Gluon Attach {@code LifecycleService.PAUSE}
      * subscription (handles OS-level backgrounding on Android — the
      * dashboard goes idle while the user has switched away from the app).
+<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
+>>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
+=======
 >>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      */
     public void stopLifecycle() {
