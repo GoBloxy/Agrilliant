@@ -1,0 +1,26 @@
+﻿2026-05-14T07:55:08.4101920Z ##[group]Run echo "JAVA_HOME=$JAVA_HOME"
+2026-05-14T07:55:08.4102294Z [36;1mecho "JAVA_HOME=$JAVA_HOME"[0m
+2026-05-14T07:55:08.4102590Z [36;1mecho "GRAALVM_HOME=$GRAALVM_HOME"[0m
+2026-05-14T07:55:08.4103010Z [36;1m# gluonfx-maven-plugin specifically reads GRAALVM_HOME; setup-graalvm[0m
+2026-05-14T07:55:08.4103517Z [36;1m# sets it but pin it explicitly in case of action version drift.[0m
+2026-05-14T07:55:08.4104167Z [36;1mecho "GRAALVM_HOME=${GRAALVM_HOME:-$JAVA_HOME}" >> $GITHUB_ENV[0m
+2026-05-14T07:55:08.4104533Z [36;1mjava -version[0m
+2026-05-14T07:55:08.4104773Z [36;1mnative-image --version[0m
+2026-05-14T07:55:08.4164653Z shell: /usr/bin/bash -e {0}
+2026-05-14T07:55:08.4164914Z env:
+2026-05-14T07:55:08.4165103Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:55:08.4165361Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:55:08.4165650Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:55:08.4165887Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:55:08.4166127Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:55:08.4166732Z   GRAALVM_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:55:08.4167572Z   JAVA_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:55:08.4168099Z ##[endgroup]
+2026-05-14T07:55:08.4247416Z JAVA_HOME=/opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:55:08.4249335Z GRAALVM_HOME=/opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:55:08.4861470Z openjdk version "21.0.2" 2024-01-16
+2026-05-14T07:55:08.4862225Z OpenJDK Runtime Environment GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30)
+2026-05-14T07:55:08.4863221Z OpenJDK 64-Bit Server VM GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30, mixed mode, sharing)
+2026-05-14T07:55:08.4943471Z native-image 21.0.2 2024-01-16
+2026-05-14T07:55:08.4945400Z GraalVM Runtime Environment GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30)
+2026-05-14T07:55:08.4946240Z Substrate VM GraalVM CE 21.0.2+13.1 (build 21.0.2+13, serial gc)

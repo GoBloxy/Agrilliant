@@ -55,8 +55,6 @@ permissions:
   contents: read
 
 env:
-  GRAALVM_VERSION: '21.0.2'           # GraalVM CE Java version
-  GRAALVM_DISTRIBUTION: 'graalvm-community'
   ANDROID_SDK_PLATFORM: '34'
   ANDROID_BUILD_TOOLS: '34.0.0'
   ANDROID_NDK_VERSION: '26.1.10909125'
@@ -91,15 +89,12 @@ jobs:
             zlib1g-dev
 
       # -----------------------------------------------------------------
-      # 3. GraalVM CE (native-image is bundled in CE 21+, no `components`)
+      # 3. GraalVM built by Gluon
       # -----------------------------------------------------------------
       - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: ${{ env.GRAALVM_VERSION }}
-          distribution: ${{ env.GRAALVM_DISTRIBUTION }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          cache: 'maven'
+        uses: gluonhq/setup-graalvm@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify GraalVM toolchain
         run: |

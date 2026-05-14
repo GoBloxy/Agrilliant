@@ -1,0 +1,23 @@
+﻿2026-05-14T07:55:46.9166859Z ##[group]Run if [ -z "$CROP_HEALTH_PROPERTIES" ]; then
+2026-05-14T07:55:46.9167270Z [36;1mif [ -z "$CROP_HEALTH_PROPERTIES" ]; then[0m
+2026-05-14T07:55:46.9167824Z [36;1m  echo "::warning::CROP_HEALTH_PROPERTIES not set — disease-detection feature will be disabled in the APK"[0m
+2026-05-14T07:55:46.9168467Z [36;1m  printf 'api.key=DISABLED\n' > src/main/resources/crop-health.properties[0m
+2026-05-14T07:55:46.9168847Z [36;1melse[0m
+2026-05-14T07:55:46.9169200Z [36;1m  printf '%s\n' "$CROP_HEALTH_PROPERTIES" > src/main/resources/crop-health.properties[0m
+2026-05-14T07:55:46.9169954Z [36;1mfi[0m
+2026-05-14T07:55:46.9170374Z [36;1mecho "crop-health.properties written ($(wc -c < src/main/resources/crop-health.properties) bytes)"[0m
+2026-05-14T07:55:46.9220018Z shell: /usr/bin/bash -e {0}
+2026-05-14T07:55:46.9220273Z env:
+2026-05-14T07:55:46.9220463Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:55:46.9220760Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:55:46.9221041Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:55:46.9221301Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:55:46.9221540Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:55:46.9222105Z   GRAALVM_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:55:46.9222940Z   JAVA_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:55:46.9223490Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-05-14T07:55:46.9223776Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-05-14T07:55:46.9224102Z   ANDROID_NDK: /usr/local/lib/android/sdk/ndk/26.1.10909125
+2026-05-14T07:55:46.9224769Z   CROP_HEALTH_PROPERTIES: ***
+2026-05-14T07:55:46.9225170Z ##[endgroup]
+2026-05-14T07:55:46.9312047Z crop-health.properties written (91 bytes)

@@ -224,13 +224,6 @@
                         <list>statusbar</list>
                         <list>storage</list>
                     </attachList>
-                    <!-- Substrate 0.0.68 passes -H:+UseCAPCache to native-image,
-                         which requires a pre-existing cache file that doesn't
-                         exist on a fresh CI runner. -H:+NewCAPCache tells GraalVM
-                         to create the cache from scratch instead of failing. -->
-                    <nativeImageArgs>
-                        <arg>-H:+NewCAPCache</arg>
-                    </nativeImageArgs>
                 </configuration>
             </plugin>
         </plugins>

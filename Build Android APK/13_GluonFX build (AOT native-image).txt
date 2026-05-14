@@ -1,0 +1,428 @@
+﻿2026-05-14T07:56:10.6987404Z ##[group]Run mvn -B -Pandroid gluonfx:build
+2026-05-14T07:56:10.6988280Z [36;1mmvn -B -Pandroid gluonfx:build[0m
+2026-05-14T07:56:10.7046355Z shell: /usr/bin/bash -e {0}
+2026-05-14T07:56:10.7046613Z env:
+2026-05-14T07:56:10.7046806Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:56:10.7047071Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:56:10.7047362Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:56:10.7047597Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:56:10.7047842Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:56:10.7048421Z   GRAALVM_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:10.7049293Z   JAVA_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:10.7050025Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-05-14T07:56:10.7050323Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-05-14T07:56:10.7050657Z   ANDROID_NDK: /usr/local/lib/android/sdk/ndk/26.1.10909125
+2026-05-14T07:56:10.7051016Z ##[endgroup]
+2026-05-14T07:56:12.5731580Z [INFO] Scanning for projects...
+2026-05-14T07:56:12.9511448Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/maven-metadata.xml
+2026-05-14T07:56:12.9545734Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml
+2026-05-14T07:56:12.9547809Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/openjfx/maven-metadata.xml
+2026-05-14T07:56:12.9549683Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml
+2026-05-14T07:56:13.3893229Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml (14 kB at 32 kB/s)
+2026-05-14T07:56:13.4032660Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml (21 kB at 45 kB/s)
+2026-05-14T07:56:13.4510578Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/maven-metadata.xml (399 B at 790 B/s)
+2026-05-14T07:56:13.4533568Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/openjfx/maven-metadata.xml (245 B at 484 B/s)
+2026-05-14T07:56:13.4705791Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/gluonfx-maven-plugin/1.0.28/gluonfx-maven-plugin-1.0.28.pom
+2026-05-14T07:56:13.4950694Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/gluonfx-maven-plugin/1.0.28/gluonfx-maven-plugin-1.0.28.pom (9.1 kB at 366 kB/s)
+2026-05-14T07:56:13.5143387Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/gluonfx-maven-plugin/1.0.28/gluonfx-maven-plugin-1.0.28.jar
+2026-05-14T07:56:13.5431707Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/gluonfx-maven-plugin/1.0.28/gluonfx-maven-plugin-1.0.28.jar (48 kB at 1.7 MB/s)
+2026-05-14T07:56:13.5874270Z [INFO] 
+2026-05-14T07:56:13.5875620Z [INFO] ----------------------< com.smartfarm:smart-farm >----------------------
+2026-05-14T07:56:13.5876555Z [INFO] Building Agrilliant 1.0-SNAPSHOT
+2026-05-14T07:56:13.5877878Z [INFO]   from pom.xml
+2026-05-14T07:56:13.5878830Z [INFO] --------------------------------[ jar ]---------------------------------
+2026-05-14T07:56:13.5983201Z [WARNING] Parameter 'attachVersion' is unknown for plugin 'gluonfx-maven-plugin:1.0.28:build (default-cli)'
+2026-05-14T07:56:13.6298407Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-controls:jar:21.0.2 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:13.6941970Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-controls:jar:20 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:13.7868126Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-graphics:jar:20.0.2 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:13.8302943Z [INFO] 
+2026-05-14T07:56:13.8304839Z [INFO] --- gluonfx:1.0.28:build (default-cli) @ smart-farm ---
+2026-05-14T07:56:13.8442155Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/substrate/0.0.68/substrate-0.0.68.pom
+2026-05-14T07:56:13.8673694Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/substrate/0.0.68/substrate-0.0.68.pom (2.2 kB at 83 kB/s)
+2026-05-14T07:56:13.8750811Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/googlecode/plist/dd-plist/1.23/dd-plist-1.23.pom
+2026-05-14T07:56:13.9002799Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/googlecode/plist/dd-plist/1.23/dd-plist-1.23.pom (8.7 kB at 335 kB/s)
+2026-05-14T07:56:13.9061057Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/7/oss-parent-7.pom
+2026-05-14T07:56:13.9237251Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/7/oss-parent-7.pom (4.8 kB at 254 kB/s)
+2026-05-14T07:56:13.9306896Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcpkix-jdk15on/1.49/bcpkix-jdk15on-1.49.pom
+2026-05-14T07:56:13.9531259Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcpkix-jdk15on/1.49/bcpkix-jdk15on-1.49.pom (1.4 kB at 62 kB/s)
+2026-05-14T07:56:13.9597869Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk15on/1.49/bcprov-jdk15on-1.49.pom
+2026-05-14T07:56:13.9842881Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk15on/1.49/bcprov-jdk15on-1.49.pom (1.0 kB at 43 kB/s)
+2026-05-14T07:56:13.9930913Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm/21.1.0/svm-21.1.0.pom
+2026-05-14T07:56:14.0159927Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm/21.1.0/svm-21.1.0.pom (2.5 kB at 97 kB/s)
+2026-05-14T07:56:14.0226488Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-linux-amd64/21.1.0/svm-hosted-native-linux-amd64-21.1.0.pom
+2026-05-14T07:56:14.0427372Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-linux-amd64/21.1.0/svm-hosted-native-linux-amd64-21.1.0.pom (1.3 kB at 70 kB/s)
+2026-05-14T07:56:14.0477071Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-darwin-amd64/21.1.0/svm-hosted-native-darwin-amd64-21.1.0.pom
+2026-05-14T07:56:14.0708783Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-darwin-amd64/21.1.0/svm-hosted-native-darwin-amd64-21.1.0.pom (1.3 kB at 55 kB/s)
+2026-05-14T07:56:14.0775464Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-windows-amd64/21.1.0/svm-hosted-native-windows-amd64-21.1.0.pom
+2026-05-14T07:56:14.0990577Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-windows-amd64/21.1.0/svm-hosted-native-windows-amd64-21.1.0.pom (1.4 kB at 65 kB/s)
+2026-05-14T07:56:14.1038252Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/sdk/graal-sdk/21.1.0/graal-sdk-21.1.0.pom
+2026-05-14T07:56:14.1256066Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/sdk/graal-sdk/21.1.0/graal-sdk-21.1.0.pom (1.4 kB at 59 kB/s)
+2026-05-14T07:56:14.1295865Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/objectfile/21.1.0/objectfile-21.1.0.pom
+2026-05-14T07:56:14.1515983Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/objectfile/21.1.0/objectfile-21.1.0.pom (1.5 kB at 66 kB/s)
+2026-05-14T07:56:14.1561087Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/compiler/compiler/21.1.0/compiler-21.1.0.pom
+2026-05-14T07:56:14.1772337Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/compiler/compiler/21.1.0/compiler-21.1.0.pom (1.6 kB at 72 kB/s)
+2026-05-14T07:56:14.1821081Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/truffle/truffle-api/21.1.0/truffle-api-21.1.0.pom
+2026-05-14T07:56:14.2015342Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/truffle/truffle-api/21.1.0/truffle-api-21.1.0.pom (1.5 kB at 72 kB/s)
+2026-05-14T07:56:14.2069016Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/pointsto/21.1.0/pointsto-21.1.0.pom
+2026-05-14T07:56:14.2261258Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/pointsto/21.1.0/pointsto-21.1.0.pom (1.5 kB at 70 kB/s)
+2026-05-14T07:56:14.2342080Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/aot/0.53/aot-0.53.pom
+2026-05-14T07:56:14.2586826Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/aot/0.53/aot-0.53.pom (2.2 kB at 81 kB/s)
+2026-05-14T07:56:14.2624969Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/rt/0.53/rt-0.53.pom
+2026-05-14T07:56:14.2826911Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/rt/0.53/rt-0.53.pom (2.1 kB at 108 kB/s)
+2026-05-14T07:56:14.2866700Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/0.53/bck2brwsr-0.53.pom
+2026-05-14T07:56:14.3085956Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/0.53/bck2brwsr-0.53.pom (15 kB at 641 kB/s)
+2026-05-14T07:56:14.3180986Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/net/java/jvnet-parent/3/jvnet-parent-3.pom
+2026-05-14T07:56:14.3348170Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/net/java/jvnet-parent/3/jvnet-parent-3.pom (4.8 kB at 252 kB/s)
+2026-05-14T07:56:14.3428562Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/vm4brwsr/0.53/vm4brwsr-0.53.pom
+2026-05-14T07:56:14.3651056Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/vm4brwsr/0.53/vm4brwsr-0.53.pom (4.3 kB at 206 kB/s)
+2026-05-14T07:56:14.3763135Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/core/0.53/core-0.53.pom
+2026-05-14T07:56:14.3993311Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/core/0.53/core-0.53.pom (2.4 kB at 99 kB/s)
+2026-05-14T07:56:14.4051404Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/google/javascript/closure-compiler/v20210601/closure-compiler-v20210601.pom
+2026-05-14T07:56:14.4284419Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/javascript/closure-compiler/v20210601/closure-compiler-v20210601.pom (1.8 kB at 73 kB/s)
+2026-05-14T07:56:14.4315308Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/google/javascript/closure-compiler-main/v20210601/closure-compiler-main-v20210601.pom
+2026-05-14T07:56:14.4518668Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/javascript/closure-compiler-main/v20210601/closure-compiler-main-v20210601.pom (1.9 kB at 95 kB/s)
+2026-05-14T07:56:14.4548205Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/google/javascript/closure-compiler-parent/v20210601/closure-compiler-parent-v20210601.pom
+2026-05-14T07:56:14.4788714Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/javascript/closure-compiler-parent/v20210601/closure-compiler-parent-v20210601.pom (3.5 kB at 147 kB/s)
+2026-05-14T07:56:14.4857367Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.2/asm-9.2.pom
+2026-05-14T07:56:14.5037239Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.2/asm-9.2.pom (2.4 kB at 125 kB/s)
+2026-05-14T07:56:14.5074548Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/ow2/1.5/ow2-1.5.pom
+2026-05-14T07:56:14.5274427Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/ow2/1.5/ow2-1.5.pom (11 kB at 535 kB/s)
+2026-05-14T07:56:14.5345784Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-util/2.0.1/maven-resolver-util-2.0.1.pom
+2026-05-14T07:56:14.5550304Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-util/2.0.1/maven-resolver-util-2.0.1.pom (2.3 kB at 114 kB/s)
+2026-05-14T07:56:14.5589993Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver/2.0.1/maven-resolver-2.0.1.pom
+2026-05-14T07:56:14.5817648Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver/2.0.1/maven-resolver-2.0.1.pom (33 kB at 1.4 MB/s)
+2026-05-14T07:56:14.6058587Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/jetty/jetty-bom/10.0.22/jetty-bom-10.0.22.pom
+2026-05-14T07:56:14.6255272Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/jetty/jetty-bom/10.0.22/jetty-bom-10.0.22.pom (19 kB at 940 kB/s)
+2026-05-14T07:56:14.6393865Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-api/2.0.1/maven-resolver-api-2.0.1.pom
+2026-05-14T07:56:14.6637605Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-api/2.0.1/maven-resolver-api-2.0.1.pom (2.1 kB at 86 kB/s)
+2026-05-14T07:56:14.6781415Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-invoker/3.3.0/maven-invoker-3.3.0.pom
+2026-05-14T07:56:14.7000867Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-invoker/3.3.0/maven-invoker-3.3.0.pom (4.2 kB at 193 kB/s)
+2026-05-14T07:56:14.7051430Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/42/maven-shared-components-42.pom
+2026-05-14T07:56:14.7258937Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/42/maven-shared-components-42.pom (3.8 kB at 180 kB/s)
+2026-05-14T07:56:14.7288446Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/42/maven-parent-42.pom
+2026-05-14T07:56:14.7481274Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/42/maven-parent-42.pom (50 kB at 2.7 MB/s)
+2026-05-14T07:56:14.7525082Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/32/apache-32.pom
+2026-05-14T07:56:14.7731274Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/32/apache-32.pom (24 kB at 1.4 MB/s)
+2026-05-14T07:56:14.8301924Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-exec/1.4.0/commons-exec-1.4.0.pom
+2026-05-14T07:56:14.8533879Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-exec/1.4.0/commons-exec-1.4.0.pom (9.5 kB at 397 kB/s)
+2026-05-14T07:56:14.8602826Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/65/commons-parent-65.pom
+2026-05-14T07:56:14.8841074Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/65/commons-parent-65.pom (78 kB at 3.4 MB/s)
+2026-05-14T07:56:14.9036884Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/substrate/0.0.68/substrate-0.0.68.jar
+2026-05-14T07:56:14.9788826Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/substrate/0.0.68/substrate-0.0.68.jar (1.2 MB at 16 MB/s)
+2026-05-14T07:56:14.9800191Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/googlecode/plist/dd-plist/1.23/dd-plist-1.23.jar
+2026-05-14T07:56:14.9837737Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcpkix-jdk15on/1.49/bcpkix-jdk15on-1.49.jar
+2026-05-14T07:56:14.9840301Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk15on/1.49/bcprov-jdk15on-1.49.jar
+2026-05-14T07:56:14.9842501Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm/21.1.0/svm-21.1.0.jar
+2026-05-14T07:56:14.9845023Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-linux-amd64/21.1.0/svm-hosted-native-linux-amd64-21.1.0.tar.gz
+2026-05-14T07:56:15.0103312Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/googlecode/plist/dd-plist/1.23/dd-plist-1.23.jar (76 kB at 2.4 MB/s)
+2026-05-14T07:56:15.0156690Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-darwin-amd64/21.1.0/svm-hosted-native-darwin-amd64-21.1.0.tar.gz
+2026-05-14T07:56:15.0371898Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-darwin-amd64/21.1.0/svm-hosted-native-darwin-amd64-21.1.0.tar.gz (46 kB at 896 kB/s)
+2026-05-14T07:56:15.0481771Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-windows-amd64/21.1.0/svm-hosted-native-windows-amd64-21.1.0.tar.gz
+2026-05-14T07:56:15.0634125Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-linux-amd64/21.1.0/svm-hosted-native-linux-amd64-21.1.0.tar.gz (70 kB at 865 kB/s)
+2026-05-14T07:56:15.0636813Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/sdk/graal-sdk/21.1.0/graal-sdk-21.1.0.jar
+2026-05-14T07:56:15.0789748Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm-hosted-native-windows-amd64/21.1.0/svm-hosted-native-windows-amd64-21.1.0.tar.gz (84 kB at 940 kB/s)
+2026-05-14T07:56:15.0796341Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/objectfile/21.1.0/objectfile-21.1.0.jar
+2026-05-14T07:56:15.0956686Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcpkix-jdk15on/1.49/bcpkix-jdk15on-1.49.jar (630 kB at 5.5 MB/s)
+2026-05-14T07:56:15.0962860Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/pointsto/21.1.0/pointsto-21.1.0.jar
+2026-05-14T07:56:15.1461460Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/sdk/graal-sdk/21.1.0/graal-sdk-21.1.0.jar (579 kB at 3.6 MB/s)
+2026-05-14T07:56:15.1480956Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/compiler/compiler/21.1.0/compiler-21.1.0.jar
+2026-05-14T07:56:15.2117661Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/objectfile/21.1.0/objectfile-21.1.0.jar (1.1 MB at 5.1 MB/s)
+2026-05-14T07:56:15.2120184Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/truffle/truffle-api/21.1.0/truffle-api-21.1.0.jar
+2026-05-14T07:56:15.2392467Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/pointsto/21.1.0/pointsto-21.1.0.jar (1.3 MB at 5.0 MB/s)
+2026-05-14T07:56:15.2398834Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/aot/0.53/aot-0.53.jar
+2026-05-14T07:56:15.2628377Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/aot/0.53/aot-0.53.jar (22 kB at 80 kB/s)
+2026-05-14T07:56:15.2631448Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/vm4brwsr/0.53/vm4brwsr-0.53.jar
+2026-05-14T07:56:15.2816700Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk15on/1.49/bcprov-jdk15on-1.49.jar (2.5 MB at 8.2 MB/s)
+2026-05-14T07:56:15.2823768Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/core/0.53/core-0.53.jar
+2026-05-14T07:56:15.3077012Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/vm4brwsr/0.53/vm4brwsr-0.53.jar (155 kB at 485 kB/s)
+2026-05-14T07:56:15.3079768Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apidesign/bck2brwsr/core/0.53/core-0.53.jar (8.1 kB at 25 kB/s)
+2026-05-14T07:56:15.3082111Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/google/javascript/closure-compiler/v20210601/closure-compiler-v20210601.jar
+2026-05-14T07:56:15.3107552Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.2/asm-9.2.jar
+2026-05-14T07:56:15.3423790Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.2/asm-9.2.jar (122 kB at 344 kB/s)
+2026-05-14T07:56:15.3431119Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-util/2.0.1/maven-resolver-util-2.0.1.jar
+2026-05-14T07:56:15.3679111Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-util/2.0.1/maven-resolver-util-2.0.1.jar (218 kB at 571 kB/s)
+2026-05-14T07:56:15.3710963Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-api/2.0.1/maven-resolver-api-2.0.1.jar
+2026-05-14T07:56:15.3988338Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-api/2.0.1/maven-resolver-api-2.0.1.jar (172 kB at 419 kB/s)
+2026-05-14T07:56:15.3995255Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-invoker/3.3.0/maven-invoker-3.3.0.jar
+2026-05-14T07:56:15.4298922Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-invoker/3.3.0/maven-invoker-3.3.0.jar (34 kB at 78 kB/s)
+2026-05-14T07:56:15.4301720Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-exec/1.4.0/commons-exec-1.4.0.jar
+2026-05-14T07:56:15.4508215Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-exec/1.4.0/commons-exec-1.4.0.jar (66 kB at 142 kB/s)
+2026-05-14T07:56:15.5841515Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/truffle/truffle-api/21.1.0/truffle-api-21.1.0.jar (8.4 MB at 14 MB/s)
+2026-05-14T07:56:15.5931738Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/nativeimage/svm/21.1.0/svm-21.1.0.jar (12 MB at 20 MB/s)
+2026-05-14T07:56:15.6428505Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/javascript/closure-compiler/v20210601/closure-compiler-v20210601.jar (13 MB at 19 MB/s)
+2026-05-14T07:56:15.6786005Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/compiler/compiler/21.1.0/compiler-21.1.0.jar (19 MB at 27 MB/s)
+2026-05-14T07:56:15.9043460Z [WARN] Maven will be executed in interactive mode, but no input stream has been configured for this MavenInvoker instance.
+2026-05-14T07:56:17.7692593Z [INFO] Scanning for projects...
+2026-05-14T07:56:17.9751747Z [INFO] 
+2026-05-14T07:56:17.9760028Z [INFO] ----------------------< com.smartfarm:smart-farm >----------------------
+2026-05-14T07:56:17.9781362Z [INFO] Building Agrilliant 1.0-SNAPSHOT
+2026-05-14T07:56:17.9783079Z [INFO]   from pom.xml
+2026-05-14T07:56:17.9783973Z [INFO] --------------------------------[ jar ]---------------------------------
+2026-05-14T07:56:17.9941215Z [WARNING] Parameter 'attachVersion' is unknown for plugin 'gluonfx-maven-plugin:1.0.28:compile (default-cli)'
+2026-05-14T07:56:18.0878408Z [WARNING] Parameter 'attachVersion' is unknown for plugin 'gluonfx-maven-plugin:1.0.28:link (default-cli)'
+2026-05-14T07:56:18.0925433Z [INFO] 
+2026-05-14T07:56:18.0928597Z [INFO] >>> gluonfx:1.0.28:compile (default-cli) > process-classes @ smart-farm >>>
+2026-05-14T07:56:18.1191534Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-controls:jar:21.0.2 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:18.1765853Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-controls:jar:20 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:18.2475253Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-graphics:jar:20.0.2 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:18.3090740Z [INFO] 
+2026-05-14T07:56:18.3091974Z [INFO] --- resources:3.4.0:resources (default-resources) @ smart-farm ---
+2026-05-14T07:56:18.5892334Z [INFO] Copying 27 resources from src/main/resources to target/classes
+2026-05-14T07:56:18.6047165Z [INFO] 
+2026-05-14T07:56:18.6053235Z [INFO] --- compiler:3.13.0:compile (default-compile) @ smart-farm ---
+2026-05-14T07:56:18.8291147Z [INFO] Nothing to compile - all classes are up to date.
+2026-05-14T07:56:18.8292243Z [INFO] 
+2026-05-14T07:56:18.8293368Z [INFO] <<< gluonfx:1.0.28:compile (default-cli) < process-classes @ smart-farm <<<
+2026-05-14T07:56:18.8294295Z [INFO] 
+2026-05-14T07:56:18.8400121Z [INFO] 
+2026-05-14T07:56:18.8402332Z [INFO] --- gluonfx:1.0.28:compile (default-cli) @ smart-farm ---
+2026-05-14T07:56:19.3303062Z Downloading from gluon-releases: https://nexus.gluonhq.com/nexus/content/repositories/releases/com/gluonhq/attach/util/4.0.23/util-4.0.23-android.jar
+2026-05-14T07:56:19.7613063Z Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/util/4.0.23/util-4.0.23-android.jar
+2026-05-14T07:56:19.8862033Z Progress (1): 0.9/32 kB
+2026-05-14T07:56:19.8867157Z Progress (1): 2.3/32 kB
+2026-05-14T07:56:19.8914319Z Progress (1): 3.6/32 kB
+2026-05-14T07:56:19.8940108Z Progress (1): 5.0/32 kB
+2026-05-14T07:56:19.8940755Z Progress (1): 6.4/32 kB
+2026-05-14T07:56:19.8941325Z Progress (1): 7.7/32 kB
+2026-05-14T07:56:19.8951862Z Progress (1): 9.1/32 kB
+2026-05-14T07:56:19.8952356Z Progress (1): 10/32 kB 
+2026-05-14T07:56:19.8952792Z Progress (1): 12/32 kB
+2026-05-14T07:56:19.8953226Z Progress (1): 13/32 kB
+2026-05-14T07:56:19.8989944Z Progress (1): 15/32 kB
+2026-05-14T07:56:19.8990478Z Progress (1): 15/32 kB
+2026-05-14T07:56:19.8990939Z Progress (1): 17/32 kB
+2026-05-14T07:56:19.8991394Z Progress (1): 18/32 kB
+2026-05-14T07:56:19.8991818Z Progress (1): 20/32 kB
+2026-05-14T07:56:19.9050296Z Progress (1): 21/32 kB
+2026-05-14T07:56:19.9050935Z Progress (1): 22/32 kB
+2026-05-14T07:56:19.9051543Z Progress (1): 24/32 kB
+2026-05-14T07:56:19.9052105Z Progress (1): 25/32 kB
+2026-05-14T07:56:19.9052650Z Progress (1): 26/32 kB
+2026-05-14T07:56:19.9053193Z Progress (1): 28/32 kB
+2026-05-14T07:56:19.9053731Z Progress (1): 29/32 kB
+2026-05-14T07:56:19.9075178Z Progress (1): 31/32 kB
+2026-05-14T07:56:19.9075731Z Progress (1): 32 kB   
+2026-05-14T07:56:19.9167442Z                    
+2026-05-14T07:56:19.9177585Z Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/util/4.0.23/util-4.0.23-android.jar (32 kB at 201 kB/s)
+2026-05-14T07:56:19.9319165Z Downloading from gluon-releases: https://nexus.gluonhq.com/nexus/content/repositories/releases/com/gluonhq/attach/settings/4.0.23/settings-4.0.23-android.jar
+2026-05-14T07:56:19.9630782Z Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/settings/4.0.23/settings-4.0.23-android.jar
+2026-05-14T07:56:20.0036536Z Progress (1): 0.9/8.0 kB
+2026-05-14T07:56:20.0046845Z Progress (1): 2.3/8.0 kB
+2026-05-14T07:56:20.0072736Z Progress (1): 3.6/8.0 kB
+2026-05-14T07:56:20.0073869Z Progress (1): 5.0/8.0 kB
+2026-05-14T07:56:20.0081924Z Progress (1): 6.4/8.0 kB
+2026-05-14T07:56:20.0107214Z Progress (1): 7.7/8.0 kB
+2026-05-14T07:56:20.0107988Z Progress (1): 8.0 kB    
+2026-05-14T07:56:20.0108716Z                     
+2026-05-14T07:56:20.0111139Z Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/settings/4.0.23/settings-4.0.23-android.jar (8.0 kB at 167 kB/s)
+2026-05-14T07:56:20.0183067Z Downloading from gluon-releases: https://nexus.gluonhq.com/nexus/content/repositories/releases/com/gluonhq/attach/storage/4.0.23/storage-4.0.23-android.jar
+2026-05-14T07:56:20.0522243Z Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/storage/4.0.23/storage-4.0.23-android.jar
+2026-05-14T07:56:20.0971515Z Progress (1): 0.9/9.1 kB
+2026-05-14T07:56:20.0972561Z Progress (1): 2.3/9.1 kB
+2026-05-14T07:56:20.0973360Z Progress (1): 3.6/9.1 kB
+2026-05-14T07:56:20.0974124Z Progress (1): 5.0/9.1 kB
+2026-05-14T07:56:20.0974837Z Progress (1): 6.4/9.1 kB
+2026-05-14T07:56:20.0975500Z Progress (1): 7.7/9.1 kB
+2026-05-14T07:56:20.0976170Z Progress (1): 9.1 kB    
+2026-05-14T07:56:20.0976833Z                     
+2026-05-14T07:56:20.0992156Z Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/storage/4.0.23/storage-4.0.23-android.jar (9.1 kB at 198 kB/s)
+2026-05-14T07:56:20.1030214Z Downloading from gluon-releases: https://nexus.gluonhq.com/nexus/content/repositories/releases/com/gluonhq/attach/lifecycle/4.0.23/lifecycle-4.0.23-android.jar
+2026-05-14T07:56:20.1408971Z Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/lifecycle/4.0.23/lifecycle-4.0.23-android.jar
+2026-05-14T07:56:20.1786491Z Progress (1): 0.9/11 kB
+2026-05-14T07:56:20.1824315Z Progress (1): 2.3/11 kB
+2026-05-14T07:56:20.1824862Z Progress (1): 3.6/11 kB
+2026-05-14T07:56:20.1825326Z Progress (1): 7.9/11 kB
+2026-05-14T07:56:20.1825792Z Progress (1): 11 kB    
+2026-05-14T07:56:20.1830631Z                    
+2026-05-14T07:56:20.1831945Z Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/lifecycle/4.0.23/lifecycle-4.0.23-android.jar (11 kB at 248 kB/s)
+2026-05-14T07:56:20.1936322Z Downloading from gluon-releases: https://nexus.gluonhq.com/nexus/content/repositories/releases/com/gluonhq/attach/pictures/4.0.23/pictures-4.0.23-android.jar
+2026-05-14T07:56:20.2295698Z Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/pictures/4.0.23/pictures-4.0.23-android.jar
+2026-05-14T07:56:20.3690301Z Progress (1): 3.8/18 kB
+2026-05-14T07:56:20.3691313Z Progress (1): 8.0/18 kB
+2026-05-14T07:56:20.3692071Z Progress (1): 12/18 kB 
+2026-05-14T07:56:20.3695223Z Progress (1): 15/18 kB
+2026-05-14T07:56:20.3711927Z Progress (1): 18 kB   
+2026-05-14T07:56:20.3723170Z                    
+2026-05-14T07:56:20.3728204Z Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/pictures/4.0.23/pictures-4.0.23-android.jar (18 kB at 121 kB/s)
+2026-05-14T07:56:20.3824800Z Downloading from gluon-releases: https://nexus.gluonhq.com/nexus/content/repositories/releases/com/gluonhq/attach/display/4.0.23/display-4.0.23-android.jar
+2026-05-14T07:56:20.4173051Z Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/display/4.0.23/display-4.0.23-android.jar
+2026-05-14T07:56:20.4546947Z Progress (1): 3.8/10 kB
+2026-05-14T07:56:20.4547475Z Progress (1): 8.0/10 kB
+2026-05-14T07:56:20.4554628Z Progress (1): 10 kB    
+2026-05-14T07:56:20.4555103Z                    
+2026-05-14T07:56:20.4558226Z Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/display/4.0.23/display-4.0.23-android.jar (10 kB at 254 kB/s)
+2026-05-14T07:56:20.4609737Z Downloading from gluon-releases: https://nexus.gluonhq.com/nexus/content/repositories/releases/com/gluonhq/attach/statusbar/4.0.23/statusbar-4.0.23-android.jar
+2026-05-14T07:56:20.4943490Z Downloading from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/statusbar/4.0.23/statusbar-4.0.23-android.jar
+2026-05-14T07:56:20.5364880Z Progress (1): 3.8/8.0 kB
+2026-05-14T07:56:20.5380187Z Progress (1): 8.0/8.0 kB
+2026-05-14T07:56:20.5380841Z Progress (1): 8.0 kB    
+2026-05-14T07:56:20.5405092Z                     
+2026-05-14T07:56:20.5406719Z Downloaded from central: https://repo.maven.apache.org/maven2/com/gluonhq/attach/statusbar/4.0.23/statusbar-4.0.23-android.jar (8.0 kB at 178 kB/s)
+2026-05-14T07:56:20.7052086Z May 14, 2026 7:56:20 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:20.7053761Z INFO: Substrate is tested with the Gluon's GraalVM build which you can find at https://github.com/gluonhq/graal/releases.
+2026-05-14T07:56:20.7055350Z While you can still use other GraalVM builds, there is no guarantee that these will work properly with Substrate
+2026-05-14T07:56:20.7200415Z May 14, 2026 7:56:20 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:20.7201438Z INFO: ANDROID_SDK not found and will be downloaded.
+2026-05-14T07:56:20.7202256Z May 14, 2026 7:56:20 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:20.7203016Z INFO: sysroot path not found and will be downloaded.
+2026-05-14T07:56:20.7203768Z May 14, 2026 7:56:20 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:20.7204478Z INFO: Downloading Java Static Libs...
+2026-05-14T07:56:21.0559947Z 
+2026-05-14T07:56:21.0610529Z Download progress: 0.01 / 0.55M
+2026-05-14T07:56:21.0844434Z Download progress: 0.06 / 0.55M
+2026-05-14T07:56:21.1069616Z Download progress: 0.12 / 0.55M
+2026-05-14T07:56:21.1091230Z Download progress: 0.17 / 0.55M
+2026-05-14T07:56:21.1110098Z Download progress: 0.23 / 0.55M
+2026-05-14T07:56:21.1319827Z Download progress: 0.28 / 0.55M
+2026-05-14T07:56:21.1339681Z Download progress: 0.34 / 0.55M
+2026-05-14T07:56:21.1365400Z Download progress: 0.39 / 0.55M
+2026-05-14T07:56:21.1406957Z Download progress: 0.45 / 0.55M
+2026-05-14T07:56:21.1413152Z Download progress: 0.50 / 0.55M
+2026-05-14T07:56:21.1419534Z Download progress: 0.55 / 0.55M
+2026-05-14T07:56:21.2114304Z May 14, 2026 7:56:21 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:21.2118932Z INFO: Java static libs downloaded successfully
+2026-05-14T07:56:21.2123712Z May 14, 2026 7:56:21 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:21.2127069Z INFO: Downloading JavaFX static libs...
+2026-05-14T07:56:21.2704651Z 
+2026-05-14T07:56:21.3522547Z Download progress: 0.01 / 24.05M
+2026-05-14T07:56:21.4097217Z Download progress: 2.41 / 24.05M
+2026-05-14T07:56:21.4593926Z Download progress: 4.81 / 24.05M
+2026-05-14T07:56:21.5090346Z Download progress: 7.22 / 24.05M
+2026-05-14T07:56:21.5552977Z Download progress: 9.62 / 24.05M
+2026-05-14T07:56:21.6049697Z Download progress: 12.03 / 24.05M
+2026-05-14T07:56:21.6751474Z Download progress: 14.44 / 24.05M
+2026-05-14T07:56:21.7463154Z Download progress: 16.84 / 24.05M
+2026-05-14T07:56:21.7921095Z Download progress: 19.25 / 24.05M
+2026-05-14T07:56:21.8073842Z Download progress: 21.66 / 24.05M
+2026-05-14T07:56:21.8080641Z Download progress: 24.05 / 24.05M
+2026-05-14T07:56:22.1324019Z May 14, 2026 7:56:22 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:22.1325713Z INFO: JavaFX static libs downloaded successfully
+2026-05-14T07:56:22.1326863Z May 14, 2026 7:56:22 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:22.1327773Z INFO: Downloading Android SDK manager...
+2026-05-14T07:56:22.2479236Z 
+2026-05-14T07:56:22.3503555Z Download progress: 0.00 / 127.32M
+2026-05-14T07:56:22.4168363Z Download progress: 12.73 / 127.32M
+2026-05-14T07:56:22.4803326Z Download progress: 25.47 / 127.32M
+2026-05-14T07:56:22.5462660Z Download progress: 38.20 / 127.32M
+2026-05-14T07:56:22.6089609Z Download progress: 50.93 / 127.32M
+2026-05-14T07:56:22.6672513Z Download progress: 63.66 / 127.32M
+2026-05-14T07:56:22.7388091Z Download progress: 76.40 / 127.32M
+2026-05-14T07:56:22.8098268Z Download progress: 89.13 / 127.32M
+2026-05-14T07:56:22.8751466Z Download progress: 101.86 / 127.32M
+2026-05-14T07:56:22.9408417Z Download progress: 114.59 / 127.32M
+2026-05-14T07:56:22.9409892Z Download progress: 127.32 / 127.32M
+2026-05-14T07:56:23.6899874Z May 14, 2026 7:56:23 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:23.6900743Z INFO: Android SDK manager downloaded successfully
+2026-05-14T07:56:23.6901525Z May 14, 2026 7:56:23 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:23.6902195Z INFO: Downloading sysroot zip...
+2026-05-14T07:56:23.7455877Z 
+2026-05-14T07:56:23.9188146Z Download progress: 0.01 / 62.36M
+2026-05-14T07:56:23.9734101Z Download progress: 6.24 / 62.36M
+2026-05-14T07:56:24.0264842Z Download progress: 12.48 / 62.36M
+2026-05-14T07:56:24.0803491Z Download progress: 18.71 / 62.36M
+2026-05-14T07:56:24.1454533Z Download progress: 24.95 / 62.36M
+2026-05-14T07:56:24.1966300Z Download progress: 31.18 / 62.36M
+2026-05-14T07:56:24.2475119Z Download progress: 37.42 / 62.36M
+2026-05-14T07:56:24.3113495Z Download progress: 43.66 / 62.36M
+2026-05-14T07:56:24.3622854Z Download progress: 49.89 / 62.36M
+2026-05-14T07:56:24.4181834Z Download progress: 56.12 / 62.36M
+2026-05-14T07:56:24.4183019Z Download progress: 62.36 / 62.36M
+2026-05-14T07:56:26.5610858Z May 14, 2026 7:56:26 AM com.gluonhq.substrate.util.Logger logInfo
+2026-05-14T07:56:26.5611874Z INFO: Sysroot zip downloaded successfully
+2026-05-14T07:56:26.5636555Z [Thu May 14 07:56:26 UTC 2026][INFO] ==================== COMPILE TASK ====================
+2026-05-14T07:56:26.7105759Z              _______  ___      __   __  _______  __    _
+2026-05-14T07:56:26.7107636Z             |       ||   |    |  | |  ||       ||  |  | |
+2026-05-14T07:56:26.7108432Z             |    ___||   |    |  | |  ||   _   ||   |_| |
+2026-05-14T07:56:26.7109197Z             |   | __ |   |    |  |_|  ||  | |  ||       |
+2026-05-14T07:56:26.7110170Z             |   ||  ||   |___ |       ||  |_|  ||  _    |
+2026-05-14T07:56:26.7110989Z             |   |_| ||       ||       ||       || | |   |
+2026-05-14T07:56:26.7111788Z             |_______||_______||_______||_______||_|  |__|
+2026-05-14T07:56:26.7112308Z 
+2026-05-14T07:56:26.7112789Z     Access to the latest docs, tips and tricks and more info on
+2026-05-14T07:56:26.7113682Z     how to get support? Register your usage of Gluon Substrate now at
+2026-05-14T07:56:26.7114355Z 
+2026-05-14T07:56:26.7114806Z     https://gluonhq.com/activate
+2026-05-14T07:56:26.7115132Z 
+2026-05-14T07:56:26.7115143Z 
+2026-05-14T07:56:26.7115152Z 
+2026-05-14T07:56:26.7115924Z [Thu May 14 07:56:26 UTC 2026][INFO] We will now compile your code for aarch64-linux-android. This may take some time.
+2026-05-14T07:56:28.0711109Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: Ignoring server-mode native-image argument --no-server.
+2026-05-14T07:56:28.0922573Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+ForceNoROSectionRelocations' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.0973775Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+UseCAPCache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.0976429Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:-DeadlockWatchdogExitOnTimeout' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.0979031Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:DeadlockWatchdogInterval=0' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1008210Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:TempDirectory=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1011276Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+RemoveSaturatedTypeFlows' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1014479Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:ResourceConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/resourceconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1025237Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:IncludeResourceBundles=com/sun/javafx/scene/control/skin/resources/controls,com/sun/javafx/scene/control/skin/resources/controls-nt,com.sun.javafx.tk.quantum.QuantumMessagesBundle' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1028603Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+NewCAPCache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1041610Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:-SpawnIsolates' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1045169Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:CAPCacheDir=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1048104Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+ExitAfterRelocatableImageWrite' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1051851Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:EnableURLProtocols=http,https' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1054276Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+SharedLibrary' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1057569Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:JNIConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/jniconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1062177Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:ReflectionConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/reflectionconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1065460Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:CompilerBackend=lir' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:28.1069285Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: Please re-evaluate whether any experimental option is required, and either remove or unlock it. The build output lists all active experimental options, including where they come from and possible alternatives. If you think an experimental option should be considered as stable, please file an issue.
+2026-05-14T07:56:34.5456350Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] ========================================================================================================================
+2026-05-14T07:56:34.5458912Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] GraalVM Native Image: Generating 'smartfarm.main' (shared library)...
+2026-05-14T07:56:34.5461050Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] ========================================================================================================================
+2026-05-14T07:56:34.5462725Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] For detailed information and explanations on the build output, visit:
+2026-05-14T07:56:34.5464477Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/BuildOutput.md
+2026-05-14T07:56:34.5466456Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] ------------------------------------------------------------------------------------------------------------------------
+2026-05-14T07:56:36.4691757Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 
+2026-05-14T07:56:36.4872540Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] [1/8] Initializing...                                                                                    (0.0s @ 0.09GB)
+2026-05-14T07:56:36.4897776Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] Error: Could not load CAPCache file. Ensure that options UseCAPCache and NewCAPCache are used on the same version of your application. Raw error: /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache/AArch64LibCHelperDirectives.cap (No such file or directory)
+2026-05-14T07:56:36.4903514Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] com.oracle.svm.core.util.UserError$UserException: Could not load CAPCache file. Ensure that options UseCAPCache and NewCAPCache are used on the same version of your application. Raw error: /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache/AArch64LibCHelperDirectives.cap (No such file or directory)
+2026-05-14T07:56:36.4907629Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:73)
+2026-05-14T07:56:36.4910545Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.CAnnotationProcessorCache.get(CAnnotationProcessorCache.java:168)
+2026-05-14T07:56:36.4913815Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.CAnnotationProcessor.process(CAnnotationProcessor.java:95)
+2026-05-14T07:56:36.4948157Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.NativeLibraries.finish(NativeLibraries.java:559)
+2026-05-14T07:56:36.4951018Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.processNativeLibraryImports(NativeImageGenerator.java:1752)
+2026-05-14T07:56:36.4953558Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeLibraries(NativeImageGenerator.java:1200)
+2026-05-14T07:56:36.4955918Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeImage(NativeImageGenerator.java:960)
+2026-05-14T07:56:36.4958292Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:590)
+2026-05-14T07:56:36.4960716Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)
+2026-05-14T07:56:36.4963045Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:539)
+2026-05-14T07:56:36.4965524Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:721)
+2026-05-14T07:56:36.4968029Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:143)
+2026-05-14T07:56:36.4970656Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:98)
+2026-05-14T07:56:36.4972761Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] ------------------------------------------------------------------------------------------------------------------------
+2026-05-14T07:56:36.5018820Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB]                         0.8s (10.0% of total time) in 24 GCs | Peak RSS: 0.44GB | CPU load: 1.88
+2026-05-14T07:56:36.5020525Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] ========================================================================================================================
+2026-05-14T07:56:36.5032775Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] Finished generating 'smartfarm.main' in 7.0s.
+2026-05-14T07:56:36.8405891Z [Thu May 14 07:56:36 UTC 2026][SEVERE] Process compile failed with result: 1
+2026-05-14T07:56:36.8409183Z Check the log files under /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/log
+2026-05-14T07:56:36.8410634Z And please check https://docs.gluonhq.com/ for more information.
+2026-05-14T07:56:36.8482599Z [Thu May 14 07:56:36 UTC 2026][INFO] Logging process [compile] to file: /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/log/process-compile-1778745396843.log
+2026-05-14T07:56:36.8502004Z [Thu May 14 07:56:36 UTC 2026][SEVERE] Compiling failed.
+2026-05-14T07:56:36.8523721Z Check the log files under /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/log
+2026-05-14T07:56:36.8524942Z And please check https://docs.gluonhq.com/ for more information.
+2026-05-14T07:56:36.8540432Z [INFO] ------------------------------------------------------------------------
+2026-05-14T07:56:36.8541303Z [INFO] BUILD FAILURE
+2026-05-14T07:56:36.8542246Z [INFO] ------------------------------------------------------------------------
+2026-05-14T07:56:36.8561086Z [INFO] Total time:  19.116 s
+2026-05-14T07:56:36.8580268Z [INFO] Finished at: 2026-05-14T07:56:36Z
+2026-05-14T07:56:36.8581083Z [INFO] ------------------------------------------------------------------------
+2026-05-14T07:56:36.8582656Z [ERROR] Failed to execute goal com.gluonhq:gluonfx-maven-plugin:1.0.28:compile (default-cli) on project smart-farm: Compiling failed -> [Help 1]
+2026-05-14T07:56:36.8583787Z [ERROR] 
+2026-05-14T07:56:36.8584768Z [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+2026-05-14T07:56:36.8585971Z [ERROR] Re-run Maven using the -X switch to enable full debug logging.
+2026-05-14T07:56:36.8586806Z [ERROR] 
+2026-05-14T07:56:36.8587832Z [ERROR] For more information about the errors and possible solutions, please read the following articles:
+2026-05-14T07:56:36.8589288Z [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+2026-05-14T07:56:36.8793871Z [INFO] ------------------------------------------------------------------------
+2026-05-14T07:56:36.8796942Z [INFO] BUILD FAILURE
+2026-05-14T07:56:36.8797924Z [INFO] ------------------------------------------------------------------------
+2026-05-14T07:56:36.8802151Z [INFO] Total time:  24.331 s
+2026-05-14T07:56:36.8806337Z [INFO] Finished at: 2026-05-14T07:56:36Z
+2026-05-14T07:56:36.8811125Z [INFO] ------------------------------------------------------------------------
+2026-05-14T07:56:36.8814001Z [ERROR] Failed to execute goal com.gluonhq:gluonfx-maven-plugin:1.0.28:build (default-cli) on project smart-farm: Error, gluonfx:build failed -> [Help 1]
+2026-05-14T07:56:36.8816564Z [ERROR] 
+2026-05-14T07:56:36.8817487Z [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+2026-05-14T07:56:36.8820858Z [ERROR] Re-run Maven using the -X switch to enable full debug logging.
+2026-05-14T07:56:36.8821457Z [ERROR] 
+2026-05-14T07:56:36.8822274Z [ERROR] For more information about the errors and possible solutions, please read the following articles:
+2026-05-14T07:56:36.8823534Z [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+2026-05-14T07:56:36.8968911Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,30 @@
+﻿2026-05-14T07:54:59.1845927Z ##[group]Run graalvm/setup-graalvm@v1
+2026-05-14T07:54:59.1846227Z with:
+2026-05-14T07:54:59.1846419Z   java-version: 21.0.2
+2026-05-14T07:54:59.1846647Z   distribution: graalvm-community
+2026-05-14T07:54:59.1847151Z   github-token: ***
+2026-05-14T07:54:59.1847368Z   cache: maven
+2026-05-14T07:54:59.1847568Z   java-package: jdk
+2026-05-14T07:54:59.1847780Z   set-java-home: true
+2026-05-14T07:54:59.1847998Z   check-for-updates: true
+2026-05-14T07:54:59.1848229Z   native-image-musl: false
+2026-05-14T07:54:59.1848475Z   native-image-job-reports: false
+2026-05-14T07:54:59.1848759Z   native-image-pr-reports: false
+2026-05-14T07:54:59.1849059Z   native-image-pr-reports-update-existing: false
+2026-05-14T07:54:59.1849535Z   native-image-enable-sbom: false
+2026-05-14T07:54:59.1849790Z env:
+2026-05-14T07:54:59.1849983Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:54:59.1850231Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:54:59.1850508Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:54:59.1850736Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:54:59.1851005Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:54:59.1851247Z ##[endgroup]
+2026-05-14T07:55:01.0392836Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/bf4ddd6e-34e4-4599-919f-a77369db4f50 -f /home/runner/work/_temp/899da68f-b57f-49eb-a34b-c96060aff2ab/.gz
+2026-05-14T07:55:05.4993330Z Adding graalvm-community-jdk-21.0.2_linux-x64_bin 21.0.2 to tool-cache ...
+2026-05-14T07:55:08.3271742Z maven cache is not found
+2026-05-14T07:55:08.3274229Z ##[group]Successfully set up 'graalvm-community-openjdk-21.0.2+13.1'
+2026-05-14T07:55:08.3278658Z [command]/opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1/bin/java --version
+2026-05-14T07:55:08.3907291Z openjdk 21.0.2 2024-01-16
+2026-05-14T07:55:08.3913995Z OpenJDK Runtime Environment GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30)
+2026-05-14T07:55:08.3915386Z OpenJDK 64-Bit Server VM GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30, mixed mode, sharing)
+2026-05-14T07:55:08.3956614Z ##[endgroup]

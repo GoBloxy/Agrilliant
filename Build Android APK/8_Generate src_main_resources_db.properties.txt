@@ -1,0 +1,28 @@
+﻿2026-05-14T07:55:46.8797500Z ##[group]Run if [ -z "$DB_URL" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
+2026-05-14T07:55:46.8798038Z [36;1mif [ -z "$DB_URL" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then[0m
+2026-05-14T07:55:46.8798496Z [36;1m  echo "::error::Missing one of DB_URL / DB_USER / DB_PASSWORD secrets"[0m
+2026-05-14T07:55:46.8798855Z [36;1m  exit 1[0m
+2026-05-14T07:55:46.8799048Z [36;1mfi[0m
+2026-05-14T07:55:46.8799288Z [36;1mcat > src/main/resources/db.properties <<EOF[0m
+2026-05-14T07:55:46.8799940Z [36;1mdb.url=$DB_URL[0m
+2026-05-14T07:55:46.8800181Z [36;1mdb.user=$DB_USER[0m
+2026-05-14T07:55:46.8800544Z [36;1mdb.***
+2026-05-14T07:55:46.8800736Z [36;1mEOF[0m
+2026-05-14T07:55:46.8801094Z [36;1mecho "db.properties written ($(wc -c < src/main/resources/db.properties) bytes)"[0m
+2026-05-14T07:55:46.8851268Z shell: /usr/bin/bash -e {0}
+2026-05-14T07:55:46.8851522Z env:
+2026-05-14T07:55:46.8851710Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:55:46.8851965Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:55:46.8852277Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:55:46.8852509Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:55:46.8852747Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:55:46.8853315Z   GRAALVM_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:55:46.8854172Z   JAVA_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:55:46.8854745Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-05-14T07:55:46.8855037Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-05-14T07:55:46.8855367Z   ANDROID_NDK: /usr/local/lib/android/sdk/ndk/26.1.10909125
+2026-05-14T07:55:46.8855783Z   DB_URL: ***
+2026-05-14T07:55:46.8855988Z   DB_USER: ***
+2026-05-14T07:55:46.8856202Z   DB_PASSWORD: ***
+2026-05-14T07:55:46.8856399Z ##[endgroup]
+2026-05-14T07:55:46.8955005Z db.properties written (104 bytes)

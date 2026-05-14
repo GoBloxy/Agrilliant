@@ -1,0 +1,78 @@
+﻿2026-05-14T07:54:35.1613100Z ##[group]Run actions/checkout@v4
+2026-05-14T07:54:35.1614588Z with:
+2026-05-14T07:54:35.1615413Z   fetch-depth: 1
+2026-05-14T07:54:35.1616340Z   repository: GoBloxy/Agrilliant
+2026-05-14T07:54:35.1617700Z   token: ***
+2026-05-14T07:54:35.1618525Z   ssh-strict: true
+2026-05-14T07:54:35.1619631Z   ssh-user: git
+2026-05-14T07:54:35.1620551Z   persist-credentials: true
+2026-05-14T07:54:35.1621532Z   clean: true
+2026-05-14T07:54:35.1622443Z   sparse-checkout-cone-mode: true
+2026-05-14T07:54:35.1623508Z   fetch-tags: false
+2026-05-14T07:54:35.1624406Z   show-progress: true
+2026-05-14T07:54:35.1625303Z   lfs: false
+2026-05-14T07:54:35.1626125Z   submodules: false
+2026-05-14T07:54:35.1627032Z   set-safe-directory: true
+2026-05-14T07:54:35.1628476Z env:
+2026-05-14T07:54:35.1629296Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:54:35.1630741Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:54:35.1631983Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:54:35.1632986Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:54:35.1634070Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:54:35.1635107Z ##[endgroup]
+2026-05-14T07:54:35.2939044Z Syncing repository: GoBloxy/Agrilliant
+2026-05-14T07:54:35.2943713Z ##[group]Getting Git version info
+2026-05-14T07:54:35.2946171Z Working directory is '/home/runner/work/Agrilliant/Agrilliant'
+2026-05-14T07:54:35.2951980Z [command]/usr/bin/git version
+2026-05-14T07:54:35.3022460Z git version 2.53.0
+2026-05-14T07:54:35.3058785Z ##[endgroup]
+2026-05-14T07:54:35.3084404Z Temporarily overriding HOME='/home/runner/work/_temp/b40aeb37-6144-4d53-9184-790fe2acd537' before making global git config changes
+2026-05-14T07:54:35.3092341Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-14T07:54:35.3097780Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Agrilliant/Agrilliant
+2026-05-14T07:54:35.3145614Z Deleting the contents of '/home/runner/work/Agrilliant/Agrilliant'
+2026-05-14T07:54:35.3150707Z ##[group]Initializing the repository
+2026-05-14T07:54:35.3153685Z [command]/usr/bin/git init /home/runner/work/Agrilliant/Agrilliant
+2026-05-14T07:54:35.3296583Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-05-14T07:54:35.3301112Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-05-14T07:54:35.3304339Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-05-14T07:54:35.3307002Z hint: call:
+2026-05-14T07:54:35.3308443Z hint:
+2026-05-14T07:54:35.3310418Z hint: 	git config --global init.defaultBranch <name>
+2026-05-14T07:54:35.3312542Z hint:
+2026-05-14T07:54:35.3314480Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-05-14T07:54:35.3317700Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-05-14T07:54:35.3320968Z hint:
+2026-05-14T07:54:35.3322417Z hint: 	git branch -m <name>
+2026-05-14T07:54:35.3323941Z hint:
+2026-05-14T07:54:35.3325963Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-05-14T07:54:35.3330311Z Initialized empty Git repository in /home/runner/work/Agrilliant/Agrilliant/.git/
+2026-05-14T07:54:35.3337757Z [command]/usr/bin/git remote add origin https://github.com/GoBloxy/Agrilliant
+2026-05-14T07:54:35.3368064Z ##[endgroup]
+2026-05-14T07:54:35.3469301Z ##[group]Disabling automatic garbage collection
+2026-05-14T07:54:35.3472969Z [command]/usr/bin/git config --local gc.auto 0
+2026-05-14T07:54:35.3481361Z ##[endgroup]
+2026-05-14T07:54:35.3485503Z ##[group]Setting up auth
+2026-05-14T07:54:35.3487935Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-14T07:54:35.3495533Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-14T07:54:35.3853060Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-14T07:54:35.3889865Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-14T07:54:35.4134606Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-14T07:54:35.4177672Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-14T07:54:35.4430716Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-05-14T07:54:35.4471707Z ##[endgroup]
+2026-05-14T07:54:35.4476218Z ##[group]Fetching the repository
+2026-05-14T07:54:35.4484810Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +42d260b90e5de766605a4cdd7c9edc9aecf68c55:refs/remotes/origin/mobile-app
+2026-05-14T07:54:36.2077141Z From https://github.com/GoBloxy/Agrilliant
+2026-05-14T07:54:36.2080287Z  * [new ref]         42d260b90e5de766605a4cdd7c9edc9aecf68c55 -> origin/mobile-app
+2026-05-14T07:54:36.2117076Z ##[endgroup]
+2026-05-14T07:54:36.2117925Z ##[group]Determining the checkout info
+2026-05-14T07:54:36.2119692Z ##[endgroup]
+2026-05-14T07:54:36.2125122Z [command]/usr/bin/git sparse-checkout disable
+2026-05-14T07:54:36.2188463Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-05-14T07:54:36.2222012Z ##[group]Checking out the ref
+2026-05-14T07:54:36.2223705Z [command]/usr/bin/git checkout --progress --force -B mobile-app refs/remotes/origin/mobile-app
+2026-05-14T07:54:36.2873242Z Switched to a new branch 'mobile-app'
+2026-05-14T07:54:36.2888758Z branch 'mobile-app' set up to track 'origin/mobile-app'.
+2026-05-14T07:54:36.2912498Z ##[endgroup]
+2026-05-14T07:54:36.2958602Z [command]/usr/bin/git log -1 --format=%H
+2026-05-14T07:54:36.2994384Z 42d260b90e5de766605a4cdd7c9edc9aecf68c55

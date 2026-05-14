@@ -1,0 +1,36 @@
+﻿2026-05-14T07:56:36.9699027Z ##[group]Run actions/upload-artifact@v4
+2026-05-14T07:56:36.9699314Z with:
+2026-05-14T07:56:36.9699666Z   name: gluonfx-failure-logs
+2026-05-14T07:56:36.9700135Z   path: target/gluonfx/**/*.log
+target/gluonfx/**/native-image*
+target/gluonfx/**/svm_err_*
+target/gluonfx/**/*.json
+
+2026-05-14T07:56:36.9700626Z   retention-days: 14
+2026-05-14T07:56:36.9700838Z   if-no-files-found: warn
+2026-05-14T07:56:36.9701067Z   compression-level: 6
+2026-05-14T07:56:36.9701294Z   overwrite: false
+2026-05-14T07:56:36.9701498Z   include-hidden-files: false
+2026-05-14T07:56:36.9701718Z env:
+2026-05-14T07:56:36.9701891Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:56:36.9702129Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:56:36.9702399Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:56:36.9702622Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:56:36.9702849Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:56:36.9703401Z   GRAALVM_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:36.9704281Z   JAVA_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:36.9704835Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-05-14T07:56:36.9705122Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-05-14T07:56:36.9705448Z   ANDROID_NDK: /usr/local/lib/android/sdk/ndk/26.1.10909125
+2026-05-14T07:56:36.9705753Z ##[endgroup]
+2026-05-14T07:56:37.2500269Z With the provided path, there will be 5 files uploaded
+2026-05-14T07:56:37.2508239Z Artifact name is valid!
+2026-05-14T07:56:37.2508787Z Root directory input is valid!
+2026-05-14T07:56:37.4639120Z Beginning upload of artifact content to blob storage
+2026-05-14T07:56:37.6273871Z Uploaded bytes 19117
+2026-05-14T07:56:37.6606572Z Finished uploading artifact content to blob storage!
+2026-05-14T07:56:37.6611614Z SHA256 digest of uploaded artifact zip is b7b088b5e48cc6678282db196c5fbee5a3171ff6cbd20da24777fbe0a0a5b12e
+2026-05-14T07:56:37.6613108Z Finalizing artifact upload
+2026-05-14T07:56:37.8113966Z Artifact gluonfx-failure-logs.zip successfully finalized. Artifact ID 6989821489
+2026-05-14T07:56:37.8115760Z Artifact gluonfx-failure-logs has been successfully uploaded! Final size is 19117 bytes. Artifact ID is 6989821489
+2026-05-14T07:56:37.8122766Z Artifact download URL: https://github.com/GoBloxy/Agrilliant/actions/runs/25848749343/artifacts/6989821489

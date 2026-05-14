@@ -1,0 +1,27 @@
+﻿2026-05-14T07:56:37.8238810Z ##[group]Run {
+2026-05-14T07:56:37.8239064Z [36;1m{[0m
+2026-05-14T07:56:37.8239285Z [36;1m  echo "# Agrilliant Android Build"[0m
+2026-05-14T07:56:37.8239736Z [36;1m  echo ""[0m
+2026-05-14T07:56:37.8239955Z [36;1m  echo "**APK:** \`\`"[0m
+2026-05-14T07:56:37.8240199Z [36;1m  echo ""[0m
+2026-05-14T07:56:37.8240415Z [36;1m  echo "**Status:** failure"[0m
+2026-05-14T07:56:37.8240698Z [36;1m  echo ""[0m
+2026-05-14T07:56:37.8240903Z [36;1m  echo "## Next steps"[0m
+2026-05-14T07:56:37.8241254Z [36;1m  echo "1. Download the \`agrilliant-apk\` artifact from this run."[0m
+2026-05-14T07:56:37.8241838Z [36;1m  echo "2. Apply the SQL migration on your MySQL: \`docs/sql/2026-05-14-fix-growthstage-growing.sql\`"[0m
+2026-05-14T07:56:37.8242455Z [36;1m  echo "3. \`adb install <downloaded-apk>\` on a device with USB debugging on."[0m
+2026-05-14T07:56:37.8243035Z [36;1m  echo "4. Stream logs while testing: \`adb logcat -s GraalVM:V GluonAttach:V Agrilliant:V\`"[0m
+2026-05-14T07:56:37.8243681Z [36;1m} >> $GITHUB_STEP_SUMMARY[0m
+2026-05-14T07:56:37.8300065Z shell: /usr/bin/bash -e {0}
+2026-05-14T07:56:37.8300318Z env:
+2026-05-14T07:56:37.8300513Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:56:37.8300769Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:56:37.8301056Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:56:37.8301288Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:56:37.8301532Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:56:37.8302112Z   GRAALVM_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:37.8302967Z   JAVA_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:37.8303525Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-05-14T07:56:37.8303826Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-05-14T07:56:37.8304161Z   ANDROID_NDK: /usr/local/lib/android/sdk/ndk/26.1.10909125
+2026-05-14T07:56:37.8304477Z ##[endgroup]

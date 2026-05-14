@@ -1,0 +1,332 @@
+﻿2026-05-14T07:56:36.9015543Z ##[group]Run echo "::group::Directory listing of target/gluonfx"
+2026-05-14T07:56:36.9016058Z [36;1mecho "::group::Directory listing of target/gluonfx"[0m
+2026-05-14T07:56:36.9016511Z [36;1mfind target/gluonfx -maxdepth 4 -type f 2>/dev/null | sort || true[0m
+2026-05-14T07:56:36.9016907Z [36;1mecho "::endgroup::"[0m
+2026-05-14T07:56:36.9017130Z [36;1m[0m
+2026-05-14T07:56:36.9017412Z [36;1mecho "::group::Last 200 lines of every *.log under target/gluonfx"[0m
+2026-05-14T07:56:36.9018057Z [36;1mfind target/gluonfx -name '*.log' 2>/dev/null | while read -r f; do[0m
+2026-05-14T07:56:36.9018426Z [36;1m  echo "────── $f ──────"[0m
+2026-05-14T07:56:36.9018705Z [36;1m  tail -n 200 "$f" 2>/dev/null || true[0m
+2026-05-14T07:56:36.9018977Z [36;1m  echo[0m
+2026-05-14T07:56:36.9019163Z [36;1mdone[0m
+2026-05-14T07:56:36.9019631Z [36;1mecho "::endgroup::"[0m
+2026-05-14T07:56:36.9019967Z [36;1m[0m
+2026-05-14T07:56:36.9020271Z [36;1mecho "::group::Last 100 lines of native-image text output (if any)"[0m
+2026-05-14T07:56:36.9020854Z [36;1mfind target/gluonfx -name 'native-image*' -type f 2>/dev/null | while read -r f; do[0m
+2026-05-14T07:56:36.9021284Z [36;1m  echo "────── $f ──────"[0m
+2026-05-14T07:56:36.9021553Z [36;1m  tail -n 100 "$f" 2>/dev/null || true[0m
+2026-05-14T07:56:36.9021818Z [36;1m  echo[0m
+2026-05-14T07:56:36.9022000Z [36;1mdone[0m
+2026-05-14T07:56:36.9022195Z [36;1mecho "::endgroup::"[0m
+2026-05-14T07:56:36.9078905Z shell: /usr/bin/bash -e {0}
+2026-05-14T07:56:36.9079207Z env:
+2026-05-14T07:56:36.9079510Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:56:36.9079768Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:56:36.9080053Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:56:36.9080280Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:56:36.9080517Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:56:36.9081082Z   GRAALVM_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:36.9081941Z   JAVA_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:36.9082534Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-05-14T07:56:36.9082830Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-05-14T07:56:36.9083161Z   ANDROID_NDK: /usr/local/lib/android/sdk/ndk/26.1.10909125
+2026-05-14T07:56:36.9083467Z ##[endgroup]
+2026-05-14T07:56:36.9166563Z ##[group]Directory listing of target/gluonfx
+2026-05-14T07:56:36.9191459Z target/gluonfx/aarch64-android/gvm/Agrilliant/attach_adapter.c
+2026-05-14T07:56:36.9192369Z target/gluonfx/aarch64-android/gvm/Agrilliant/attach_adapter.o
+2026-05-14T07:56:36.9193168Z target/gluonfx/aarch64-android/gvm/Agrilliant/dummy.c
+2026-05-14T07:56:36.9193929Z target/gluonfx/aarch64-android/gvm/Agrilliant/dummy.o
+2026-05-14T07:56:36.9194710Z target/gluonfx/aarch64-android/gvm/Agrilliant/glibc_shim.c
+2026-05-14T07:56:36.9195505Z target/gluonfx/aarch64-android/gvm/Agrilliant/glibc_shim.o
+2026-05-14T07:56:36.9196279Z target/gluonfx/aarch64-android/gvm/Agrilliant/grandroid.h
+2026-05-14T07:56:36.9199623Z target/gluonfx/aarch64-android/gvm/Agrilliant/grandroid_ext.h
+2026-05-14T07:56:36.9200498Z target/gluonfx/aarch64-android/gvm/Agrilliant/javafx_adapter.c
+2026-05-14T07:56:36.9201348Z target/gluonfx/aarch64-android/gvm/Agrilliant/javafx_adapter.o
+2026-05-14T07:56:36.9202142Z target/gluonfx/aarch64-android/gvm/Agrilliant/launcher.c
+2026-05-14T07:56:36.9202907Z target/gluonfx/aarch64-android/gvm/Agrilliant/launcher.o
+2026-05-14T07:56:36.9203789Z target/gluonfx/aarch64-android/gvm/Agrilliant/logger.c
+2026-05-14T07:56:36.9204531Z target/gluonfx/aarch64-android/gvm/Agrilliant/logger.o
+2026-05-14T07:56:36.9205324Z target/gluonfx/aarch64-android/gvm/Agrilliant/touch_events.c
+2026-05-14T07:56:36.9206146Z target/gluonfx/aarch64-android/gvm/Agrilliant/touch_events.o
+2026-05-14T07:56:36.9207006Z target/gluonfx/aarch64-android/gvm/jniconfig-aarch64-android.json
+2026-05-14T07:56:36.9207790Z target/gluonfx/aarch64-android/gvm/lib/libdisplay.a
+2026-05-14T07:56:36.9208813Z target/gluonfx/aarch64-android/gvm/lib/liblifecycle.a
+2026-05-14T07:56:36.9209857Z target/gluonfx/aarch64-android/gvm/lib/libpictures.a
+2026-05-14T07:56:36.9210637Z target/gluonfx/aarch64-android/gvm/lib/libsettings.a
+2026-05-14T07:56:36.9211377Z target/gluonfx/aarch64-android/gvm/lib/libstatusbar.a
+2026-05-14T07:56:36.9212088Z target/gluonfx/aarch64-android/gvm/lib/libstorage.a
+2026-05-14T07:56:36.9212779Z target/gluonfx/aarch64-android/gvm/lib/libutil.a
+2026-05-14T07:56:36.9213761Z target/gluonfx/aarch64-android/gvm/log/client-debug0.log
+2026-05-14T07:56:36.9214675Z target/gluonfx/aarch64-android/gvm/reflectionconfig-aarch64-android.json
+2026-05-14T07:56:36.9215701Z target/gluonfx/aarch64-android/gvm/resourceconfig-aarch64-android.json
+2026-05-14T07:56:36.9216611Z target/gluonfx/aarch64-android/gvm/tmp/classpathJar.jar
+2026-05-14T07:56:36.9217345Z target/gluonfx/log/process-compile-1778745396843.log
+2026-05-14T07:56:36.9218124Z ##[endgroup]
+2026-05-14T07:56:36.9218802Z ##[group]Last 200 lines of every *.log under target/gluonfx
+2026-05-14T07:56:36.9222785Z ────── target/gluonfx/aarch64-android/gvm/log/client-debug0.log ──────
+2026-05-14T07:56:36.9236111Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/AlertController$3.class to /tmp/classes12940484876127899293/smartfarm/ui/AlertController$3.class
+2026-05-14T07:56:36.9241504Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/SignInController.class to /tmp/classes12940484876127899293/smartfarm/ui/SignInController.class
+2026-05-14T07:56:36.9244424Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/CropsPage.class to /tmp/classes12940484876127899293/smartfarm/ui/CropsPage.class
+2026-05-14T07:56:36.9247301Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/PlotController$4.class to /tmp/classes12940484876127899293/smartfarm/ui/PlotController$4.class
+2026-05-14T07:56:36.9250731Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/DashboardController$HarvestData.class to /tmp/classes12940484876127899293/smartfarm/ui/DashboardController$HarvestData.class
+2026-05-14T07:56:36.9255978Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/LogsController$LogListCell.class to /tmp/classes12940484876127899293/smartfarm/ui/LogsController$LogListCell.class
+2026-05-14T07:56:36.9259253Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/async/AsyncCalls.class to /tmp/classes12940484876127899293/smartfarm/ui/async/AsyncCalls.class
+2026-05-14T07:56:36.9262933Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/LogsController.class to /tmp/classes12940484876127899293/smartfarm/ui/LogsController.class
+2026-05-14T07:56:36.9266035Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/PlotController$1.class to /tmp/classes12940484876127899293/smartfarm/ui/PlotController$1.class
+2026-05-14T07:56:36.9269118Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/DiseaseDetectionPage$1.class to /tmp/classes12940484876127899293/smartfarm/ui/DiseaseDetectionPage$1.class
+2026-05-14T07:56:36.9272758Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/PlotController.class to /tmp/classes12940484876127899293/smartfarm/ui/PlotController.class
+2026-05-14T07:56:36.9275802Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/DiseaseDetectionPage.class to /tmp/classes12940484876127899293/smartfarm/ui/DiseaseDetectionPage.class
+2026-05-14T07:56:36.9279234Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/AlertController$1.class to /tmp/classes12940484876127899293/smartfarm/ui/AlertController$1.class
+2026-05-14T07:56:36.9283442Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/CropController$2.class to /tmp/classes12940484876127899293/smartfarm/ui/CropController$2.class
+2026-05-14T07:56:36.9286592Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/CropsPage$CropRow.class to /tmp/classes12940484876127899293/smartfarm/ui/CropsPage$CropRow.class
+2026-05-14T07:56:36.9289732Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/PlotController$3.class to /tmp/classes12940484876127899293/smartfarm/ui/PlotController$3.class
+2026-05-14T07:56:36.9291488Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/CropController$1.class to /tmp/classes12940484876127899293/smartfarm/ui/CropController$1.class
+2026-05-14T07:56:36.9293127Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/PlotController$PlotData.class to /tmp/classes12940484876127899293/smartfarm/ui/PlotController$PlotData.class
+2026-05-14T07:56:36.9294772Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/WorkerController.class to /tmp/classes12940484876127899293/smartfarm/ui/WorkerController.class
+2026-05-14T07:56:36.9296400Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/MonitoringController.class to /tmp/classes12940484876127899293/smartfarm/ui/MonitoringController.class
+2026-05-14T07:56:36.9298160Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/DashboardController$CropPlotData.class to /tmp/classes12940484876127899293/smartfarm/ui/DashboardController$CropPlotData.class
+2026-05-14T07:56:36.9300059Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/AboutPage.class to /tmp/classes12940484876127899293/smartfarm/ui/AboutPage.class
+2026-05-14T07:56:36.9301769Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/tools/LauncherIconGenerator.class to /tmp/classes12940484876127899293/smartfarm/ui/tools/LauncherIconGenerator.class
+2026-05-14T07:56:36.9303449Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/SettingsPage.class to /tmp/classes12940484876127899293/smartfarm/ui/SettingsPage.class
+2026-05-14T07:56:36.9304995Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/PlotController$2.class to /tmp/classes12940484876127899293/smartfarm/ui/PlotController$2.class
+2026-05-14T07:56:36.9306723Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/HarvestController$HarvestListCell.class to /tmp/classes12940484876127899293/smartfarm/ui/HarvestController$HarvestListCell.class
+2026-05-14T07:56:36.9308436Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/PlotController$5.class to /tmp/classes12940484876127899293/smartfarm/ui/PlotController$5.class
+2026-05-14T07:56:36.9310458Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/TaskController$TaskListCell.class to /tmp/classes12940484876127899293/smartfarm/ui/TaskController$TaskListCell.class
+2026-05-14T07:56:36.9312499Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/WorkerController$WorkerListCell.class to /tmp/classes12940484876127899293/smartfarm/ui/WorkerController$WorkerListCell.class
+2026-05-14T07:56:36.9314236Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/ui/ReportsController.class to /tmp/classes12940484876127899293/smartfarm/ui/ReportsController.class
+2026-05-14T07:56:36.9315971Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/SensorReading.class to /tmp/classes12940484876127899293/smartfarm/model/SensorReading.class
+2026-05-14T07:56:36.9317613Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Notification$Channel.class to /tmp/classes12940484876127899293/smartfarm/model/Notification$Channel.class
+2026-05-14T07:56:36.9319220Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Device$Type.class to /tmp/classes12940484876127899293/smartfarm/model/Device$Type.class
+2026-05-14T07:56:36.9321168Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Notification$Status.class to /tmp/classes12940484876127899293/smartfarm/model/Notification$Status.class
+2026-05-14T07:56:36.9322806Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Notification.class to /tmp/classes12940484876127899293/smartfarm/model/Notification.class
+2026-05-14T07:56:36.9324378Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/HarvestRecord.class to /tmp/classes12940484876127899293/smartfarm/model/HarvestRecord.class
+2026-05-14T07:56:36.9325990Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/SystemLog$LogType.class to /tmp/classes12940484876127899293/smartfarm/model/SystemLog$LogType.class
+2026-05-14T07:56:36.9327530Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Admin.class to /tmp/classes12940484876127899293/smartfarm/model/Admin.class
+2026-05-14T07:56:36.9329041Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Device$Status.class to /tmp/classes12940484876127899293/smartfarm/model/Device$Status.class
+2026-05-14T07:56:36.9331048Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Alert.class to /tmp/classes12940484876127899293/smartfarm/model/Alert.class
+2026-05-14T07:56:36.9332567Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Attendance.class to /tmp/classes12940484876127899293/smartfarm/model/Attendance.class
+2026-05-14T07:56:36.9334063Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Drone.class to /tmp/classes12940484876127899293/smartfarm/model/Drone.class
+2026-05-14T07:56:36.9335626Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/DiseaseDetection.class to /tmp/classes12940484876127899293/smartfarm/model/DiseaseDetection.class
+2026-05-14T07:56:36.9337153Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Task.class to /tmp/classes12940484876127899293/smartfarm/model/Task.class
+2026-05-14T07:56:36.9338568Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/User.class to /tmp/classes12940484876127899293/smartfarm/model/User.class
+2026-05-14T07:56:36.9340514Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Crop.class to /tmp/classes12940484876127899293/smartfarm/model/Crop.class
+2026-05-14T07:56:36.9342095Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/HarvestRecord$Grade.class to /tmp/classes12940484876127899293/smartfarm/model/HarvestRecord$Grade.class
+2026-05-14T07:56:36.9343915Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Crop$GrowthStage.class to /tmp/classes12940484876127899293/smartfarm/model/Crop$GrowthStage.class
+2026-05-14T07:56:36.9345444Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Plot.class to /tmp/classes12940484876127899293/smartfarm/model/Plot.class
+2026-05-14T07:56:36.9346925Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/SystemLog.class to /tmp/classes12940484876127899293/smartfarm/model/SystemLog.class
+2026-05-14T07:56:36.9348452Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Task$Status.class to /tmp/classes12940484876127899293/smartfarm/model/Task$Status.class
+2026-05-14T07:56:36.9350303Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/IrrigationLog$Method.class to /tmp/classes12940484876127899293/smartfarm/model/IrrigationLog$Method.class
+2026-05-14T07:56:36.9352113Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/DiseaseDetection$Status.class to /tmp/classes12940484876127899293/smartfarm/model/DiseaseDetection$Status.class
+2026-05-14T07:56:36.9353785Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/User$Role.class to /tmp/classes12940484876127899293/smartfarm/model/User$Role.class
+2026-05-14T07:56:36.9355323Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/GisPlot.class to /tmp/classes12940484876127899293/smartfarm/model/GisPlot.class
+2026-05-14T07:56:36.9356920Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Alert$Severity.class to /tmp/classes12940484876127899293/smartfarm/model/Alert$Severity.class
+2026-05-14T07:56:36.9358669Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Notification$RecipientRole.class to /tmp/classes12940484876127899293/smartfarm/model/Notification$RecipientRole.class
+2026-05-14T07:56:36.9360555Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Device.class to /tmp/classes12940484876127899293/smartfarm/model/Device.class
+2026-05-14T07:56:36.9362077Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Drone$Status.class to /tmp/classes12940484876127899293/smartfarm/model/Drone$Status.class
+2026-05-14T07:56:36.9363651Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/IrrigationLog.class to /tmp/classes12940484876127899293/smartfarm/model/IrrigationLog.class
+2026-05-14T07:56:36.9365646Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Manager.class to /tmp/classes12940484876127899293/smartfarm/model/Manager.class
+2026-05-14T07:56:36.9368591Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/DiseaseDetection$Confidence.class to /tmp/classes12940484876127899293/smartfarm/model/DiseaseDetection$Confidence.class
+2026-05-14T07:56:36.9370636Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/model/Worker.class to /tmp/classes12940484876127899293/smartfarm/model/Worker.class
+2026-05-14T07:56:36.9372108Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/TaskDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/TaskDAO.class
+2026-05-14T07:56:36.9373729Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/WorkerDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/WorkerDAO.class
+2026-05-14T07:56:36.9375218Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/SensorDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/SensorDAO.class
+2026-05-14T07:56:36.9376680Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/UserDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/UserDAO.class
+2026-05-14T07:56:36.9378181Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/AlertDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/AlertDAO.class
+2026-05-14T07:56:36.9379889Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/ManagerDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/ManagerDAO.class
+2026-05-14T07:56:36.9381428Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/HarvestDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/HarvestDAO.class
+2026-05-14T07:56:36.9382982Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/AttendanceDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/AttendanceDAO.class
+2026-05-14T07:56:36.9384512Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/PlotDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/PlotDAO.class
+2026-05-14T07:56:36.9385996Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/AdminDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/AdminDAO.class
+2026-05-14T07:56:36.9387454Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/CropDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/CropDAO.class
+2026-05-14T07:56:36.9388917Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/DeviceDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/DeviceDAO.class
+2026-05-14T07:56:36.9390525Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/smartfarm/dao/GenericDAO.class to /tmp/classes12940484876127899293/smartfarm/dao/GenericDAO.class
+2026-05-14T07:56:36.9391932Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/mqtt.properties to /tmp/classes12940484876127899293/mqtt.properties
+2026-05-14T07:56:36.9393223Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/css/farm-theme.css to /tmp/classes12940484876127899293/css/farm-theme.css
+2026-05-14T07:56:36.9394490Z [Thu May 14 07:56:27 UTC 2026][FINE] Copied resource /home/runner/work/Agrilliant/Agrilliant/target/classes/css/mobile.css to /tmp/classes12940484876127899293/css/mobile.css
+2026-05-14T07:56:36.9396147Z [Thu May 14 07:56:27 UTC 2026][FINE] PB Command for jar: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1/bin/jar cf /tmp/classes12940484876127899293/classes.jar -C /tmp/classes12940484876127899293 .
+2026-05-14T07:56:36.9397381Z [Thu May 14 07:56:27 UTC 2026][FINE] Start process jar...
+2026-05-14T07:56:36.9397792Z [Thu May 14 07:56:28 UTC 2026][FINE] Result for jar: 0
+2026-05-14T07:56:36.9398225Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning for resource bundles
+2026-05-14T07:56:36.9399066Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/charm-glisten/6.2.3/charm-glisten-6.2.3.jar
+2026-05-14T07:56:36.9400113Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/display/4.0.23/display-4.0.23-android.jar
+2026-05-14T07:56:36.9401613Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/display/4.0.23/display-4.0.23.jar
+2026-05-14T07:56:36.9403306Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/lifecycle/4.0.23/lifecycle-4.0.23-android.jar
+2026-05-14T07:56:36.9404948Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/lifecycle/4.0.23/lifecycle-4.0.23.jar
+2026-05-14T07:56:36.9406569Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/pictures/4.0.23/pictures-4.0.23-android.jar
+2026-05-14T07:56:36.9407509Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/pictures/4.0.23/pictures-4.0.23.jar
+2026-05-14T07:56:36.9408444Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/settings/4.0.23/settings-4.0.23-android.jar
+2026-05-14T07:56:36.9409509Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/settings/4.0.23/settings-4.0.23.jar
+2026-05-14T07:56:36.9410499Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/statusbar/4.0.23/statusbar-4.0.23-android.jar
+2026-05-14T07:56:36.9411443Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/statusbar/4.0.23/statusbar-4.0.23.jar
+2026-05-14T07:56:36.9412382Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/storage/4.0.23/storage-4.0.23-android.jar
+2026-05-14T07:56:36.9413288Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/storage/4.0.23/storage-4.0.23.jar
+2026-05-14T07:56:36.9414170Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/util/4.0.23/util-4.0.23-android.jar
+2026-05-14T07:56:36.9415020Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/gluonhq/attach/util/4.0.23/util-4.0.23.jar
+2026-05-14T07:56:36.9415849Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar
+2026-05-14T07:56:36.9416873Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/google/errorprone/error_prone_annotations/2.27.0/error_prone_annotations-2.27.0.jar
+2026-05-14T07:56:36.9417954Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/google/protobuf/protobuf-java/3.25.1/protobuf-java-3.25.1.jar
+2026-05-14T07:56:36.9418931Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/com/mysql/mysql-connector-j/8.3.0/mysql-connector-j-8.3.0.jar
+2026-05-14T07:56:36.9419991Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/io/github/mkpaz/atlantafx-base/2.0.1/atlantafx-base-2.0.1.jar
+2026-05-14T07:56:36.9420939Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/org/kordamp/ikonli/ikonli-core/12.3.1/ikonli-core-12.3.1.jar
+2026-05-14T07:56:36.9421976Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/org/kordamp/ikonli/ikonli-feather-pack/12.3.1/ikonli-feather-pack-12.3.1.jar
+2026-05-14T07:56:36.9423017Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/org/kordamp/ikonli/ikonli-javafx/12.3.1/ikonli-javafx-12.3.1.jar
+2026-05-14T07:56:36.9424068Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.m2/repository/org/mindrot/jbcrypt/0.4/jbcrypt-0.4.jar
+2026-05-14T07:56:36.9424981Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.base.jar
+2026-05-14T07:56:36.9426124Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.controls.jar
+2026-05-14T07:56:36.9427423Z [Thu May 14 07:56:28 UTC 2026][FINE] Adding classes from /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.controls.jar::META-INF/substrate/config/resourcebundles
+2026-05-14T07:56:36.9428638Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.fxml.jar
+2026-05-14T07:56:36.9429768Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.graphics.jar
+2026-05-14T07:56:36.9431051Z [Thu May 14 07:56:28 UTC 2026][FINE] Adding classes from /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.graphics.jar::META-INF/substrate/config/resourcebundles
+2026-05-14T07:56:36.9432045Z [Thu May 14 07:56:28 UTC 2026][FINE] Scanning /tmp/classes12940484876127899293/classes.jar
+2026-05-14T07:56:36.9433358Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/charm-glisten/6.2.3/charm-glisten-6.2.3.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/charm-glisten-6.2.3.jar
+2026-05-14T07:56:36.9435244Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/display/4.0.23/display-4.0.23-android.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/display-4.0.23-android.jar
+2026-05-14T07:56:36.9437058Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/display/4.0.23/display-4.0.23.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/display-4.0.23.jar
+2026-05-14T07:56:36.9438911Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/lifecycle/4.0.23/lifecycle-4.0.23-android.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/lifecycle-4.0.23-android.jar
+2026-05-14T07:56:36.9440909Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/lifecycle/4.0.23/lifecycle-4.0.23.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/lifecycle-4.0.23.jar
+2026-05-14T07:56:36.9442798Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/pictures/4.0.23/pictures-4.0.23-android.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/pictures-4.0.23-android.jar
+2026-05-14T07:56:36.9444631Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/pictures/4.0.23/pictures-4.0.23.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/pictures-4.0.23.jar
+2026-05-14T07:56:36.9446478Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/settings/4.0.23/settings-4.0.23-android.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/settings-4.0.23-android.jar
+2026-05-14T07:56:36.9448301Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/settings/4.0.23/settings-4.0.23.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/settings-4.0.23.jar
+2026-05-14T07:56:36.9450400Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/statusbar/4.0.23/statusbar-4.0.23-android.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/statusbar-4.0.23-android.jar
+2026-05-14T07:56:36.9452293Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/statusbar/4.0.23/statusbar-4.0.23.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/statusbar-4.0.23.jar
+2026-05-14T07:56:36.9454296Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/storage/4.0.23/storage-4.0.23-android.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/storage-4.0.23-android.jar
+2026-05-14T07:56:36.9456102Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/storage/4.0.23/storage-4.0.23.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/storage-4.0.23.jar
+2026-05-14T07:56:36.9457875Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/util/4.0.23/util-4.0.23-android.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/util-4.0.23-android.jar
+2026-05-14T07:56:36.9459727Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/gluonhq/attach/util/4.0.23/util-4.0.23.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/util-4.0.23.jar
+2026-05-14T07:56:36.9461422Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/gson-2.11.0.jar
+2026-05-14T07:56:36.9463357Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/google/errorprone/error_prone_annotations/2.27.0/error_prone_annotations-2.27.0.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/error_prone_annotations-2.27.0.jar
+2026-05-14T07:56:36.9465378Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/google/protobuf/protobuf-java/3.25.1/protobuf-java-3.25.1.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/protobuf-java-3.25.1.jar
+2026-05-14T07:56:36.9467297Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/com/mysql/mysql-connector-j/8.3.0/mysql-connector-j-8.3.0.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/mysql-connector-j-8.3.0.jar
+2026-05-14T07:56:36.9469200Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/io/github/mkpaz/atlantafx-base/2.0.1/atlantafx-base-2.0.1.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/atlantafx-base-2.0.1.jar
+2026-05-14T07:56:36.9471152Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/org/kordamp/ikonli/ikonli-core/12.3.1/ikonli-core-12.3.1.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/ikonli-core-12.3.1.jar
+2026-05-14T07:56:36.9473113Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/org/kordamp/ikonli/ikonli-feather-pack/12.3.1/ikonli-feather-pack-12.3.1.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/ikonli-feather-pack-12.3.1.jar
+2026-05-14T07:56:36.9475091Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/org/kordamp/ikonli/ikonli-javafx/12.3.1/ikonli-javafx-12.3.1.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/ikonli-javafx-12.3.1.jar
+2026-05-14T07:56:36.9476845Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.m2/repository/org/mindrot/jbcrypt/0.4/jbcrypt-0.4.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/jbcrypt-0.4.jar
+2026-05-14T07:56:36.9478920Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.base.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/javafx.base.jar
+2026-05-14T07:56:36.9481035Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.controls.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/javafx.controls.jar
+2026-05-14T07:56:36.9483395Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.fxml.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/javafx.fxml.jar
+2026-05-14T07:56:36.9497752Z [Thu May 14 07:56:28 UTC 2026][FINE] Copied resource /home/runner/.gluon/substrate/javafxStaticSdk/21-ea+11.3/android-aarch64/sdk/lib/javafx.graphics.jar to /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/deps/javafx.graphics.jar
+2026-05-14T07:56:36.9502992Z [Thu May 14 07:56:28 UTC 2026][FINE] Class-Path manifest entry for pathing jar: ../../../../classes deps/charm-glisten-6.2.3.jar deps/display-4.0.23-android.jar deps/display-4.0.23.jar deps/lifecycle-4.0.23-android.jar deps/lifecycle-4.0.23.jar deps/pictures-4.0.23-android.jar deps/pictures-4.0.23.jar deps/settings-4.0.23-android.jar deps/settings-4.0.23.jar deps/statusbar-4.0.23-android.jar deps/statusbar-4.0.23.jar deps/storage-4.0.23-android.jar deps/storage-4.0.23.jar deps/util-4.0.23-android.jar deps/util-4.0.23.jar deps/gson-2.11.0.jar deps/error_prone_annotations-2.27.0.jar deps/protobuf-java-3.25.1.jar deps/mysql-connector-j-8.3.0.jar deps/atlantafx-base-2.0.1.jar deps/ikonli-core-12.3.1.jar deps/ikonli-feather-pack-12.3.1.jar deps/ikonli-javafx-12.3.1.jar deps/jbcrypt-0.4.jar deps/javafx.base.jar deps/javafx.controls.jar deps/javafx.fxml.jar deps/javafx.graphics.jar
+2026-05-14T07:56:36.9506500Z [Thu May 14 07:56:28 UTC 2026][FINE] Pathing jar created at /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/classpathJar.jar
+2026-05-14T07:56:36.9515213Z [Thu May 14 07:56:28 UTC 2026][FINE] PB Command for compile: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1/bin/native-image -Djdk.internal.lambda.eagerlyInitialize=false --no-server -H:+SharedLibrary -H:+AddAllCharsets -H:+ReportExceptionStackTraces -H:-DeadlockWatchdogExitOnTimeout -H:DeadlockWatchdogInterval=0 -H:+RemoveSaturatedTypeFlows -H:+ExitAfterRelocatableImageWrite -H:TempDirectory=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp -H:EnableURLProtocols=http,https --initialize-at-build-time=com.gluonhq.charm.glisten.visual.MaterialDesignIcon -H:ReflectionConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/reflectionconfig-aarch64-android.json -H:JNIConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/jniconfig-aarch64-android.json -H:ResourceConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/resourceconfig-aarch64-android.json -H:-SpawnIsolates -Dsvm.targetArch=aarch64 -H:+ForceNoROSectionRelocations --libc=bionic -H:+UseCAPCache -H:CAPCacheDir=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache -H:CompilerBackend=lir -H:IncludeResourceBundles=com/sun/javafx/scene/control/skin/resources/controls,com/sun/javafx/scene/control/skin/resources/controls-nt,com.sun.javafx.tk.quantum.QuantumMessagesBundle -Dsvm.platform=org.graalvm.nativeimage.Platform$LINUX_AARCH64 -cp /home/runner/.m2/repository/com/gluonhq/substrate/0.0.68/substrate-0.0.68.jar:/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/classpathJar.jar -H:+NewCAPCache smartfarm.Main
+2026-05-14T07:56:36.9522393Z [Thu May 14 07:56:28 UTC 2026][FINE] Start process compile...
+2026-05-14T07:56:36.9523042Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: Ignoring server-mode native-image argument --no-server.
+2026-05-14T07:56:36.9524146Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+ForceNoROSectionRelocations' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9525528Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+UseCAPCache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9526779Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:-DeadlockWatchdogExitOnTimeout' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9528084Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:DeadlockWatchdogInterval=0' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9529984Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:TempDirectory=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9531571Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+RemoveSaturatedTypeFlows' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9533415Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:ResourceConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/resourceconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9535861Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:IncludeResourceBundles=com/sun/javafx/scene/control/skin/resources/controls,com/sun/javafx/scene/control/skin/resources/controls-nt,com.sun.javafx.tk.quantum.QuantumMessagesBundle' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9537690Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+NewCAPCache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9538874Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:-SpawnIsolates' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9540671Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:CAPCacheDir=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9542243Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+ExitAfterRelocatableImageWrite' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9543571Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:EnableURLProtocols=http,https' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9544801Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:+SharedLibrary' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9546498Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:JNIConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/jniconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9548667Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:ReflectionConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/reflectionconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9550657Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: The option '-H:CompilerBackend=lir' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9552683Z [Thu May 14 07:56:28 UTC 2026][INFO] [SUB] Warning: Please re-evaluate whether any experimental option is required, and either remove or unlock it. The build output lists all active experimental options, including where they come from and possible alternatives. If you think an experimental option should be considered as stable, please file an issue.
+2026-05-14T07:56:36.9554418Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] ========================================================================================================================
+2026-05-14T07:56:36.9555204Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] GraalVM Native Image: Generating 'smartfarm.main' (shared library)...
+2026-05-14T07:56:36.9556018Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] ========================================================================================================================
+2026-05-14T07:56:36.9556776Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] For detailed information and explanations on the build output, visit:
+2026-05-14T07:56:36.9557684Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/BuildOutput.md
+2026-05-14T07:56:36.9558686Z [Thu May 14 07:56:34 UTC 2026][INFO] [SUB] ------------------------------------------------------------------------------------------------------------------------
+2026-05-14T07:56:36.9559289Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 
+2026-05-14T07:56:36.9560058Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] [1/8] Initializing...                                                                                    (0.0s @ 0.09GB)
+2026-05-14T07:56:36.9561841Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] Error: Could not load CAPCache file. Ensure that options UseCAPCache and NewCAPCache are used on the same version of your application. Raw error: /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache/AArch64LibCHelperDirectives.cap (No such file or directory)
+2026-05-14T07:56:36.9564512Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] com.oracle.svm.core.util.UserError$UserException: Could not load CAPCache file. Ensure that options UseCAPCache and NewCAPCache are used on the same version of your application. Raw error: /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache/AArch64LibCHelperDirectives.cap (No such file or directory)
+2026-05-14T07:56:36.9566325Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:73)
+2026-05-14T07:56:36.9567482Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.CAnnotationProcessorCache.get(CAnnotationProcessorCache.java:168)
+2026-05-14T07:56:36.9568736Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.CAnnotationProcessor.process(CAnnotationProcessor.java:95)
+2026-05-14T07:56:36.9570452Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.NativeLibraries.finish(NativeLibraries.java:559)
+2026-05-14T07:56:36.9572726Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.processNativeLibraryImports(NativeImageGenerator.java:1752)
+2026-05-14T07:56:36.9574254Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeLibraries(NativeImageGenerator.java:1200)
+2026-05-14T07:56:36.9575575Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeImage(NativeImageGenerator.java:960)
+2026-05-14T07:56:36.9576999Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:590)
+2026-05-14T07:56:36.9578235Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)
+2026-05-14T07:56:36.9579634Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:539)
+2026-05-14T07:56:36.9581094Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:721)
+2026-05-14T07:56:36.9582389Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:143)
+2026-05-14T07:56:36.9583667Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:98)
+2026-05-14T07:56:36.9584772Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] ------------------------------------------------------------------------------------------------------------------------
+2026-05-14T07:56:36.9585651Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB]                         0.8s (10.0% of total time) in 24 GCs | Peak RSS: 0.44GB | CPU load: 1.88
+2026-05-14T07:56:36.9586464Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] ========================================================================================================================
+2026-05-14T07:56:36.9587127Z [Thu May 14 07:56:36 UTC 2026][INFO] [SUB] Finished generating 'smartfarm.main' in 7.0s.
+2026-05-14T07:56:36.9587627Z [Thu May 14 07:56:36 UTC 2026][FINE] Result for compile: 1
+2026-05-14T07:56:36.9588098Z [Thu May 14 07:56:36 UTC 2026][SEVERE] Process compile failed with result: 1
+2026-05-14T07:56:36.9588784Z Check the log files under /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/log
+2026-05-14T07:56:36.9589537Z And please check https://docs.gluonhq.com/ for more information.
+2026-05-14T07:56:36.9590499Z [Thu May 14 07:56:36 UTC 2026][INFO] Logging process [compile] to file: /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/log/process-compile-1778745396843.log
+2026-05-14T07:56:36.9591273Z [Thu May 14 07:56:36 UTC 2026][SEVERE] Compiling failed.
+2026-05-14T07:56:36.9591878Z Check the log files under /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/log
+2026-05-14T07:56:36.9592503Z And please check https://docs.gluonhq.com/ for more information.
+2026-05-14T07:56:36.9592762Z 
+2026-05-14T07:56:36.9593196Z ────── target/gluonfx/log/process-compile-1778745396843.log ──────
+2026-05-14T07:56:36.9593581Z Process
+2026-05-14T07:56:36.9593759Z =======
+2026-05-14T07:56:36.9593932Z compile
+2026-05-14T07:56:36.9594042Z 
+2026-05-14T07:56:36.9594128Z Command Line
+2026-05-14T07:56:36.9594314Z ============
+2026-05-14T07:56:36.9602256Z /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1/bin/native-image -Djdk.internal.lambda.eagerlyInitialize=false --no-server -H:+SharedLibrary -H:+AddAllCharsets -H:+ReportExceptionStackTraces -H:-DeadlockWatchdogExitOnTimeout -H:DeadlockWatchdogInterval=0 -H:+RemoveSaturatedTypeFlows -H:+ExitAfterRelocatableImageWrite -H:TempDirectory=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp -H:EnableURLProtocols=http,https --initialize-at-build-time=com.gluonhq.charm.glisten.visual.MaterialDesignIcon -H:ReflectionConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/reflectionconfig-aarch64-android.json -H:JNIConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/jniconfig-aarch64-android.json -H:ResourceConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/resourceconfig-aarch64-android.json -H:-SpawnIsolates -Dsvm.targetArch=aarch64 -H:+ForceNoROSectionRelocations --libc=bionic -H:+UseCAPCache -H:CAPCacheDir=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache -H:CompilerBackend=lir -H:IncludeResourceBundles=com/sun/javafx/scene/control/skin/resources/controls,com/sun/javafx/scene/control/skin/resources/controls-nt,com.sun.javafx.tk.quantum.QuantumMessagesBundle -Dsvm.platform=org.graalvm.nativeimage.Platform$LINUX_AARCH64 -cp /home/runner/.m2/repository/com/gluonhq/substrate/0.0.68/substrate-0.0.68.jar:/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp/classpathJar.jar -H:+NewCAPCache smartfarm.Main
+2026-05-14T07:56:36.9608777Z 
+2026-05-14T07:56:36.9608853Z Output
+2026-05-14T07:56:36.9609025Z ======
+2026-05-14T07:56:36.9609466Z Warning: Ignoring server-mode native-image argument --no-server.
+2026-05-14T07:56:36.9610310Z Warning: The option '-H:+ForceNoROSectionRelocations' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9611304Z Warning: The option '-H:+UseCAPCache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9612327Z Warning: The option '-H:-DeadlockWatchdogExitOnTimeout' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9613400Z Warning: The option '-H:DeadlockWatchdogInterval=0' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9614742Z Warning: The option '-H:TempDirectory=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/tmp' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9616013Z Warning: The option '-H:+RemoveSaturatedTypeFlows' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9617572Z Warning: The option '-H:ResourceConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/resourceconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9619823Z Warning: The option '-H:IncludeResourceBundles=com/sun/javafx/scene/control/skin/resources/controls,com/sun/javafx/scene/control/skin/resources/controls-nt,com.sun.javafx.tk.quantum.QuantumMessagesBundle' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9621364Z Warning: The option '-H:+NewCAPCache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9622309Z Warning: The option '-H:-SpawnIsolates' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9623638Z Warning: The option '-H:CAPCacheDir=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9624953Z Warning: The option '-H:+ExitAfterRelocatableImageWrite' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9626028Z Warning: The option '-H:EnableURLProtocols=http,https' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9627021Z Warning: The option '-H:+SharedLibrary' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9628471Z Warning: The option '-H:JNIConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/jniconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9630506Z Warning: The option '-H:ReflectionConfigurationFiles=/home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/reflectionconfig-aarch64-android.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9632071Z Warning: The option '-H:CompilerBackend=lir' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+2026-05-14T07:56:36.9633795Z Warning: Please re-evaluate whether any experimental option is required, and either remove or unlock it. The build output lists all active experimental options, including where they come from and possible alternatives. If you think an experimental option should be considered as stable, please file an issue.
+2026-05-14T07:56:36.9635237Z ========================================================================================================================
+2026-05-14T07:56:36.9635789Z GraalVM Native Image: Generating 'smartfarm.main' (shared library)...
+2026-05-14T07:56:36.9636339Z ========================================================================================================================
+2026-05-14T07:56:36.9636854Z For detailed information and explanations on the build output, visit:
+2026-05-14T07:56:36.9637492Z https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/BuildOutput.md
+2026-05-14T07:56:36.9638209Z ------------------------------------------------------------------------------------------------------------------------
+2026-05-14T07:56:36.9638555Z 
+2026-05-14T07:56:36.9638876Z [1/8] Initializing...                                                                                    (0.0s @ 0.09GB)
+2026-05-14T07:56:36.9640498Z Error: Could not load CAPCache file. Ensure that options UseCAPCache and NewCAPCache are used on the same version of your application. Raw error: /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache/AArch64LibCHelperDirectives.cap (No such file or directory)
+2026-05-14T07:56:36.9642905Z com.oracle.svm.core.util.UserError$UserException: Could not load CAPCache file. Ensure that options UseCAPCache and NewCAPCache are used on the same version of your application. Raw error: /home/runner/work/Agrilliant/Agrilliant/target/gluonfx/aarch64-android/gvm/capcache/AArch64LibCHelperDirectives.cap (No such file or directory)
+2026-05-14T07:56:36.9644461Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:73)
+2026-05-14T07:56:36.9645374Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.CAnnotationProcessorCache.get(CAnnotationProcessorCache.java:168)
+2026-05-14T07:56:36.9646379Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.CAnnotationProcessor.process(CAnnotationProcessor.java:95)
+2026-05-14T07:56:36.9647297Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c.NativeLibraries.finish(NativeLibraries.java:559)
+2026-05-14T07:56:36.9648331Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.processNativeLibraryImports(NativeImageGenerator.java:1752)
+2026-05-14T07:56:36.9649565Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeLibraries(NativeImageGenerator.java:1200)
+2026-05-14T07:56:36.9650668Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeImage(NativeImageGenerator.java:960)
+2026-05-14T07:56:36.9651697Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:590)
+2026-05-14T07:56:36.9652620Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)
+2026-05-14T07:56:36.9653644Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:539)
+2026-05-14T07:56:36.9654715Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:721)
+2026-05-14T07:56:36.9655756Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:143)
+2026-05-14T07:56:36.9656950Z 	at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:98)
+2026-05-14T07:56:36.9657810Z ------------------------------------------------------------------------------------------------------------------------
+2026-05-14T07:56:36.9658439Z                         0.8s (10.0% of total time) in 24 GCs | Peak RSS: 0.44GB | CPU load: 1.88
+2026-05-14T07:56:36.9659101Z ========================================================================================================================
+2026-05-14T07:56:36.9659636Z Finished generating 'smartfarm.main' in 7.0s.
+2026-05-14T07:56:36.9659851Z 
+2026-05-14T07:56:36.9659857Z 
+2026-05-14T07:56:36.9659929Z Result
+2026-05-14T07:56:36.9660103Z ======
+2026-05-14T07:56:36.9660273Z result: 1
+2026-05-14T07:56:36.9660619Z ##[endgroup]
+2026-05-14T07:56:36.9661020Z ##[group]Last 100 lines of native-image text output (if any)
+2026-05-14T07:56:36.9661461Z ##[endgroup]

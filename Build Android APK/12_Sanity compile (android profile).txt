@@ -1,0 +1,99 @@
+﻿2026-05-14T07:56:01.6562478Z ##[group]Run mvn -B -Pandroid clean compile
+2026-05-14T07:56:01.6562862Z [36;1mmvn -B -Pandroid clean compile[0m
+2026-05-14T07:56:01.6620436Z shell: /usr/bin/bash -e {0}
+2026-05-14T07:56:01.6620683Z env:
+2026-05-14T07:56:01.6620887Z   GRAALVM_VERSION: 21.0.2
+2026-05-14T07:56:01.6621139Z   GRAALVM_DISTRIBUTION: graalvm-community
+2026-05-14T07:56:01.6621421Z   ANDROID_SDK_PLATFORM: 34
+2026-05-14T07:56:01.6621648Z   ANDROID_BUILD_TOOLS: 34.0.0
+2026-05-14T07:56:01.6621880Z   ANDROID_NDK_VERSION: 26.1.10909125
+2026-05-14T07:56:01.6622448Z   GRAALVM_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:01.6623322Z   JAVA_HOME: /opt/hostedtoolcache/graalvm-community-jdk-21.0.2_linux-x64_bin/21.0.2/x64/graalvm-community-openjdk-21.0.2+13.1
+2026-05-14T07:56:01.6623888Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-05-14T07:56:01.6624180Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-05-14T07:56:01.6624505Z   ANDROID_NDK: /usr/local/lib/android/sdk/ndk/26.1.10909125
+2026-05-14T07:56:01.6624841Z ##[endgroup]
+2026-05-14T07:56:03.5110771Z [INFO] Scanning for projects...
+2026-05-14T07:56:03.6397633Z [INFO] 
+2026-05-14T07:56:03.6402935Z [INFO] ----------------------< com.smartfarm:smart-farm >----------------------
+2026-05-14T07:56:03.6407339Z [INFO] Building Agrilliant 1.0-SNAPSHOT
+2026-05-14T07:56:03.6430100Z [INFO]   from pom.xml
+2026-05-14T07:56:03.6431230Z [INFO] --------------------------------[ jar ]---------------------------------
+2026-05-14T07:56:04.0297326Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.13.0/maven-compiler-plugin-3.13.0.pom
+2026-05-14T07:56:04.4388083Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.13.0/maven-compiler-plugin-3.13.0.pom (10 kB at 25 kB/s)
+2026-05-14T07:56:04.4498949Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/41/maven-plugins-41.pom
+2026-05-14T07:56:04.4721543Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/41/maven-plugins-41.pom (7.4 kB at 334 kB/s)
+2026-05-14T07:56:04.4736799Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/41/maven-parent-41.pom
+2026-05-14T07:56:04.5002813Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/41/maven-parent-41.pom (50 kB at 1.9 MB/s)
+2026-05-14T07:56:04.5208808Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.13.0/maven-compiler-plugin-3.13.0.jar
+2026-05-14T07:56:04.5604198Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.13.0/maven-compiler-plugin-3.13.0.jar (83 kB at 2.0 MB/s)
+2026-05-14T07:56:04.6131765Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-controls:jar:21.0.2 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:04.6667893Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-controls:jar:20 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:04.7402409Z [WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-graphics:jar:20.0.2 during dependency collection step for project (use -X to see details)
+2026-05-14T07:56:04.8074081Z [INFO] 
+2026-05-14T07:56:04.8083477Z [INFO] --- clean:3.2.0:clean (default-clean) @ smart-farm ---
+2026-05-14T07:56:04.9237823Z [INFO] Deleting /home/runner/work/Agrilliant/Agrilliant/target
+2026-05-14T07:56:04.9367104Z [INFO] 
+2026-05-14T07:56:04.9376435Z [INFO] --- resources:3.4.0:resources (default-resources) @ smart-farm ---
+2026-05-14T07:56:05.1090560Z [INFO] Copying 27 resources from src/main/resources to target/classes
+2026-05-14T07:56:05.1369258Z [INFO] 
+2026-05-14T07:56:05.1370770Z [INFO] --- compiler:3.13.0:compile (default-compile) @ smart-farm ---
+2026-05-14T07:56:05.1661617Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-java/1.2.0/plexus-java-1.2.0.pom
+2026-05-14T07:56:05.1846008Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-java/1.2.0/plexus-java-1.2.0.pom (4.3 kB at 225 kB/s)
+2026-05-14T07:56:05.1904011Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-languages/1.2.0/plexus-languages-1.2.0.pom
+2026-05-14T07:56:05.2090095Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-languages/1.2.0/plexus-languages-1.2.0.pom (3.2 kB at 177 kB/s)
+2026-05-14T07:56:05.2154483Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/15/plexus-15.pom
+2026-05-14T07:56:05.2372074Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/15/plexus-15.pom (28 kB at 1.3 MB/s)
+2026-05-14T07:56:05.2437359Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.0/junit-bom-5.10.0.pom
+2026-05-14T07:56:05.2624095Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.0/junit-bom-5.10.0.pom (5.6 kB at 282 kB/s)
+2026-05-14T07:56:05.2676561Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.pom
+2026-05-14T07:56:05.2883792Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.pom (2.4 kB at 113 kB/s)
+2026-05-14T07:56:05.2982903Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/thoughtworks/qdox/qdox/2.0.3/qdox-2.0.3.pom
+2026-05-14T07:56:05.3214812Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/thoughtworks/qdox/qdox/2.0.3/qdox-2.0.3.pom (17 kB at 718 kB/s)
+2026-05-14T07:56:05.3291266Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-api/2.15.0/plexus-compiler-api-2.15.0.pom
+2026-05-14T07:56:05.3457861Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-api/2.15.0/plexus-compiler-api-2.15.0.pom (1.4 kB at 85 kB/s)
+2026-05-14T07:56:05.3499344Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler/2.15.0/plexus-compiler-2.15.0.pom
+2026-05-14T07:56:05.3671604Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler/2.15.0/plexus-compiler-2.15.0.pom (7.6 kB at 447 kB/s)
+2026-05-14T07:56:05.3719685Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/17/plexus-17.pom
+2026-05-14T07:56:05.3913403Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/17/plexus-17.pom (28 kB at 1.4 MB/s)
+2026-05-14T07:56:05.4028549Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.0/plexus-utils-4.0.0.pom
+2026-05-14T07:56:05.4171883Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.0/plexus-utils-4.0.0.pom (8.7 kB at 541 kB/s)
+2026-05-14T07:56:05.4231044Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/13/plexus-13.pom
+2026-05-14T07:56:05.4383272Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/13/plexus-13.pom (27 kB at 1.5 MB/s)
+2026-05-14T07:56:05.4430418Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.9.3/junit-bom-5.9.3.pom
+2026-05-14T07:56:05.4606863Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.9.3/junit-bom-5.9.3.pom (5.6 kB at 313 kB/s)
+2026-05-14T07:56:05.4691547Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-manager/2.15.0/plexus-compiler-manager-2.15.0.pom
+2026-05-14T07:56:05.4855157Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-manager/2.15.0/plexus-compiler-manager-2.15.0.pom (1.3 kB at 79 kB/s)
+2026-05-14T07:56:05.4943160Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.pom
+2026-05-14T07:56:05.5131227Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.pom (3.7 kB at 187 kB/s)
+2026-05-14T07:56:05.5189085Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-javac/2.15.0/plexus-compiler-javac-2.15.0.pom
+2026-05-14T07:56:05.5369998Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-javac/2.15.0/plexus-compiler-javac-2.15.0.pom (1.3 kB at 72 kB/s)
+2026-05-14T07:56:05.5426752Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compilers/2.15.0/plexus-compilers-2.15.0.pom
+2026-05-14T07:56:05.5584024Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compilers/2.15.0/plexus-compilers-2.15.0.pom (1.6 kB at 98 kB/s)
+2026-05-14T07:56:05.5712177Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-java/1.2.0/plexus-java-1.2.0.jar
+2026-05-14T07:56:05.5916707Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-java/1.2.0/plexus-java-1.2.0.jar (58 kB at 3.2 MB/s)
+2026-05-14T07:56:05.5922469Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.jar
+2026-05-14T07:56:05.5953610Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/thoughtworks/qdox/qdox/2.0.3/qdox-2.0.3.jar
+2026-05-14T07:56:05.5958810Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-api/2.15.0/plexus-compiler-api-2.15.0.jar
+2026-05-14T07:56:05.5990114Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.jar
+2026-05-14T07:56:05.5992826Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-manager/2.15.0/plexus-compiler-manager-2.15.0.jar
+2026-05-14T07:56:05.6441207Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.jar (124 kB at 2.4 MB/s)
+2026-05-14T07:56:05.6443539Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-javac/2.15.0/plexus-compiler-javac-2.15.0.jar
+2026-05-14T07:56:05.6738634Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-api/2.15.0/plexus-compiler-api-2.15.0.jar (29 kB at 409 kB/s)
+2026-05-14T07:56:05.6741312Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.0/plexus-utils-4.0.0.jar
+2026-05-14T07:56:05.6743610Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-javac/2.15.0/plexus-compiler-javac-2.15.0.jar (26 kB at 367 kB/s)
+2026-05-14T07:56:05.6745930Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.jar (93 kB at 1.2 MB/s)
+2026-05-14T07:56:05.6748209Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-manager/2.15.0/plexus-compiler-manager-2.15.0.jar (5.2 kB at 67 kB/s)
+2026-05-14T07:56:05.7132512Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.0/plexus-utils-4.0.0.jar (192 kB at 1.7 MB/s)
+2026-05-14T07:56:05.7202874Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/thoughtworks/qdox/qdox/2.0.3/qdox-2.0.3.jar (334 kB at 2.6 MB/s)
+2026-05-14T07:56:05.8406456Z [INFO] Recompiling the module because of changed source code.
+2026-05-14T07:56:05.8483046Z [INFO] Compiling 79 source files with javac [debug target 17] to target/classes
+2026-05-14T07:56:10.6629061Z [WARNING] system modules path not set in conjunction with -source 17
+2026-05-14T07:56:10.6635404Z [INFO] /home/runner/work/Agrilliant/Agrilliant/src/main/java/smartfarm/Main.java: Some input files use or override a deprecated API.
+2026-05-14T07:56:10.6641892Z [INFO] /home/runner/work/Agrilliant/Agrilliant/src/main/java/smartfarm/Main.java: Recompile with -Xlint:deprecation for details.
+2026-05-14T07:56:10.6656054Z [INFO] ------------------------------------------------------------------------
+2026-05-14T07:56:10.6656923Z [INFO] BUILD SUCCESS
+2026-05-14T07:56:10.6657817Z [INFO] ------------------------------------------------------------------------
+2026-05-14T07:56:10.6665803Z [INFO] Total time:  7.180 s
+2026-05-14T07:56:10.6679851Z [INFO] Finished at: 2026-05-14T07:56:10Z
+2026-05-14T07:56:10.6680915Z [INFO] ------------------------------------------------------------------------
