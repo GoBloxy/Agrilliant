@@ -62,6 +62,29 @@ public class PlotController {
     @FXML private TableColumn<PlotRecord, String> colStatus, colSoil, colIrrigation, colLastActivity, colActions;
     @FXML private Label lblPagination;
 
+    // ── View Switching ──
+    @FXML private VBox listView;
+    @FXML private VBox detailView;
+
+    // ── Detail View ──
+    @FXML private HBox plotTabBar;
+    @FXML private StackPane plotTabContent;
+    @FXML private Button plotTabOverview, plotTabCrops, plotTabSensors, plotTabNotes;
+    @FXML private Button btnEditPlotDetail;
+    @FXML private VBox plotOverviewPane, plotCropsPane, plotSensorsPane, plotNotesPane;
+    @FXML private Label lblPlotDetailName, lblPlotDetailLocation, lblPlotDetailStatus;
+    @FXML private Label lblPlotDetailCreated, lblPlotDetailArea, lblPlotDetailSoil;
+    @FXML private Label lblPlotDetailIrrigation, lblPlotDetailUpdated;
+    @FXML private Label lblPlotCondSource;
+    @FXML private Label lblPlotTemp, lblPlotTempStatus;
+    @FXML private Label lblPlotHumidity, lblPlotHumStatus;
+    @FXML private Label lblPlotSoilMoisture, lblPlotSoilStatus;
+    @FXML private VBox plotDetailCropsBox, soilProfileBox, plotSummaryBox;
+    @FXML private VBox plotCropsListBox, sensorHistoryBox;
+    @FXML private TextArea txtPlotNotes;
+
+    private Plot selectedDetailPlot;
+
     // Data
     private ObservableList<PlotRecord> allRecords = FXCollections.observableArrayList();
     private FilteredList<PlotRecord> filteredRecords;
@@ -578,6 +601,16 @@ public class PlotController {
             }
         });
 
+        // Double-click to open details
+        plotTable.setRowFactory(tv -> {
+            TableRow<PlotRecord> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    onViewPlot(row.getItem());
+                }
+            });
+            return row;
+        });
     }
 
     // ═══════════════ FILTERS ═══════════════
@@ -671,7 +704,8 @@ public class PlotController {
             plotCropMap.clear();
             for (Crop c : dbCrops) {
                 if (c.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
-                    plotCropMap.put(c.getPlotId(), c.getCropName());
+                    // Append multiple crop names if a plot has more than one active crop
+                    plotCropMap.merge(c.getPlotId(), c.getCropName(), (old, nw) -> old + ", " + nw);
                 }
             }
 
@@ -929,23 +963,274 @@ public class PlotController {
     private void onViewPlot(PlotRecord rec) {
         Plot dbPlot = findPlotById(rec.getDbPlotId());
         if (dbPlot == null) return;
+        showPlotDetail(dbPlot);
+    }
 
-        String cropName = plotCropMap.getOrDefault(dbPlot.getPlotId(), "None");
-        String irr = dbPlot.getIrrigationType() != null ? dbPlot.getIrrigationType() : "—";
-        String info = String.format(
-                "Name: %s\nLocation: %s\nSize: %.1f acres\nSoil Type: %s\nIrrigation: %s\nCurrent Crop: %s\nStatus: %s\nCreated: %s\nLast Updated: %s",
-                dbPlot.getName(), dbPlot.getLocation(), dbPlot.getSizeAcres(),
-                dbPlot.getSoilType(), irr, cropName, rec.getStatus(),
-                dbPlot.getCreatedAt() != null ? dbPlot.getCreatedAt().toLocalDate() : "—",
-                dbPlot.getUpdatedAt() != null ? dbPlot.getUpdatedAt().toLocalDate() : "—"
-        );
+    // ═══════════════ DETAIL VIEW ═══════════════
 
-        Alert detail = new Alert(Alert.AlertType.INFORMATION);
-        detail.setTitle("Plot Details");
-        detail.setHeaderText(dbPlot.getName());
-        detail.setContentText(info);
-        detail.getDialogPane().setMinWidth(400);
-        detail.showAndWait();
+    private void showPlotDetail(Plot plot) {
+        selectedDetailPlot = plot;
+        populatePlotDetail(plot);
+        listView.setVisible(false);
+        listView.setManaged(false);
+        detailView.setVisible(true);
+        detailView.setManaged(true);
+        onPlotTabOverview();
+    }
+
+    @FXML
+    private void onBackToPlots() {
+        detailView.setVisible(false);
+        detailView.setManaged(false);
+        listView.setVisible(true);
+        listView.setManaged(true);
+        loadPlotData();
+    }
+
+    @FXML
+    private void onEditPlotFromDetail() {
+        if (selectedDetailPlot == null) return;
+        String currentCrop = plotCropMap.getOrDefault(selectedDetailPlot.getPlotId(), null);
+        Dialog<Plot> dialog = createPlotDialog(selectedDetailPlot, currentCrop);
+        dialog.showAndWait().ifPresent(updated -> {
+            PlotDAO plotDAO = new PlotDAO();
+            try {
+                updated.setPlotId(selectedDetailPlot.getPlotId());
+                plotDAO.update(updated);
+                if (dialogSelectedCrop != null && !dialogSelectedCrop.equals("None")
+                        && !dialogSelectedCrop.equals(currentCrop)) {
+                    reassignCropToPlot(dialogSelectedCrop, selectedDetailPlot.getPlotId());
+                }
+                // Reload data and refresh detail
+                loadPlotData();
+                selectedDetailPlot = findPlotById(selectedDetailPlot.getPlotId());
+                if (selectedDetailPlot != null) populatePlotDetail(selectedDetailPlot);
+            } catch (SQLException e) {
+                showAlert("Error", "Failed to update: " + e.getMessage());
+            }
+        });
+    }
+
+    private void populatePlotDetail(Plot plot) {
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("MMM d, yyyy");
+        smartfarm.service.SettingsManager sm = smartfarm.service.SettingsManager.getInstance();
+
+        // ── Info card ──
+        lblPlotDetailName.setText(plot.getName());
+        lblPlotDetailLocation.setText(plot.getLocation());
+
+        String status = plot.getStatus() != null ? plot.getStatus() : "Available";
+        lblPlotDetailStatus.setText(status);
+        String badgeBase = "-fx-padding:3 12;-fx-background-radius:12;-fx-font-size:11;-fx-font-weight:bold;";
+        switch (status) {
+            case "Under Cultivation": lblPlotDetailStatus.setStyle(badgeBase + "-fx-background-color:#d1fae5;-fx-text-fill:#065f46;"); break;
+            case "Fallow": lblPlotDetailStatus.setStyle(badgeBase + "-fx-background-color:#f3e8ff;-fx-text-fill:#7c3aed;"); break;
+            default: lblPlotDetailStatus.setStyle(badgeBase + "-fx-background-color:#fed7aa;-fx-text-fill:#9a3412;");
+        }
+
+        lblPlotDetailCreated.setText("Created  " + (plot.getCreatedAt() != null ? plot.getCreatedAt().toLocalDate().format(dateFmt) : "—"));
+        lblPlotDetailArea.setText(String.format("%.1f acres", plot.getSizeAcres()));
+        lblPlotDetailSoil.setText(plot.getSoilType() != null ? plot.getSoilType() : "—");
+        lblPlotDetailIrrigation.setText(plot.getIrrigationType() != null ? plot.getIrrigationType() : "—");
+        lblPlotDetailUpdated.setText(plot.getUpdatedAt() != null ? plot.getUpdatedAt().toLocalDate().format(dateFmt) : "—");
+
+        // ── Active Crops (overview) ──
+        plotDetailCropsBox.getChildren().clear();
+        List<Crop> plotCrops = dbCrops.stream()
+                .filter(c -> c.getPlotId() == plot.getPlotId() && c.getGrowthStage() != Crop.GrowthStage.HARVESTED)
+                .collect(Collectors.toList());
+        if (plotCrops.isEmpty()) {
+            Label no = new Label("No active crops on this plot");
+            no.setStyle("-fx-text-fill:#9ca3af;-fx-font-size:12;");
+            plotDetailCropsBox.getChildren().add(no);
+        } else {
+            for (Crop c : plotCrops) {
+                HBox row = new HBox(10);
+                row.setAlignment(Pos.CENTER_LEFT);
+                row.setStyle("-fx-padding:8;-fx-background-color:#f9fafb;-fx-background-radius:8;");
+                Circle dot = new Circle(6, Color.web(getCropColor(c.getCropName())));
+                VBox info = new VBox(2);
+                Label n = new Label(c.getCropName());
+                n.setStyle("-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#111827;");
+                String stage = c.getGrowthStage().name();
+                Label s = new Label(stage.charAt(0) + stage.substring(1).toLowerCase()
+                        + (c.getPlantingDate() != null ? "  •  Planted " + c.getPlantingDate().format(dateFmt) : ""));
+                s.setStyle("-fx-font-size:11;-fx-text-fill:#6b7280;");
+                info.getChildren().addAll(n, s);
+                row.getChildren().addAll(dot, info);
+                plotDetailCropsBox.getChildren().add(row);
+            }
+        }
+
+        // ── Conditions (latest sensor reading) ──
+        try {
+            smartfarm.dao.SensorDAO sensorDAO = new smartfarm.dao.SensorDAO();
+            List<smartfarm.model.SensorReading> readings = sensorDAO.getRecentForPlot(plot.getPlotId(), 1);
+            if (!readings.isEmpty()) {
+                smartfarm.model.SensorReading r = readings.get(0);
+                lblPlotTemp.setText(sm.formatTemp(r.getTemperature()));
+                lblPlotTempStatus.setText(r.getTemperature() > 35 ? "High" : r.getTemperature() < 10 ? "Low" : "Normal");
+                lblPlotTempStatus.setStyle("-fx-font-size:10;-fx-font-weight:bold;-fx-text-fill:" +
+                        (r.getTemperature() > 35 || r.getTemperature() < 10 ? "#dc2626" : "#16a34a") + ";");
+
+                lblPlotHumidity.setText(String.format("%.0f %%", r.getHumidity()));
+                lblPlotHumStatus.setText(r.getHumidity() < 30 ? "Low" : r.getHumidity() > 80 ? "High" : "Normal");
+                lblPlotHumStatus.setStyle("-fx-font-size:10;-fx-font-weight:bold;-fx-text-fill:" +
+                        (r.getHumidity() < 30 || r.getHumidity() > 80 ? "#d97706" : "#16a34a") + ";");
+
+                lblPlotSoilMoisture.setText(String.format("%.0f %%", r.getSoilMoisture()));
+                lblPlotSoilStatus.setText(r.getSoilMoisture() < 20 ? "Dry" : r.getSoilMoisture() > 80 ? "Wet" : "Normal");
+                lblPlotSoilStatus.setStyle("-fx-font-size:10;-fx-font-weight:bold;-fx-text-fill:" +
+                        (r.getSoilMoisture() < 20 || r.getSoilMoisture() > 80 ? "#dc2626" : "#16a34a") + ";");
+
+                lblPlotCondSource.setText("Last reading: " +
+                        (r.getTimestamp() != null ? r.getTimestamp().format(DateTimeFormatter.ofPattern("MMM d, HH:mm")) : "—"));
+            } else {
+                lblPlotTemp.setText("-- °C");
+                lblPlotHumidity.setText("-- %");
+                lblPlotSoilMoisture.setText("-- %");
+                lblPlotCondSource.setText("No sensor data");
+                lblPlotTempStatus.setText("—");
+                lblPlotHumStatus.setText("—");
+                lblPlotSoilStatus.setText("—");
+            }
+        } catch (SQLException e) {
+            lblPlotCondSource.setText("Error loading data");
+        }
+
+        // ── Soil Profile ──
+        soilProfileBox.getChildren().clear();
+        addProfileRow(soilProfileBox, "Soil Type", plot.getSoilType() != null ? plot.getSoilType() : "Unknown");
+        addProfileRow(soilProfileBox, "Plot Size", String.format("%.1f acres (%.2f ha)", plot.getSizeAcres(), plot.getSizeAcres() * 0.4047));
+        addProfileRow(soilProfileBox, "Irrigation", plot.getIrrigationType() != null ? plot.getIrrigationType() : "None");
+        addProfileRow(soilProfileBox, "Status", status);
+
+        // ── Plot Summary ──
+        plotSummaryBox.getChildren().clear();
+        addProfileRow(plotSummaryBox, "Active Crops", String.valueOf(plotCrops.size()));
+        addProfileRow(plotSummaryBox, "Manager ID", String.valueOf(plot.getManagerId()));
+        addProfileRow(plotSummaryBox, "Created", plot.getCreatedAt() != null ? plot.getCreatedAt().toLocalDate().format(dateFmt) : "—");
+        addProfileRow(plotSummaryBox, "Last Updated", plot.getUpdatedAt() != null ? plot.getUpdatedAt().toLocalDate().format(dateFmt) : "—");
+    }
+
+    private void addProfileRow(VBox container, String label, String value) {
+        HBox row = new HBox();
+        row.setAlignment(Pos.CENTER_LEFT);
+        Label l = new Label(label);
+        l.setStyle("-fx-font-size:12;-fx-text-fill:#6b7280;");
+        l.setPrefWidth(120);
+        Label v = new Label(value);
+        v.setStyle("-fx-font-size:12;-fx-font-weight:bold;-fx-text-fill:#111827;");
+        row.getChildren().addAll(l, v);
+        container.getChildren().add(row);
+    }
+
+    // ═══════════════ DETAIL TABS ═══════════════
+
+    @FXML private void onPlotTabOverview() { switchPlotTab(plotOverviewPane, plotTabOverview); }
+    @FXML private void onPlotTabCrops()    { switchPlotTab(plotCropsPane, plotTabCrops); populateCropsTab(); }
+    @FXML private void onPlotTabSensors()  { switchPlotTab(plotSensorsPane, plotTabSensors); populateSensorTab(); }
+    @FXML private void onPlotTabNotes()    { switchPlotTab(plotNotesPane, plotTabNotes); }
+
+    private void switchPlotTab(VBox activePane, Button activeTab) {
+        VBox[] panes = {plotOverviewPane, plotCropsPane, plotSensorsPane, plotNotesPane};
+        Button[] tabs = {plotTabOverview, plotTabCrops, plotTabSensors, plotTabNotes};
+        for (VBox p : panes) { p.setVisible(false); p.setManaged(false); }
+        for (Button t : tabs) { t.getStyleClass().remove("crop-tab-active"); }
+        activePane.setVisible(true);
+        activePane.setManaged(true);
+        if (!activeTab.getStyleClass().contains("crop-tab-active")) {
+            activeTab.getStyleClass().add("crop-tab-active");
+        }
+    }
+
+    private void populateCropsTab() {
+        if (selectedDetailPlot == null) return;
+        plotCropsListBox.getChildren().clear();
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("MMM d, yyyy");
+        List<Crop> all = dbCrops.stream()
+                .filter(c -> c.getPlotId() == selectedDetailPlot.getPlotId())
+                .collect(Collectors.toList());
+        if (all.isEmpty()) {
+            Label no = new Label("No crops have been planted on this plot.");
+            no.setStyle("-fx-text-fill:#9ca3af;-fx-font-size:13;");
+            plotCropsListBox.getChildren().add(no);
+        } else {
+            for (Crop c : all) {
+                HBox row = new HBox(12);
+                row.setAlignment(Pos.CENTER_LEFT);
+                row.setStyle("-fx-padding:10;-fx-background-color:#f9fafb;-fx-background-radius:8;");
+                Circle dot = new Circle(6, Color.web(getCropColor(c.getCropName())));
+                VBox info = new VBox(2);
+                Label n = new Label(c.getCropName());
+                n.setStyle("-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#111827;");
+                String stage = c.getGrowthStage().name();
+                String planted = c.getPlantingDate() != null ? c.getPlantingDate().format(dateFmt) : "—";
+                Label detail = new Label(stage.charAt(0) + stage.substring(1).toLowerCase()
+                        + "  •  Planted: " + planted);
+                detail.setStyle("-fx-font-size:11;-fx-text-fill:#6b7280;");
+                info.getChildren().addAll(n, detail);
+                row.getChildren().addAll(dot, info);
+                plotCropsListBox.getChildren().add(row);
+            }
+        }
+    }
+
+    private void populateSensorTab() {
+        if (selectedDetailPlot == null) return;
+        sensorHistoryBox.getChildren().clear();
+        smartfarm.service.SettingsManager sm = smartfarm.service.SettingsManager.getInstance();
+        try {
+            smartfarm.dao.SensorDAO sensorDAO = new smartfarm.dao.SensorDAO();
+            List<smartfarm.model.SensorReading> readings = sensorDAO.getRecentForPlot(selectedDetailPlot.getPlotId(), 20);
+            if (readings.isEmpty()) {
+                Label no = new Label("No sensor readings recorded for this plot.");
+                no.setStyle("-fx-text-fill:#9ca3af;-fx-font-size:13;");
+                sensorHistoryBox.getChildren().add(no);
+            } else {
+                // Header
+                HBox header = new HBox(20);
+                header.setStyle("-fx-padding:6 10;-fx-background-color:#f3f4f6;-fx-background-radius:6;");
+                header.getChildren().addAll(
+                        headerLabel("Timestamp", 140),
+                        headerLabel("Temp", 80),
+                        headerLabel("Humidity", 80),
+                        headerLabel("Soil", 80));
+                sensorHistoryBox.getChildren().add(header);
+
+                for (smartfarm.model.SensorReading r : readings) {
+                    HBox row = new HBox(20);
+                    row.setStyle("-fx-padding:6 10;");
+                    String time = r.getTimestamp() != null
+                            ? r.getTimestamp().format(DateTimeFormatter.ofPattern("MMM d, HH:mm:ss"))
+                            : "—";
+                    row.getChildren().addAll(
+                            dataLabel(time, 140),
+                            dataLabel(sm.formatTemp(r.getTemperature()), 80),
+                            dataLabel(String.format("%.0f%%", r.getHumidity()), 80),
+                            dataLabel(String.format("%.0f%%", r.getSoilMoisture()), 80));
+                    sensorHistoryBox.getChildren().add(row);
+                }
+            }
+        } catch (SQLException e) {
+            Label err = new Label("Failed to load sensor data: " + e.getMessage());
+            err.setStyle("-fx-text-fill:#ef4444;-fx-font-size:12;");
+            sensorHistoryBox.getChildren().add(err);
+        }
+    }
+
+    private Label headerLabel(String text, double width) {
+        Label l = new Label(text);
+        l.setPrefWidth(width);
+        l.setStyle("-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#6b7280;");
+        return l;
+    }
+
+    private Label dataLabel(String text, double width) {
+        Label l = new Label(text);
+        l.setPrefWidth(width);
+        l.setStyle("-fx-font-size:12;-fx-text-fill:#374151;");
+        return l;
     }
 
     private Plot findPlotById(int plotId) {

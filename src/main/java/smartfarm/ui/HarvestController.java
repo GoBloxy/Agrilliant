@@ -45,8 +45,25 @@ public class HarvestController {
         setupTableColumns();
         setupFilters();
         loadRecords();
+        reconcileHarvestedCrops();
         updateSummaryCards();
         populateGradeChart();
+    }
+
+    private void reconcileHarvestedCrops() {
+        for (HarvestRecord hr : allRecords) {
+            Crop crop = cropCache.get(hr.getCropId());
+            if (crop != null && crop.getGrowthStage() != Crop.GrowthStage.HARVESTED) {
+                try {
+                    crop.setGrowthStage(Crop.GrowthStage.HARVESTED);
+                    crop.setHarvestDate(hr.getHarvestDate());
+                    cropDAO.update(crop);
+                    System.out.println("[HarvestController] Reconciled crop '" + crop.getCropName() + "' → HARVESTED");
+                } catch (SQLException e) {
+                    System.err.println("Failed to reconcile crop " + crop.getCropId() + ": " + e.getMessage());
+                }
+            }
+        }
     }
 
     private void loadCropCache() {
@@ -165,8 +182,16 @@ public class HarvestController {
         dialog.showAndWait().ifPresent(record -> {
             try {
                 harvestDAO.save(record);
+                // Mark the crop as HARVESTED so it no longer appears as active/growing
+                Crop crop = cropCache.get(record.getCropId());
+                if (crop != null) {
+                    crop.setGrowthStage(Crop.GrowthStage.HARVESTED);
+                    crop.setHarvestDate(record.getHarvestDate());
+                    cropDAO.update(crop);
+                }
                 SystemLogManager.getInstance().info("HarvestService",
                         "Harvest recorded: " + record.getQuantityKg() + " kg (Grade " + record.getGrade() + ")", "manager");
+                loadCropCache();
                 loadRecords();
                 updateSummaryCards();
                 populateGradeChart();

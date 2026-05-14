@@ -42,7 +42,7 @@ public class AttendancePage extends VBox {
 
     private HBox buildHeader() {
         Label title = new Label("Attendance Records");
-        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2e7d32;");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1f2937;");
 
         Label subtitle = new Label("R307 Fingerprint Scanner");
         subtitle.setStyle("-fx-font-size: 13px; -fx-text-fill: #888;");

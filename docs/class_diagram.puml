@@ -5,6 +5,8 @@ skinparam linetype ortho
 skinparam packageStyle rectangle
 skinparam shadowing false
 skinparam defaultFontSize 11
+skinparam nodesep 60
+skinparam ranksep 45
 
 title Agrilliant — Smart Farm Management System\nClass Diagram
 
@@ -62,9 +64,12 @@ package "model" #E8F5E9 {
         - workerId : int
         - fullName : String
         - phone : String
+        - email : String
+        - passwordHash : String
         - jobTitle : String
         - skills : String
         - onDuty : boolean
+        - fingerprintId : Integer
         - managerId : int
         - createdAt : LocalDateTime
         - updatedAt : LocalDateTime
@@ -79,6 +84,8 @@ package "model" #E8F5E9 {
         - sizeAcres : double
         - soilType : String
         - managerId : int
+        - irrigationType : String
+        - status : String
         - createdAt : LocalDateTime
         - updatedAt : LocalDateTime
     }
@@ -96,11 +103,9 @@ package "model" #E8F5E9 {
     }
 
     enum "Crop.GrowthStage" as GrowthStage {
-        SEED
-        SEEDLING
-        VEGETATIVE
-        FLOWERING
-        FRUITING
+        PLANTED
+        GROWING
+        READY
         HARVESTED
     }
 
@@ -117,15 +122,13 @@ package "model" #E8F5E9 {
 
     enum "Device.Type" as DeviceType {
         TEMP_HUM
-        SOIL_MOISTURE
-        LIGHT
-        WEATHER_STATION
+        SOIL
     }
 
     enum "Device.Status" as DeviceStatus {
         ONLINE
         OFFLINE
-        MAINTENANCE
+        MAINT
     }
 
     class SensorReading {
@@ -194,7 +197,39 @@ package "model" #E8F5E9 {
         A
         B
         C
-        REJECT
+    }
+
+    class Attendance {
+        - attendanceId : int
+        - workerId : int
+        - checkIn : LocalDateTime
+        - checkOut : LocalDateTime
+        - deviceCode : String
+        + isCheckedOut() : boolean
+    }
+
+    class DiseaseDetection {
+        - detectionId : int
+        - plotId : int
+        - cropId : int
+        - imagePath : String
+        - diseaseName : String
+        - confidence : Confidence
+        - recommendation : String
+        - status : DetectionStatus
+        - detectedByWorkerId : int
+    }
+
+    enum "DiseaseDetection.Confidence" as DetectionConfidence {
+        HIGH
+        MEDIUM
+        LOW
+    }
+
+    enum "DiseaseDetection.Status" as DetectionStatus {
+        PENDING
+        CONFIRMED
+        DISMISSED
     }
 
     class Notification {
@@ -207,6 +242,25 @@ package "model" #E8F5E9 {
         - status : Status
         - relatedEntityType : String
         - relatedEntityId : Integer
+    }
+
+    enum "Notification.RecipientRole" as NotifRecipientRole {
+        ADMIN
+        MANAGER
+        WORKER
+    }
+
+    enum "Notification.Channel" as NotifChannel {
+        PUSH
+        SMS
+        WHATSAPP
+        EMAIL
+    }
+
+    enum "Notification.Status" as NotifStatus {
+        QUEUED
+        SENT
+        FAILED
     }
 
     class SystemLog {
@@ -248,18 +302,40 @@ package "dao" #E3F2FD {
         + getByUsername(String) : Manager
     }
 
-    class WorkerDAO
+    class WorkerDAO {
+        + getByManager(int) : List<Worker>
+        + getByPhoneOrEmail(String) : Worker
+    }
+
     class PlotDAO
-    class CropDAO
+
+    class CropDAO {
+        + updateGrowthStage(int, GrowthStage) : void
+    }
+
     class DeviceDAO {
         + getByCode(String) : Device
     }
+
     class SensorDAO {
         + getRecent(int) : List<SensorReading>
+        + getRecentForPlot(int, int) : List<SensorReading>
     }
-    class AlertDAO
+
+    class AlertDAO {
+        + getUnresolved() : List<Alert>
+        + getAlertsByPlot(int) : List<Alert>
+        + markResolved(int) : void
+    }
+
     class TaskDAO
     class HarvestDAO
+    class AttendanceDAO {
+        + getWorkerIdByFingerprint(int) : int
+        + getOpenSession(int) : Attendance
+        + checkIn(Attendance) : void
+        + checkOut(int) : void
+    }
     class UserDAO
 
     GenericDAO <|.. AdminDAO
@@ -272,6 +348,7 @@ package "dao" #E3F2FD {
     GenericDAO <|.. AlertDAO
     GenericDAO <|.. TaskDAO
     GenericDAO <|.. HarvestDAO
+    GenericDAO <|.. AttendanceDAO
 }
 
 ' ════════════════════════════════════════
@@ -300,8 +377,14 @@ package "service" #FFF3E0 {
 
     class AlertService {
         - alertDAO : AlertDAO
-        - taskDAO : TaskDAO
+        - taskService : TaskService
         + checkAndAlert(SensorReading, int) : void
+        + createAlertWithTask(String, Severity, String, int) : void
+        + createAlertOnly(String, Severity, String, int) : void
+        + resolveAlert(int) : void
+        + getAllAlerts() : List<Alert>
+        + getUnresolvedAlerts() : List<Alert>
+        + getCriticalAlerts() : List<Alert>
     }
 
     class LiveSensorData <<Singleton>> {
@@ -325,11 +408,79 @@ package "service" #FFF3E0 {
         + {static} clearSession() : void
     }
 
+    class FingerprintService {
+        - port : SerialPort
+        - connected : boolean
+        + connect(String) : boolean
+        + enroll(int, EnrollCallback) : boolean
+        + scan(EnrollCallback) : int
+        + deleteTemplate(int) : boolean
+        + disconnect() : void
+    }
+
+    interface "FingerprintService.EnrollCallback" as EnrollCallback {
+        + onStatus(String) : void
+    }
+
+    class AttendanceService {
+        - attendanceDAO : AttendanceDAO
+        + handleFingerprintScan(int, String) : String
+        + getAllRecords() : List<Attendance>
+    }
+
+    class PlantIdService <<Singleton>> {
+        - {static} instance : PlantIdService
+        - httpClient : HttpClient
+        - apiKey : String
+        + {static} getInstance() : PlantIdService
+        + isAvailable() : boolean
+        + analyzeImage(String) : CropHealthResult
+    }
+
+    class "PlantIdService.DiseaseSuggestion" as DiseaseSuggestion {
+        + name : String
+        + scientificName : String
+        + probability : double
+        + description : String
+        + severity : String
+        + treatment : String
+    }
+
+    class "PlantIdService.CropHealthResult" as CropHealthResult {
+        + isPlant : boolean
+        + isHealthy : boolean
+        + cropName : String
+        + diseases : List<DiseaseSuggestion>
+        + getTopDisease() : DiseaseSuggestion
+        + toDiseaseDetection(int, int, String, int) : DiseaseDetection
+    }
+
+    class SettingsManager <<Singleton>> {
+        - {static} INSTANCE : SettingsManager
+        - useFahrenheit : BooleanProperty
+        + {static} getInstance() : SettingsManager
+        + isUseFahrenheit() : boolean
+        + setUseFahrenheit(boolean) : void
+        + formatTemp(float) : String
+        + formatTempShort(float) : String
+    }
+
+    class SystemLogManager <<Singleton>> {
+        - {static} INSTANCE : SystemLogManager
+        - logs : List<SystemLog>
+        + {static} getInstance() : SystemLogManager
+        + info(String, String, String) : void
+        + warning(String, String, String) : void
+        + error(String, String, String) : void
+        + getLogs() : List<SystemLog>
+    }
+
     class CropService
     class HarvestService
-    class TaskService
+    class TaskService {
+        + autoCreateTask(Task) : void
+    }
     class WorkerService
-    class SystemLogManager
 }
 
 ' ════════════════════════════════════════
@@ -345,11 +496,71 @@ package "server" #FCE4EC {
     class SensorHandler implements Runnable {
         - socket : Socket
         - sensorService : SensorService
+        - attendanceService : AttendanceService
         - deviceDAO : DeviceDAO
         - lastDeviceCode : String
         + run() : void
         - parseLine(String) : Parsed
         - resolveDeviceId(String) : int
+        - handleFingerprint(String) : void
+    }
+
+    class MqttBridge <<Singleton>> {
+        - {static} instance : MqttBridge
+        - client : MqttAsyncClient
+        - topicPrefix : String
+        - connected : boolean
+        + {static} getInstance() : MqttBridge
+        + connect() : void
+        + publishReading(String, float, float, float) : void
+        + disconnect() : void
+        + isConnected() : boolean
+    }
+
+    class "MqttBridge.SensorPayload" as SensorPayload {
+        + deviceCode : String
+        + temperature : float
+        + humidity : float
+        + soilMoisture : float
+        + timestamp : long
+    }
+
+    class MqttSensorSubscriber <<Singleton>> {
+        - {static} instance : MqttSensorSubscriber
+        - client : MqttAsyncClient
+        - connected : boolean
+        + {static} getInstance() : MqttSensorSubscriber
+        + start() : void
+        + stop() : void
+        + isConnected() : boolean
+    }
+
+    class NotificationService <<Singleton>> {
+        - {static} instance : NotificationService
+        - alertDAO : AlertDAO
+        - liveSensorData : LiveSensorData
+        + {static} getInstance() : NotificationService
+        + sendNotification(NotificationType, String, String, String) : void
+        + sendSensorAlert(String, String, double, double, Severity) : void
+        + sendDeviceStatusNotification(String, String, String) : void
+        + sendTaskNotification(String, String, String) : void
+        + sendHarvestNotification(String, double, String) : void
+        + addListener(NotificationListener) : void
+        + removeListener(NotificationListener) : void
+        + shutdown() : void
+    }
+
+    enum "NotificationService.NotificationType" as NotificationType {
+        INFO
+        WARNING
+        CRITICAL
+        SUCCESS
+        TASK
+        SYSTEM
+    }
+
+    interface "NotificationService.NotificationListener" as NotificationListener {
+        + onNotification(Notification) : void
     }
 }
 
@@ -358,9 +569,30 @@ package "server" #FCE4EC {
 ' ════════════════════════════════════════
 package "ui" #F3E5F5 {
 
+    class LoginPage {
+        - authService : AuthService
+        - fpService : FingerprintService
+        - workerDAO : WorkerDAO
+        + createView() : Parent
+        - buildLeftPanel() : StackPane
+        - buildRightPanel() : VBox
+        - handleSignIn() : void
+        - handleSignUp() : void
+        - handleFingerprintLogin() : void
+        - switchToSignIn() : void
+        - switchToSignUp() : void
+    }
+
     class DashboardController {
         - currentUser : User
         - pageContainer : StackPane
+        - alertDAO : AlertDAO
+        - taskDAO : TaskDAO
+        - cropDAO : CropDAO
+        - plotDAO : PlotDAO
+        - workerDAO : WorkerDAO
+        - harvestDAO : HarvestDAO
+        - sensorDAO : SensorDAO
         + setCurrentUser(User) : void
         - subscribeLiveSensor() : void
         - updateTemperature(float) : void
@@ -380,14 +612,74 @@ package "ui" #F3E5F5 {
         - onSignUp() : void
     }
 
+    class PlotController {
+        - plotDAO : PlotDAO
+        - cropDAO : CropDAO
+        + populatePlotDetail(Plot) : void
+    }
+
+    class CropController {
+        - cropDAO : CropDAO
+        - plotDAO : PlotDAO
+        + showCropDetail(Crop) : void
+        + populateDetail(Crop) : void
+    }
+
     class MonitoringController {
+        - sensorService : SensorService
+        - plotDAO : PlotDAO
         - subscribeLiveSensor() : void
     }
 
-    class AlertController
-    class CropController
-    class HarvestController
-    class LogsController
+    class HarvestController {
+        - harvestDAO : HarvestDAO
+        - cropDAO : CropDAO
+        + reconcileHarvestedCrops() : void
+    }
+
+    class TaskController {
+        - taskDAO : TaskDAO
+        - workerDAO : WorkerDAO
+        - plotDAO : PlotDAO
+    }
+
+    class WorkerController {
+        - workerService : WorkerService
+        - workerDAO : WorkerDAO
+        - taskDAO : TaskDAO
+        - fpService : FingerprintService
+    }
+
+    class UsersController {
+        - adminDAO : AdminDAO
+        - managerDAO : ManagerDAO
+        - workerDAO : WorkerDAO
+    }
+
+    class AlertController {
+        - alertService : AlertService
+        - sensorDAO : SensorDAO
+        - taskDAO : TaskDAO
+    }
+
+    class ReportsController {
+        - harvestDAO : HarvestDAO
+        - cropDAO : CropDAO
+    }
+
+    class LogsController {
+        - logManager : SystemLogManager
+    }
+
+    class DiseaseDetectionPage extends javafx.scene.layout.VBox {
+        - plantIdService : PlantIdService
+        + analyzeImage(File) : void
+    }
+
+    class AttendancePage extends javafx.scene.layout.VBox {
+        - attendanceService : AttendanceService
+        - workerDAO : WorkerDAO
+    }
 
     class SettingsPage extends javafx.scene.layout.VBox {
         - txtServerIp : TextField
@@ -443,6 +735,10 @@ class Main extends javafx.application.Application {
     + {static} main(String[]) : void
 }
 
+class Launcher {
+    + {static} main(String[]) : void
+}
+
 ' ════════════════════════════════════════
 '  RELATIONSHIPS
 ' ════════════════════════════════════════
@@ -456,6 +752,11 @@ Alert *-- Severity
 Task *-- TaskStatus
 HarvestRecord *-- Grade
 SystemLog *-- LogType
+DiseaseDetection *-- DetectionConfidence
+DiseaseDetection *-- DetectionStatus
+Notification *-- NotifRecipientRole
+Notification *-- NotifChannel
+Notification *-- NotifStatus
 
 ' Model associations
 Manager "1" --> "*" Worker : manages
@@ -467,6 +768,8 @@ Plot "1" --> "*" Alert : generates
 Alert "0..1" --> "*" Task : triggers
 Task "*" --> "*" Worker : assigned to
 Crop "1" --> "*" HarvestRecord : yields
+Crop "1" --> "*" DiseaseDetection : detected on
+Worker "1" --> "*" Attendance : checks in
 
 ' DAO uses model
 AdminDAO --> Admin
@@ -479,6 +782,7 @@ SensorDAO --> SensorReading
 AlertDAO --> Alert
 TaskDAO --> Task
 HarvestDAO --> HarvestRecord
+AttendanceDAO --> Attendance
 
 ' DAO uses DBConnection
 GenericDAO ..> DBConnection : <<uses>>
@@ -488,28 +792,98 @@ AuthService --> AdminDAO
 AuthService --> ManagerDAO
 SensorService --> SensorDAO
 SensorService --> AlertService
-AlertService --> AlertDAO
-AlertService --> TaskDAO
-AlertService ..> ThresholdConfig : <<uses>>
 SensorService --> LiveSensorData
+SensorService --> MqttBridge : publishes
+AlertService --> AlertDAO
+AlertService --> TaskService
+AlertService ..> ThresholdConfig : <<uses>>
+AttendanceService --> AttendanceDAO
+FingerprintService --> EnrollCallback
+PlantIdService --> DiseaseSuggestion
+PlantIdService --> CropHealthResult
+CropHealthResult ..> DiseaseDetection : converts to
 
 ' Server
 FarmServer --> SensorHandler : creates
 SensorHandler --> SensorService
+SensorHandler --> AttendanceService
 SensorHandler --> DeviceDAO
+SensorHandler --> LiveSensorData : updates
+MqttBridge --> SensorPayload
+MqttSensorSubscriber --> LiveSensorData : updates
+MqttSensorSubscriber ..> SensorPayload : deserializes
+NotificationService --> AlertDAO
+NotificationService --> LiveSensorData
+NotificationService *-- NotificationType
+NotificationService --> NotificationListener
 
 ' UI dependencies
+Launcher --> Main : launches
 Main --> FarmServer : starts
-Main --> AuthService
+Main --> MqttBridge : connects
+Main --> MqttSensorSubscriber : starts
+Main --> AuthService : restores session
 Main --> SessionManager
-Main --> DashboardController
+Main --> LoginPage : shows on start
+Main --> DashboardController : on restored session
+
+LoginPage --> AuthService
+LoginPage --> FingerprintService
+LoginPage --> WorkerDAO
+LoginPage --> SessionManager
+
 SignInController --> AuthService
 SignInController --> SessionManager
 SignInController --> DashboardController
+
 DashboardController --> LiveSensorData : subscribes
-MonitoringController --> LiveSensorData : subscribes
+DashboardController --> LoginPage : logout navigates to
 DashboardController --> SettingsPage : navigates
 DashboardController --> AboutPage : navigates
 DashboardController --> CropsPage : navigates
+DashboardController --> DiseaseDetectionPage : navigates
+DashboardController --> AttendancePage : navigates
+DashboardController --> SettingsManager
+
+PlotController --> PlotDAO
+PlotController --> CropDAO
+
+CropController --> CropDAO
+CropController --> PlotDAO
+CropController --> LiveSensorData
+
+MonitoringController --> SensorService
+MonitoringController --> PlotDAO
+MonitoringController --> LiveSensorData : subscribes
+
+HarvestController --> HarvestDAO
+HarvestController --> CropDAO
+
+TaskController --> TaskDAO
+TaskController --> WorkerDAO
+TaskController --> PlotDAO
+
+WorkerController --> WorkerService
+WorkerController --> WorkerDAO
+WorkerController --> TaskDAO
+WorkerController --> FingerprintService
+
+UsersController --> AdminDAO
+UsersController --> ManagerDAO
+UsersController --> WorkerDAO
+
+AlertController --> AlertService
+AlertController --> SensorDAO
+AlertController --> TaskDAO
+
+ReportsController --> HarvestDAO
+ReportsController --> CropDAO
+
+LogsController --> SystemLogManager
+
+DiseaseDetectionPage --> PlantIdService
+
+AttendancePage --> AttendanceService
+AttendancePage --> WorkerDAO
 
 @enduml

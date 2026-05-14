@@ -7,9 +7,16 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import javafx.scene.shape.Circle?>
 
-<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.PlotController"
-      spacing="14" styleClass="content-pane" prefWidth="1200" prefHeight="900">
+<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.PlotController"
+           styleClass="content-pane" prefWidth="1200" prefHeight="900">
+
+    <!-- ════════ VIEW 1: PLOT LIST ════════ -->
+    <VBox fx:id="listView" spacing="14">
     <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Plots &amp; Fields" styleClass="page-title"/>
+    </HBox>
 
     <!-- Summary Cards -->
     <HBox spacing="14" alignment="CENTER_LEFT">
@@ -226,4 +233,178 @@
             </HBox>
         </HBox>
     </VBox>
-</VBox>
+    </VBox>
+
+    <!-- ════════ VIEW 2: PLOT DETAILS ════════ -->
+    <VBox fx:id="detailView" managed="false" spacing="0" style="-fx-background-color:#f5f7fa;" visible="false">
+
+        <!-- Detail Header -->
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding:18 24 14 24;-fx-background-color:white;-fx-border-color:transparent transparent #e5e7eb transparent;-fx-border-width:0 0 1 0;">
+            <Button onAction="#onBackToPlots" styleClass="icon-btn">
+                <graphic><FontIcon iconLiteral="fth-arrow-left" iconSize="18"/></graphic>
+            </Button>
+            <Label styleClass="page-title" text="Plot Details"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnEditPlotDetail" onAction="#onEditPlotFromDetail" styleClass="btn-secondary" text="Edit Plot">
+                <graphic><FontIcon iconLiteral="fth-edit-2" iconSize="14"/></graphic>
+            </Button>
+        </HBox>
+
+        <!-- Tab Bar -->
+        <HBox fx:id="plotTabBar" spacing="0" style="-fx-padding:0 24 0 24;-fx-background-color:white;-fx-border-color:transparent transparent #e5e7eb transparent;-fx-border-width:0 0 1 0;">
+            <Button fx:id="plotTabOverview" onAction="#onPlotTabOverview" styleClass="crop-tab,crop-tab-active" text="Overview"/>
+            <Button fx:id="plotTabCrops" onAction="#onPlotTabCrops" styleClass="crop-tab" text="Crops"/>
+            <Button fx:id="plotTabSensors" onAction="#onPlotTabSensors" styleClass="crop-tab" text="Sensor Data"/>
+            <Button fx:id="plotTabNotes" onAction="#onPlotTabNotes" styleClass="crop-tab" text="Notes"/>
+        </HBox>
+
+        <!-- Tab Content -->
+        <ScrollPane fitToWidth="true" style="-fx-background-color:#f5f7fa;" styleClass="page-scroll" VBox.vgrow="ALWAYS">
+            <StackPane fx:id="plotTabContent" style="-fx-padding:20 24 24 24;">
+
+                <!-- ═══ OVERVIEW TAB ═══ -->
+                <VBox fx:id="plotOverviewPane" spacing="16">
+
+                    <!-- ROW 1: Plot Info + Conditions + Irrigation -->
+                    <HBox spacing="16">
+
+                        <!-- LEFT: Plot Info Card -->
+                        <VBox minWidth="250" prefWidth="280" spacing="14" styleClass="card">
+                            <padding><Insets bottom="24" left="20" right="20" top="24"/></padding>
+                            <VBox alignment="CENTER" spacing="6">
+                                <StackPane alignment="CENTER" prefHeight="64" prefWidth="64" style="-fx-background-color:#e8f5e9;-fx-background-radius:100;">
+                                    <FontIcon iconColor="#2e7d32" iconLiteral="fth-map-pin" iconSize="28"/>
+                                </StackPane>
+                                <Label fx:id="lblPlotDetailName" style="-fx-font-size:18;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Plot 1"/>
+                                <Label fx:id="lblPlotDetailLocation" style="-fx-font-size:12;-fx-text-fill:#6b7280;" text="Main Field"/>
+                                <HBox alignment="CENTER">
+                                    <Label fx:id="lblPlotDetailStatus" style="-fx-background-color:#d1fae5;-fx-text-fill:#065f46;-fx-padding:3 12;-fx-background-radius:12;-fx-font-size:11;-fx-font-weight:bold;" text="Active"/>
+                                </HBox>
+                            </VBox>
+                            <Separator/>
+                            <Label fx:id="lblPlotDetailCreated" style="-fx-font-size:12;-fx-text-fill:#6b7280;" text="Created  —"/>
+                            <HBox spacing="0">
+                                <VBox spacing="10" HBox.hgrow="ALWAYS">
+                                    <VBox spacing="2">
+                                        <Label style="-fx-font-size:11;-fx-text-fill:#9ca3af;" text="Area"/>
+                                        <Label fx:id="lblPlotDetailArea" style="-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#111827;" text="0 acres"/>
+                                    </VBox>
+                                    <VBox spacing="2">
+                                        <Label style="-fx-font-size:11;-fx-text-fill:#9ca3af;" text="Soil Type"/>
+                                        <Label fx:id="lblPlotDetailSoil" style="-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#111827;" text="—"/>
+                                    </VBox>
+                                </VBox>
+                                <VBox spacing="10" HBox.hgrow="ALWAYS">
+                                    <VBox spacing="2">
+                                        <Label style="-fx-font-size:11;-fx-text-fill:#9ca3af;" text="Irrigation"/>
+                                        <Label fx:id="lblPlotDetailIrrigation" style="-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#111827;" text="—"/>
+                                    </VBox>
+                                    <VBox spacing="2">
+                                        <Label style="-fx-font-size:11;-fx-text-fill:#9ca3af;" text="Last Updated"/>
+                                        <Label fx:id="lblPlotDetailUpdated" style="-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#111827;" text="—"/>
+                                    </VBox>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <!-- CENTER: Active Crops -->
+                        <VBox spacing="14" styleClass="card" HBox.hgrow="ALWAYS">
+                            <padding><Insets bottom="20" left="20" right="20" top="20"/></padding>
+                            <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Active Crops"/>
+                            <VBox fx:id="plotDetailCropsBox" spacing="8">
+                                <Label text="No active crops" style="-fx-text-fill:#9ca3af;-fx-font-size:12;"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- RIGHT: Plot Conditions -->
+                        <VBox minWidth="260" prefWidth="280" spacing="14" styleClass="card">
+                            <padding><Insets bottom="20" left="20" right="20" top="20"/></padding>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <FontIcon iconColor="#2e7d32" iconLiteral="fth-thermometer" iconSize="16"/>
+                                <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Plot Conditions"/>
+                            </HBox>
+                            <Label fx:id="lblPlotCondSource" style="-fx-font-size:11;-fx-text-fill:#9ca3af;" text="Last recorded reading"/>
+
+                            <!-- Temperature -->
+                            <VBox spacing="4" style="-fx-background-color:#f0fdf4;-fx-background-radius:8;-fx-padding:12;">
+                                <HBox alignment="CENTER_LEFT" spacing="6">
+                                    <FontIcon iconColor="#dc2626" iconLiteral="fth-sun" iconSize="14"/>
+                                    <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Temperature"/>
+                                </HBox>
+                                <Label fx:id="lblPlotTemp" style="-fx-font-size:20;-fx-font-weight:bold;-fx-text-fill:#111827;" text="-- °C"/>
+                                <Label fx:id="lblPlotTempStatus" style="-fx-font-size:10;-fx-text-fill:#16a34a;-fx-font-weight:bold;" text="Normal"/>
+                            </VBox>
+
+                            <!-- Humidity -->
+                            <VBox spacing="4" style="-fx-background-color:#eff6ff;-fx-background-radius:8;-fx-padding:12;">
+                                <HBox alignment="CENTER_LEFT" spacing="6">
+                                    <FontIcon iconColor="#2563eb" iconLiteral="fth-droplet" iconSize="14"/>
+                                    <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Humidity"/>
+                                </HBox>
+                                <Label fx:id="lblPlotHumidity" style="-fx-font-size:20;-fx-font-weight:bold;-fx-text-fill:#111827;" text="-- %"/>
+                                <Label fx:id="lblPlotHumStatus" style="-fx-font-size:10;-fx-text-fill:#16a34a;-fx-font-weight:bold;" text="Normal"/>
+                            </VBox>
+
+                            <!-- Soil Moisture -->
+                            <VBox spacing="4" style="-fx-background-color:#fefce8;-fx-background-radius:8;-fx-padding:12;">
+                                <HBox alignment="CENTER_LEFT" spacing="6">
+                                    <FontIcon iconColor="#ca8a04" iconLiteral="fth-activity" iconSize="14"/>
+                                    <Label style="-fx-font-size:11;-fx-text-fill:#6b7280;" text="Soil Moisture"/>
+                                </HBox>
+                                <Label fx:id="lblPlotSoilMoisture" style="-fx-font-size:20;-fx-font-weight:bold;-fx-text-fill:#111827;" text="-- %"/>
+                                <Label fx:id="lblPlotSoilStatus" style="-fx-font-size:10;-fx-text-fill:#16a34a;-fx-font-weight:bold;" text="Normal"/>
+                            </VBox>
+                        </VBox>
+                    </HBox>
+
+                    <!-- ROW 2: Soil Profile + Plot Activity -->
+                    <HBox spacing="16">
+                        <VBox spacing="14" styleClass="card" HBox.hgrow="ALWAYS">
+                            <padding><Insets bottom="20" left="24" right="24" top="20"/></padding>
+                            <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Soil Profile"/>
+                            <VBox fx:id="soilProfileBox" spacing="10">
+                            </VBox>
+                        </VBox>
+
+                        <VBox minWidth="280" prefWidth="300" spacing="14" styleClass="card">
+                            <padding><Insets bottom="20" left="20" right="20" top="20"/></padding>
+                            <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Plot Summary"/>
+                            <VBox fx:id="plotSummaryBox" spacing="10">
+                            </VBox>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- ═══ CROPS TAB ═══ -->
+                <VBox fx:id="plotCropsPane" managed="false" spacing="16" visible="false">
+                    <VBox spacing="12" styleClass="card">
+                        <padding><Insets bottom="24" left="24" right="24" top="20"/></padding>
+                        <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Crops on this Plot"/>
+                        <VBox fx:id="plotCropsListBox" spacing="8">
+                        </VBox>
+                    </VBox>
+                </VBox>
+
+                <!-- ═══ SENSOR DATA TAB ═══ -->
+                <VBox fx:id="plotSensorsPane" managed="false" spacing="16" visible="false">
+                    <VBox spacing="12" styleClass="card">
+                        <padding><Insets bottom="24" left="24" right="24" top="20"/></padding>
+                        <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Sensor Reading History"/>
+                        <VBox fx:id="sensorHistoryBox" spacing="4">
+                        </VBox>
+                    </VBox>
+                </VBox>
+
+                <!-- ═══ NOTES TAB ═══ -->
+                <VBox fx:id="plotNotesPane" managed="false" spacing="16" visible="false">
+                    <VBox spacing="12" styleClass="card">
+                        <padding><Insets bottom="24" left="24" right="24" top="20"/></padding>
+                        <Label style="-fx-font-size:16;-fx-font-weight:bold;-fx-text-fill:#111827;" text="Notes"/>
+                        <TextArea fx:id="txtPlotNotes" prefHeight="200" promptText="Add notes about this plot..." style="-fx-font-size:13;-fx-border-color:#e5e7eb;-fx-border-radius:8;-fx-background-radius:8;"/>
+                    </VBox>
+                </VBox>
+
+            </StackPane>
+        </ScrollPane>
+    </VBox>
+</StackPane>

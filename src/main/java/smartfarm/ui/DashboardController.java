@@ -923,7 +923,7 @@ public class DashboardController {
     }
 
     private void updateSensorDot(int count) {
-        lblSensorStatus.setText(count + " Active");
+        lblSensorStatus.setText(count > 0 ? "Active" : "Inactive");
         dotSensors.getStyleClass().setAll(count > 0 ? "status-dot-online" : "status-dot-offline");
     }
 
