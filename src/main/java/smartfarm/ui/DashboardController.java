@@ -90,6 +90,9 @@ public class DashboardController {
     @FXML private Label lblSystemStatus, lblDbStatus, lblSensorStatus;
     @FXML private Circle dotSystem, dotDb, dotSensors;
 
+    // ── Sensor Refresh ──
+    @FXML private Button btnRefreshSensors;
+
     // ── Navigation ──
     @FXML private StackPane pageContainer;
     @FXML private VBox dashboardPage;
@@ -184,6 +187,7 @@ public class DashboardController {
         subscribeLiveSensor();
         updateSidebarStatus();
         loadDashboardData();
+        refreshSensorLabels();   // Populate cards immediately from LiveSensorData or DB
         activeNavButton = btnDashboard;
 
         // Log DB connection status
@@ -932,6 +936,48 @@ public class DashboardController {
 
     // ═══════════════ LIVE SENSOR SUBSCRIPTION ═══════════════
 
+    // ═══════════════ SENSOR REFRESH ═══════════════
+
+    @FXML
+    private void onRefreshSensors() {
+        refreshSensorLabels();
+    }
+
+    /**
+     * Populates the Live Environmental Monitor cards.
+     * Reads from LiveSensorData (in-memory, real-time) first; falls back to
+     * the most recent DB row if no live data has arrived yet (e.g. on first load
+     * before the first TCP/MQTT message is processed).
+     */
+    private void refreshSensorLabels() {
+        LiveSensorData live = LiveSensorData.getInstance();
+        float t = live.temperatureProperty().get();
+        float h = live.humidityProperty().get();
+        float s = live.soilMoistureProperty().get();
+        String dev = live.deviceIdProperty().get();
+
+        if (!Float.isNaN(t) && !Float.isNaN(h)) {
+            updateTemperature(t);
+            updateHumidity(h);
+            if (!Float.isNaN(s)) updateSoilMoisture(s);
+            if (dev != null && !dev.equals("--")) updatePlotLabels(dev);
+            return;
+        }
+
+        // Live data not available yet — pull the most recent row from DB
+        try {
+            List<SensorReading> recent = sensorDAO.getRecent(1);
+            if (!recent.isEmpty()) {
+                SensorReading r = recent.get(0);
+                updateTemperature(r.getTemperature());
+                updateHumidity(r.getHumidity());
+                if (!Float.isNaN(r.getSoilMoisture())) updateSoilMoisture(r.getSoilMoisture());
+            }
+        } catch (SQLException e) {
+            System.err.println("refreshSensorLabels: DB fallback failed: " + e.getMessage());
+        }
+    }
+
     private void subscribeLiveSensor() {
         LiveSensorData live = LiveSensorData.getInstance();
 
@@ -1030,7 +1076,7 @@ public class DashboardController {
     }
 
     // ═══════════════ NAVIGATION HANDLERS ═══════════════
-    @FXML private void onNavDashboard()  { showPage(dashboardPage,  btnDashboard); }
+    @FXML private void onNavDashboard()  { showPage(dashboardPage, btnDashboard); refreshSensorLabels(); }
     @FXML private void onNavMonitoring() { loadFxmlPage("/fxml/monitoring.fxml", btnMonitoring); }
     @FXML private void onNavDisease()    { showPage(new DiseaseDetectionPage(), btnDisease); }
     @FXML private void onNavAlerts()     { loadFxmlPage("/fxml/alerts.fxml", btnAlerts); }

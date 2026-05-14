@@ -60,6 +60,7 @@
 #define FP_RX_PIN     16               // GPIO pin for R307 TX -> ESP32 RX (UART2)
 #define FP_TX_PIN     17               // GPIO pin for R307 RX -> ESP32 TX (UART2)
 #define FP_CHECK_INTERVAL 3000         // Milliseconds between fingerprint scan checks
+#define SERIAL_BRIDGE_TIMEOUT 45000    // Release R307 bridge lock if Java app goes silent
 
 // FC-28 calibration (adjust after testing with your sensor)
 #define SOIL_DRY      4095              // ADC value when sensor is in dry air
@@ -78,6 +79,7 @@ Adafruit_Fingerprint finger = Adafruit_Fingerprint(&fpSerial);
 bool fingerprintDetected = false;
 unsigned long lastFpCheck = 0;
 bool serialBridgeActive = false;       // True when desktop app is using R307 via serial
+unsigned long serialBridgeLastActivity = 0;  // Timestamp of last serial command (for auto-expiry)
 
 // SH1106 OLED (128x64, I2C on default SDA=21, SCL=22)
 U8G2_SH1106_128X64_NONAME_F_HW_I2C oled(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -221,8 +223,13 @@ void loop() {
         handleSerialCommand(cmd);
     }
 
-    // Check fingerprint scanner (non-blocking, every 500ms)
-    // Skip when desktop app is using R307 via serial bridge
+    // Auto-expire serial bridge lock if desktop app went silent
+    if (serialBridgeActive && (millis() - serialBridgeLastActivity > SERIAL_BRIDGE_TIMEOUT)) {
+        serialBridgeActive = false;
+        Serial.println("BRIDGE_TIMEOUT: R307 lock released");
+    }
+
+    // Check fingerprint scanner — skip while desktop app holds the R307 bridge
     if (fingerprintDetected && !serialBridgeActive && millis() - lastFpCheck >= FP_CHECK_INTERVAL) {
         lastFpCheck = millis();
         checkFingerprint();
@@ -234,7 +241,6 @@ void loop() {
     float temp = dht.readTemperature();
     float hum  = dht.readHumidity();
 
-    // Validate DHT reading
     if (isnan(temp) || isnan(hum)) {
         Serial.println("DHT read failed, retrying...");
         return;
@@ -250,18 +256,22 @@ void loop() {
         Serial.printf("Temp: %.2f C  Hum: %.2f %%\n", temp, hum);
     }
 
-    // Update OLED display
-    updateOLED(temp, hum, soilPercent);
-
-    // Connect to server if not connected
+    // Establish (or re-establish) server connection BEFORE updating OLED
+    // so the display reflects the actual connection state.
     if (!client.connected()) {
+        client.stop();  // Ensure clean close before reconnecting
         Serial.printf("Connecting to server %s:%d...\n", SERVER_IP, SERVER_PORT);
         if (!client.connect(SERVER_IP, SERVER_PORT)) {
             Serial.println("Connection failed!");
+            updateOLED(temp, hum, soilPercent);  // Show disconnected state
             return;
         }
+        client.setNoDelay(true);  // Disable Nagle — send each packet immediately
         Serial.println("Connected to server.");
     }
+
+    // Update OLED — connection state is now accurate
+    updateOLED(temp, hum, soilPercent);
 
     // Send reading in expected format
     String payload = "DEVICE:" + String(DEVICE_ID) +
@@ -271,7 +281,9 @@ void loop() {
         payload += ",SOIL:" + String(soilPercent, 2);
     }
     client.println(payload);
-    client.flush();  // Force immediate send (no TCP buffering)
+    client.flush();
+    // Drain any server response to keep the TCP stream clean
+    while (client.available()) client.read();
     Serial.println("Sent: " + payload);
 }
 
@@ -346,14 +358,20 @@ void checkFingerprint() {
     oled.drawStr(10, 55, buf);
     oled.sendBuffer();
 
-    // Send to server
+    // Ensure server connection before sending attendance event.
+    // checkFingerprint() runs between sensor cycles, so TCP may have dropped.
+    if (!client.connected()) {
+        client.stop();
+        client.connect(SERVER_IP, SERVER_PORT);
+        if (client.connected()) client.setNoDelay(true);
+    }
     if (client.connected()) {
         String payload = "FINGERPRINT:" + String(DEVICE_ID) + ",ID:" + String(fpId);
         client.println(payload);
         client.flush();
         Serial.println("Sent: " + payload);
     } else {
-        Serial.println("Cannot send fingerprint — not connected to server");
+        Serial.println("Cannot send fingerprint — server unreachable");
     }
 
     delay(2000);  // Debounce — prevent multiple reads of same finger
@@ -364,6 +382,7 @@ void checkFingerprint() {
 // ESP32 relays to R307 and responds with results.
 //
 // Commands:
+//   LOCK            → reserve R307 for desktop (prevents autonomous scan); respond: LOCKED
 //   SCAN            → scan finger, respond: SCAN_OK:<id>,<confidence> or SCAN_FAIL
 //   ENROLL:<slot>   → enroll finger at slot (two scans), respond: ENROLL_OK:<slot> or ENROLL_FAIL:<reason>
 //   TEMPLATE_COUNT  → respond: TEMPLATE_COUNT:<n>
@@ -391,17 +410,32 @@ void handleSerialCommand(String cmd) {
         showOLED("[Bridge]", "Desktop connected");
         return;
     }
+    else if (cmd == "LOCK") {
+        // Grab bridge lock immediately — blocks autonomous scan so user can
+        // place their finger in response to the Java UI prompt, not the OLED.
+        serialBridgeActive = true;
+        serialBridgeLastActivity = millis();
+        Serial.println("LOCKED");
+        showOLED("[Bridge]", "Scan ready...");
+        return;
+    }
     else if (cmd == "RELEASE") {
+        // Desktop app explicitly releases the R307 sensor lock
         serialBridgeActive = false;
         Serial.println("RELEASED");
         return;
     }
 
-    // All commands below lock the R307 for the desktop app
+    // All commands below lock the R307 for the desktop app session.
+    // The lock persists across retries until the desktop sends RELEASE
+    // or SERIAL_BRIDGE_TIMEOUT elapses — this prevents background
+    // checkFingerprint() from corrupting UART2 between retry attempts.
     serialBridgeActive = true;
+    serialBridgeLastActivity = millis();
 
     if (cmd == "SCAN") {
         handleScan();
+        // Release immediately — SCAN is a one-shot operation
         serialBridgeActive = false;
     }
     else if (cmd.startsWith("ENROLL:")) {
@@ -411,7 +445,8 @@ void handleSerialCommand(String cmd) {
             return;
         }
         handleEnroll(slot);
-        serialBridgeActive = false;
+        // Do NOT release here — desktop may retry on failure.
+        // Desktop must send RELEASE when enrollment session is done.
     }
     else if (cmd == "TEMPLATE_COUNT") {
         finger.getTemplateCount();

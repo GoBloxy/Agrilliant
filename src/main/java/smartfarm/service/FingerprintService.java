@@ -94,7 +94,20 @@ public class FingerprintService {
         return false;
     }
 
+    /**
+     * Tell the ESP32 to release the R307 sensor lock so background check-in
+     * scanning can resume. Always call this before disconnect() when an
+     * enrollment session ends (success, failure, or cancellation).
+     */
+    public void release() {
+        if (!isConnected()) return;
+        try {
+            sendLine("RELEASE");
+        } catch (Exception ignored) {}
+    }
+
     public void disconnect() {
+        release();  // Always release R307 lock before closing so autonomous scans resume
         connected = false;
         try { if (reader != null) reader.close(); } catch (Exception ignored) {}
         try { if (writer != null) writer.close(); } catch (Exception ignored) {}
@@ -115,6 +128,10 @@ public class FingerprintService {
     public int scanAndMatch() {
         if (!isConnected()) return -1;
         try {
+            // LOCK first: prevents the autonomous ESP32 scan from consuming the
+            // finger image before handleScan() is ready to receive it.
+            sendLine("LOCK");
+            waitForResponse("LOCKED", 2000);
             sendLine("SCAN");
             // Wait for final result (SCAN_OK or SCAN_FAIL), up to 15s
             long deadline = System.currentTimeMillis() + 15000;
