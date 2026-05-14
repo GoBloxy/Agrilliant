@@ -77,7 +77,7 @@ The app compiles cleanly on both profiles and boots through Splash → SignIn on
 |------|--------|
 | `mvn -Pdesktop clean compile` | BUILD SUCCESS (79 sources) |
 | `mvn -Pandroid clean compile` | BUILD SUCCESS (75 sources) |
-| FXML load smoke (no DB) | **8/12 pass** |
+| FXML load smoke (with DB) | **9/12 pass** (retested 2026-05-14 with real MySQL at 139.59.153.80) |
 | Boot smoke (desktop) | Splash → SignIn end-to-end, FarmServer starts |
 | Boot smoke (android profile) | Splash → SignIn end-to-end, FarmServer skipped (correct) |
 
@@ -111,49 +111,63 @@ These are 3bdelbary's remaining Phase 1 tasks, none started yet:
 
 ## Known Errors and Issues
 
-### 1. FXML Load Failures (4/12) — Pre-existing, Hagag's lane
+### 1. FXML Load Failures (3/12) — Retested 2026-05-14 with real DB
 
-These controllers eagerly call DAO methods in `initialize()`. Without a MySQL database, the cached `Connection` is `null` and they NPE.
+Retested with `db.properties` pointing to the real MySQL at `139.59.153.80`. DB connection now succeeds, which changed the failure profile: `monitoring.fxml` now passes (was failing with DB NPE before). Three FXMLs still fail, but with different root causes than the previous "no DB" NPEs.
 
-| FXML | Controller | Root Cause |
-|------|------------|------------|
-| `dashboard.fxml` | `DashboardController` | `initialize()` hits DB for datetime/weather/status |
-| `crops.fxml` | `CropController` | `initialize()` loads crop data from DB |
-| `monitoring.fxml` | `MonitoringController` | `initialize()` loads sensor data from DB |
-| `reports.fxml` | `ReportsController` | `initialize()` loads report data from DB |
+**Full smoke results:**
 
-**Stack trace shape:**
+| FXML | Status | Details |
+|------|--------|---------|
+| `signin.fxml` | PASS | |
+| `signup.fxml` | PASS | |
+| `dashboard.fxml` | **FAIL** | `IllegalArgumentException: No enum constant smartfarm.model.Crop.GrowthStage.GROWING` — DB has `growth_stage='GROWING'` but the Java enum only defines `SEED, SEEDLING, VEGETATIVE, FLOWERING, FRUITING, HARVESTED` |
+| `crops.fxml` | **FAIL** | `NullPointerException: Cannot invoke "javafx.scene.control.TableColumn.setResizable(boolean)" because "this.colVariety" is null` — `CropController` declares `@FXML colVariety` but `crops.fxml` has no `<TableColumn fx:id="colVariety">` |
+| `plots.fxml` | PASS | (logs `IllegalArgumentException: No enum constant Crop.GrowthStage.GROWING` but catches it — `PlotController.initialize` has a try/catch guard) |
+| `workers.fxml` | PASS | |
+| `tasks.fxml` | PASS | |
+| `alerts.fxml` | PASS | |
+| `monitoring.fxml` | PASS | (was failing without DB; now works with real DB) |
+| `harvest.fxml` | PASS | |
+| `reports.fxml` | **FAIL** | `IllegalArgumentException: No enum constant smartfarm.model.Crop.GrowthStage.GROWING` — same enum mismatch as dashboard |
+| `logs.fxml` | PASS | |
+
+**Root cause #1 — `Crop.GrowthStage` enum vs DB data mismatch:**
+
+The `crops` table contains rows with `growth_stage = 'GROWING'`, but `Crop.GrowthStage` only defines:
+```java
+public enum GrowthStage { SEED, SEEDLING, VEGETATIVE, FLOWERING, FRUITING, HARVESTED }
 ```
-NullPointerException: Cannot invoke "java.sql.Connection.createStatement()" because "this.conn" is null
-    at smartfarm.dao.XxxDAO.getAll(XxxDAO.java:NN)
-    at smartfarm.ui.XxxController.loadXxxData(...)
-    at smartfarm.ui.XxxController.initialize(...)
-```
+`CropDAO.extractCrop()` calls `Crop.GrowthStage.valueOf(rs.getString("growth_stage"))` which throws `IllegalArgumentException` for any value not in the enum. This crashes `dashboard.fxml` and `reports.fxml` during `initialize()`. `plots.fxml` survives because `PlotController.initialize()` wraps the call in a try/catch.
 
-**Fix needed:** Controllers must defer DB calls (wrap in `DBConnection.runAsync(...)`) or guard with null-DB checks. The 11 DAOs still use `private final Connection conn = DBConnection.getInstance()` (cached field) instead of the recommended `private Connection conn() { return DBConnection.getInstance(); }` per-method call. Both changes are Phase 2 TODOs.
+**Fix options:** (a) Add `GROWING` to the enum (if the DB value is intentional), (b) UPDATE the DB rows to use a valid enum value like `VEGETATIVE`, or (c) Make `CropDAO.extractCrop()` handle unknown enum values gracefully (e.g. default to `VEGETATIVE`).
 
-### 2. CropController `colVariety` Mismatch — Pre-existing
+**Root cause #2 — `CropController.colVariety` FXML mismatch:**
 
-`CropController` declares `@FXML private TableColumn<Crop, String> colVariety` and calls `colVariety.setResizable(false)` in `initialize()`, but `crops.fxml` has never had a `<TableColumn fx:id="colVariety">` element. This causes an NPE whether or not a DB is available.
+`CropController` declares `@FXML private TableColumn<Crop, String> colVariety` and calls `colVariety.setResizable(false)` in `initialize()`, but `crops.fxml` has never had a `<TableColumn fx:id="colVariety">` element. The `@FXML` injection leaves the field `null`, and the subsequent method call NPEs.
 
-**Fix:** Either add the column to `crops.fxml` or remove the field from `CropController`.
+**Fix:** Either add the column to `crops.fxml` or remove the `colVariety` field + its references from `CropController`.
 
-### 3. Headless Monocle NagScreen Crash — Glisten + headless-only
+**Previous (no-DB) smoke for comparison:**
+
+Before the env files were added (no DB credentials), the smoke was 8/12 pass. The 4 failures were all `NullPointerException: Cannot invoke "...Connection.createStatement()" because "this.conn" is null` in `dashboard`, `crops`, `monitoring`, `reports`. With the real DB connected, `monitoring` now passes and the 3 remaining failures surface their real root causes (enum mismatch + FXML field mismatch) instead of the generic "no DB" NPE.
+
+### 2. Headless Monocle NagScreen Crash — Glisten + headless-only
 
 Under headless Monocle (no display), Glisten's `NagScreenPresenter` (triggered by missing license file) calls `enterNestedEventLoop`, which Monocle's strict event-thread check rejects. Not an app code bug — only affects headless test environments. On real displays the nag dialog renders fine.
 
-### 4. NavigationDrawer Not Visually Tested
+### 3. NavigationDrawer Not Visually Tested
 
 The ShellView drawer + AppBar configuration is compile-verified but has not been visually smoke-tested with a real login session (requires DB credentials). The drawer items call `DashboardController.navigate(NavTarget)` which delegates to the existing `loadFxmlPage` path — this should work but hasn't been confirmed end-to-end.
 
-### 5. No Android APK Built Yet
+### 4. No Android APK Built Yet
 
 The full `mvn -Pandroid gluonfx:build` → APK pipeline has not been run. Requires:
 - GraalVM / Liberica NIK installed
 - Android SDK + NDK available
 - B7 launcher icons in place (otherwise manifest references fail)
 
-### 6. `FarmServer.class` Still Leaks into Android Build
+### 5. `FarmServer.class` Still Leaks into Android Build
 
 `Main.java` no longer statically imports `FarmServer`, but javac may still implicit-compile it. The `**/smartfarm/server/**/*.java` exclude in the android profile should now be structurally effective after B1's rewrite, but this hasn't been confirmed by inspecting the Android `target/classes` output.
 
@@ -211,10 +225,10 @@ a0c06d5 [3bdelbary] B2.7 fix: SPLASH registers under HOME_VIEW so Glisten mounts
 
 ## Recommended Next Steps
 
-1. **B4** — Replace `FileChooser` with `CSVExporter.saveCsv()` (highest impact; these features crash on Android)
-2. **B7** — Add launcher icons (required for APK build)
-3. **B8** — Create `PlatformPickers` for image picking (needed by DiseaseDetectionPage)
-4. **B5** — Add `mobile.css` for touch targets and responsive sidebar
-5. Fix the 4 eager-DB FXML failures (defer DB calls or add null guards)
-6. Fix `CropController.colVariety` mismatch
+1. **Fix `Crop.GrowthStage` enum mismatch** — Add `GROWING` to the enum or UPDATE DB rows (blocks dashboard + reports FXML loading)
+2. **Fix `CropController.colVariety` NPE** — Add column to `crops.fxml` or remove field from controller (blocks crops FXML loading)
+3. **B4** — Replace `FileChooser` with `CSVExporter.saveCsv()` (highest migration impact; these features crash on Android)
+4. **B7** — Add launcher icons (required for APK build)
+5. **B8** — Create `PlatformPickers` for image picking (needed by DiseaseDetectionPage)
+6. **B5** — Add `mobile.css` for touch targets and responsive sidebar
 7. Run first `mvn -Pandroid gluonfx:build` to produce an APK
