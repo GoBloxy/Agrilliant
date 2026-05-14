@@ -108,13 +108,13 @@
 
 /* ───── Content pane — tighter padding for phone screens ─────── */
 .content-pane {
-    -fx-padding: 8;
+    -fx-padding: 12;
 }
 
 /* ───── Cards — compact, full-width ──────────────────────────── */
 .card {
-    -fx-background-radius: 12;
-    -fx-border-radius: 12;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
     -fx-padding: 0;
 }
 
@@ -126,9 +126,9 @@
  * Each sensor row is an HBox: icon | label+value | plot+badge.
  * Compact height, left-to-right scan pattern. */
 .sensor-card {
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
-    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-padding: 10 14 10 14;
 }
 
 .sensor-label {
@@ -157,10 +157,10 @@
  * Tables are too wide for 390px. Let them scroll horizontally
  * inside the ScrollPane and use smaller cells. */
 .table-view {
-    -fx-fixed-cell-size: 40;
+    -fx-fixed-cell-size: 44;
     -fx-min-height: 120;
-    -fx-pref-height: 140;
-    -fx-max-height: 200;
+    -fx-pref-height: 160;
+    -fx-max-height: 220;
 }
 
 .table-view .column-header .label {
@@ -174,24 +174,24 @@
 
 /* ───── List views — compact ─────────────────────────────────── */
 .ghost-list .list-cell {
-    -fx-padding: 4 4 4 4;
+    -fx-padding: 8 10 8 10;
     -fx-font-size: 12;
 }
 
 /* ───── Action buttons — compact grid ────────────────────────── */
 .action-btn {
     -fx-font-size: 12;
-    -fx-padding: 10 6 10 6;
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
+    -fx-padding: 10 12 10 12;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
 }
 
 /* ───── Export buttons — full-width, compact ──────────────────── */
 .export-btn {
     -fx-font-size: 13;
     -fx-padding: 10 12 10 12;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
 }
 
 /* ───── Badges — slightly larger for touch ───────────────────── */
@@ -202,9 +202,11 @@
 
 /* ───── Filter buttons — touch-friendly ──────────────────────── */
 .filter-btn {
-    -fx-min-height: 40;
+    -fx-min-height: 44;
     -fx-padding: 8 14 8 14;
     -fx-font-size: 12;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
 }
 
 /* ───── Search box — full-width ──────────────────────────────── */
