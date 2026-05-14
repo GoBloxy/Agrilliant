@@ -251,8 +251,81 @@ observable without a debugger.
 
 ---
 
-## Status of B3–B10
-- [ ] **B3** — 12 FXML files made mobile-friendly. Touch targets, `ScrollPane` wrap, `TableView` → `CharmListView` where appropriate.
+## B3: Make every FXML mobile-friendly — DONE ✅
+
+### Approach
+The §8.B3 spec asked for 4 things per FXML:
+1. drop fixed pixel widths/heights
+2. wrap non-trivial layouts in a `ScrollPane`
+3. enforce 48dp touch targets
+4. replace `TableView` with `CharmListView` where the screen is a list
+
+After surveying all 12 FXMLs (commit `33c0539` notes), the actual scope shook out as:
+
+| Need | Files affected | Why |
+|------|----------------|-----|
+| Drop oversized root `prefWidth`/`prefHeight` | 11 files (all except `monitoring`, which already had no root size set… or so the survey said — turned out `monitoring.fxml` *did* have `1200×900`, see B3.7) | Forced desktop window sizes don't fit on phones. |
+| `ScrollPane` wrap | 0 files | Dashboard's existing `<ScrollPane fitToWidth="true">` (line 153 of dashboard.fxml) already wraps `pageContainer`, so all 9 inner pages inherit vertical scrolling. The 2 auth views are short forms that fit a phone height. |
+| Touch target ≥48dp | 0 files | The survey found no fixed-size buttons anywhere — the existing styles already use `maxWidth="Infinity"` or styleClass-based sizing. The CSS-level enforcement lands in B5 `mobile.css`. |
+| Tooltip / ContextMenu replacement | 1 file (`plots.fxml`) | Only 2 hover tooltips on map controls. Removed (touch has no hover); a long-press handler is a future polish. |
+| `MenuBar` / `MenuItem` → `NavigationDrawer` | 0 files | Survey found no `MenuBar` anywhere — only one `MenuButton` in dashboard, which is mobile-fine (it's a dropdown button, not a top-of-window menu bar). |
+| `TableView` → `CharmListView` | 4 list-shaped files: `workers`, `tasks`, `harvest`, `logs` | Each row collapses 5–8 columns into a Glisten `ListTile`. The other 4 tables (`dashboard`, `crops`, `plots`, `alerts`, `monitoring`, `reports`) stay `TableView` — they're either dashboard-shaped (mixed widgets, not list-shaped) or comparison-shaped (columns truly matter). |
+
+### Files modified
+- 12 FXMLs: all under `src/main/resources/fxml/` (3bdelbary lane)
+- 4 controllers: `WorkerController`, `TaskController`, `HarvestController`, `LogsController`
+
+### CharmListView pattern (for the 4 list-shaped views)
+Each rewrite follows the same shape: replace the `<TableView>` + N `<TableColumn>` block with a single `<CharmListView fx:id="...List" VBox.vgrow="ALWAYS"/>`, drop the matching `@FXML TableColumn` fields from the controller, add a `setupCellFactory()` method that installs an inner `XxxListCell extends CharmListCell<T>`. Each cell builds a Glisten `ListTile`:
+
+| Slot                      | Worker                  | Task                       | Harvest                  | SystemLog                       |
+|---------------------------|-------------------------|----------------------------|--------------------------|---------------------------------|
+| `setPrimaryGraphic` (left)| green avatar with `fth-user` | status-coloured badge with `fth-check-square` (green/blue/amber by `Status.DONE`/`IN_PROGRESS`/`PENDING`) | green badge with `fth-package` | severity-coloured badge with `fth-info`/`fth-alert-triangle`/`fth-x-circle` |
+| `setTextLine(0)`          | full name               | description                | crop + plot              | message                         |
+| `setTextLine(1)`          | role + status           | assignee + plot            | quantity + date          | timestamp + user                |
+| `setTextLine(2)`          | workload + phone + FP id| due + priority + status    | grade + revenue          | source + level                  |
+| `setSecondaryGraphic` (right) | edit + delete (`icon-btn`) | advance + revert + delete (advance disabled at `DONE`, revert disabled at `PENDING`) | edit + delete | none (logs read-only) |
+
+The cells reuse the existing `icon-btn` style class from `farm-theme.css`, so they match the rest of the app visually. Cell layouts are built once in the constructor and only the per-row data is set in `updateItem` — no allocations on scroll.
+
+### Defensive DB guard (B3.14)
+`HarvestController.loadCropCache()` and `loadRecords()` previously caught only `SQLException`. The H5-pending DAOs (`CropDAO`, `HarvestDAO`) eagerly construct their `Connection` field via `DBConnection.getInstance()`, which returns `null` when no DB creds are configured — so the first `prepareStatement` call NPEs (unchecked, bypasses `catch SQLException`). B3.14 widens the catches to `catch (SQLException | RuntimeException)`, matching the pattern `WorkerController.loadWorkers()` already uses. The TODO is to drop the `RuntimeException` once `CropDAO`/`HarvestDAO` get Hagag's H5 null-guard sweep.
+
+### Commits
+```
+9a53bc6 [3bdelbary] B3.1 signin.fxml: drop hardcoded root + auth-left widths for mobile
+05b5795 [3bdelbary] B3.2 signup.fxml: drop hardcoded root + auth-left widths for mobile
+e16fe69 [3bdelbary] B3.3 dashboard.fxml: drop 1440x900 root prefSize
+cfb2808 [3bdelbary] B3.4 crops.fxml: drop 1200x900 root prefSize
+aeb2ce7 [3bdelbary] B3.5 plots.fxml: drop 1200x900 root + remove 2 hover-only tooltips
+a467a53 [3bdelbary] B3.6-B3.8 alerts/monitoring/reports.fxml: drop hardcoded root sizes
+5da4b75 [3bdelbary] B3.9 workers.fxml: TableView -> CharmListView + drop 1200x900
+33c0539 [3bdelbary] B3.10 WorkerController: adapt to CharmListView cellFactory
+2e88cd1 [3bdelbary] B3.11 tasks.fxml: TableView -> CharmListView + drop 1200x900
+3bdf5fd [3bdelbary] B3.12 TaskController: adapt to CharmListView cellFactory
+f26a33f [3bdelbary] B3.13 harvest.fxml: TableView -> CharmListView + drop 1200x900
+67634a3 [3bdelbary] B3.14 HarvestController: adapt to CharmListView + defensive DB guard
+71c1b82 [3bdelbary] B3.15 logs.fxml: TableView -> CharmListView + drop 1200x900
+0932ebf [3bdelbary] B3.16 LogsController: adapt to CharmListView + severity-coloured cell
+```
+
+### Verification (B3 done state)
+| Gate | Result |
+|------|--------|
+| `mvn -Pdesktop clean compile` | BUILD SUCCESS |
+| `mvn -Pandroid clean compile` | BUILD SUCCESS |
+| FXML load smoke (12 files, no DB) | **8/12 PASS** (signin, signup, plots, workers, tasks, alerts, harvest, logs). 4 fail with the H5-pending DB NPE (dashboard, crops, monitoring, reports) — same shape as before, owned by Hagag's lane. **Net improvement: +1 vs the pre-B3 baseline (which had harvest also failing).** |
+| Boot smoke (`-Pdesktop`) | Splash → SignIn end-to-end, FarmServer thread starts on port 8080 |
+| Boot smoke (`-Pandroid`) | Splash → SignIn end-to-end, FarmServer reflectively skipped (correct: H9 excludes it from Android profile) |
+| Lane diff (`f083ad3..HEAD` for B3 only) | 16 files: 12 in `src/main/resources/fxml/`, 4 in `src/main/java/smartfarm/ui/` (3bdelbary's lane). Zero touches to `dao/`, `service/`, `server/`, `util/`, `pom.xml`. |
+
+### Pre-existing inconsistency surfaced (not a regression)
+`crops.fxml` fails the smoke with `NullPointerException: ...this.colVariety is null`. This is not B3 fallout — `CropController` declares `@FXML private TableColumn<Crop, String> colVariety;` and calls `colVariety.setResizable(false)` in `initialize()`, but `crops.fxml` has never had a `<TableColumn fx:id="colVariety">` element (`git log --all -- src/main/java/smartfarm/ui/CropController.java` shows the field reference predates the migration commits). With a real DB the controller would NPE before reaching the no-DB branch; without one it just NPEs earlier. Either way it's a Phase 2 follow-up: either remove `colVariety` from the controller or add it to the FXML.
+
+---
+
+## Status of B4–B10
+- [x] **B3** — done. See section above.
 - [ ] **B4** — Sweep controllers: replace `FileChooser` (CSV export in Dashboard/Logs/Reports/Crop) with `CSVExporter.saveCsv(...)`. Replace `FileChooser.showOpenDialog` (DiseaseDetectionPage) with `PlatformPickers.pickImage()` (delivered in B8).
 - [ ] **B5** — Add `css/mobile.css`. Keep AtlantaFX PrimerLight as base.
 - [ ] **B6** — Drop any remaining JFreeChart use (already absent from `src/main/java`; double-check leftover imports in dashboard/monitoring).
