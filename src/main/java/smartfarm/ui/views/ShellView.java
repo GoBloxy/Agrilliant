@@ -42,6 +42,7 @@ public class ShellView extends View {
         }
 
         setOnShowing(e -> {
+            Logger.d(TAG, "showing");
             // Dashboard has its own top bar — hide Gluon's AppBar.
             AppManager.getInstance().getAppBar().setVisible(false);
 
@@ -54,6 +55,9 @@ public class ShellView extends View {
                 }
             }
         });
-        setOnHiding(e -> AppManager.getInstance().getAppBar().setVisible(true));
+        setOnHiding(e -> {
+            Logger.d(TAG, "hiding");
+            AppManager.getInstance().getAppBar().setVisible(true);
+        });
     }
 }

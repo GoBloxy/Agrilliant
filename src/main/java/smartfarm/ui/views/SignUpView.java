@@ -3,6 +3,7 @@ package smartfarm.ui.views;
 import com.gluonhq.charm.glisten.mvc.View;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import smartfarm.util.Logger;
 
 import java.io.IOException;
 
@@ -10,7 +11,7 @@ import java.io.IOException;
  * Gluon {@link View} wrapping the existing {@code signup.fxml}.
  *
  * <p>The existing {@code SignUpController} keeps working unchanged. B2
- * will rewrite the controller's navigation calls.
+ * rewrote the controller's navigation calls.
  */
 public class SignUpView extends View {
 
@@ -22,5 +23,7 @@ public class SignUpView extends View {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load signup.fxml", e);
         }
+        setOnShowing(e -> Logger.d("SignUpView", "showing"));
+        setOnHiding(e -> Logger.d("SignUpView", "hiding"));
     }
 }

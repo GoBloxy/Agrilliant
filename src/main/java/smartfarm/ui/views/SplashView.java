@@ -14,6 +14,7 @@ import smartfarm.service.AuthService;
 import smartfarm.service.SessionManager;
 import smartfarm.ui.nav.AppView;
 import smartfarm.ui.nav.NavContext;
+import smartfarm.util.Logger;
 
 /**
  * Splash screen + session-restore router. Set as HOME_VIEW.
@@ -47,10 +48,14 @@ public class SplashView extends View {
         setCenter(box);
 
         setOnShowing(e -> {
+            Logger.d("SplashView", "showing");
             AppManager.getInstance().getAppBar().setVisible(false);
             kickOffSessionRestore();
         });
-        setOnHiding(e -> AppManager.getInstance().getAppBar().setVisible(true));
+        setOnHiding(e -> {
+            Logger.d("SplashView", "hiding");
+            AppManager.getInstance().getAppBar().setVisible(true);
+        });
     }
 
     private void kickOffSessionRestore() {
@@ -86,9 +91,11 @@ public class SplashView extends View {
             final User finalUser = restored;
             Platform.runLater(() -> {
                 if (finalUser != null) {
+                    Logger.d("SplashView", "session restored → SHELL");
                     NavContext.get().setCurrentUser(finalUser);
                     AppView.SHELL.switchTo();
                 } else {
+                    Logger.d("SplashView", "no session → SIGNIN");
                     AppView.SIGNIN.switchTo();
                 }
             });
