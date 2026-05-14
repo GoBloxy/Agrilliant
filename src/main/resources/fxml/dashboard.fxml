@@ -11,8 +11,17 @@
 <HBox xmlns:fx="http://javafx.com/fxml" fx:controller="smartfarm.ui.DashboardController"
       styleClass="dashboard-root">
 
-    <!-- ═══════════════ LEFT SIDEBAR ═══════════════ -->
-        <VBox fx:id="sidebar" prefWidth="240" minWidth="240" maxWidth="240" spacing="3" styleClass="sidebar">
+    <!--
+      ═══════════════ LEFT SIDEBAR (LEGACY — hidden on mobile) ═══════════════
+
+      The sidebar is now visible="false" managed="false" by default. On mobile,
+      ShellView replaces it with a Gluon NavigationDrawer (slides in from the
+      AppBar's hamburger). The sidebar's onAction handlers all route through
+      DashboardController.navigate(NavTarget) so both nav surfaces share a
+      single dispatch path — re-enabling the sidebar via mobile.css media-query
+      equivalent is a one-line change.
+    -->
+        <VBox fx:id="sidebar" prefWidth="240" minWidth="240" maxWidth="240" spacing="3" styleClass="sidebar" visible="false" managed="false">
             <padding><Insets top="20" right="15" bottom="15" left="15"/></padding>
 
             <!-- Logo + App Title -->
@@ -114,8 +123,12 @@
     <!-- ═══════════════ MAIN CONTENT AREA (top bar + scrollable content) ═══════════════ -->
     <VBox HBox.hgrow="ALWAYS" styleClass="content-area">
 
-        <!-- ═══════════════ TOP BAR ═══════════════ -->
-        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="topbar">
+        <!-- ═══════════════ TOP BAR (LEGACY — hidden on mobile) ═══════════════
+             Replaced by the Gluon AppBar that ShellView re-enables. The hidden
+             labels (lblDate, lblTime, lblTempTop, lblUserName, lblUserRole)
+             still get updated by DashboardController so the data is ready
+             if the topbar is re-shown via a future width-based toggle. -->
+        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="topbar" visible="false" managed="false">
             <padding><Insets top="12" right="25" bottom="12" left="25"/></padding>
             <FontIcon iconLiteral="fth-menu" iconSize="20"/>
             <Region HBox.hgrow="ALWAYS"/>

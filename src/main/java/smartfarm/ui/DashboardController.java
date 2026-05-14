@@ -842,20 +842,62 @@ public class DashboardController {
     }
 
     // ═══════════════ NAVIGATION HANDLERS ═══════════════
-    @FXML private void onNavDashboard()  { showPage(dashboardPage,  btnDashboard); }
-    @FXML private void onNavMonitoring() { loadFxmlPage("/fxml/monitoring.fxml", btnMonitoring); }
-    @FXML private void onNavDisease()    { showPage(new DiseaseDetectionPage(), btnDisease); }
-    @FXML private void onNavAlerts()     { loadFxmlPage("/fxml/alerts.fxml", btnAlerts); }
-    @FXML private void onNavCropsList()  { loadFxmlPage("/fxml/crops.fxml", btnCropsCrops); }
-    @FXML private void onNavPlotsList()  { loadFxmlPage("/fxml/plots.fxml", btnCropsPlots); }
-    @FXML private void onNavWorkers()    { loadFxmlPage("/fxml/workers.fxml", btnWorkers); }
-    @FXML private void onNavAttendance() { showPage(new AttendancePage(), btnAttendance); }
-    @FXML private void onNavTasks()      { loadFxmlPage("/fxml/tasks.fxml", btnTasks); }
-    @FXML private void onNavHarvests()   { loadFxmlPage("/fxml/harvest.fxml", btnHarvests); }
-    @FXML private void onNavReports()    { loadFxmlPage("/fxml/reports.fxml", btnReports); }
-    @FXML private void onNavSettings()   { showPage(new SettingsPage(), btnSettings); }
-    @FXML private void onNavUsers()      { loadFxmlPage("/fxml/workers.fxml", btnUsers); }
-    @FXML private void onNavLogs()       { loadFxmlPage("/fxml/logs.fxml", btnLogs); }
+    // Legacy sidebar buttons — still wired by the (now-hidden) sidebar in
+    // dashboard.fxml so the desktop look is preserved if mobile.css ever
+    // re-enables the sidebar via a width-based toggle. Each handler routes
+    // through the public navigate(...) method below so the sidebar and the
+    // Gluon NavigationDrawer (set up by ShellView on mobile) share a single
+    // dispatch path.
+    @FXML private void onNavDashboard()  { navigate(NavTarget.DASHBOARD); }
+    @FXML private void onNavMonitoring() { navigate(NavTarget.MONITORING); }
+    @FXML private void onNavDisease()    { navigate(NavTarget.DISEASE); }
+    @FXML private void onNavAlerts()     { navigate(NavTarget.ALERTS); }
+    @FXML private void onNavCropsList()  { navigate(NavTarget.CROPS); }
+    @FXML private void onNavPlotsList()  { navigate(NavTarget.PLOTS); }
+    @FXML private void onNavWorkers()    { navigate(NavTarget.WORKERS); }
+    @FXML private void onNavAttendance() { navigate(NavTarget.ATTENDANCE); }
+    @FXML private void onNavTasks()      { navigate(NavTarget.TASKS); }
+    @FXML private void onNavHarvests()   { navigate(NavTarget.HARVESTS); }
+    @FXML private void onNavReports()    { navigate(NavTarget.REPORTS); }
+    @FXML private void onNavSettings()   { navigate(NavTarget.SETTINGS); }
+    @FXML private void onNavUsers()      { navigate(NavTarget.USERS); }
+    @FXML private void onNavLogs()       { navigate(NavTarget.LOGS); }
+
+    /**
+     * Public navigation entry point so external chrome (Gluon
+     * NavigationDrawer in {@link smartfarm.ui.views.ShellView}, hyperlinks,
+     * etc.) can switch the dashboard's inner page without needing a
+     * reference to the matching sidebar Button.
+     *
+     * <p>The sidebar Button (if any) is still highlighted via
+     * {@code setActiveNav} for the desktop look. When called from the
+     * NavigationDrawer the Button param is null — {@code setActiveNav}
+     * already tolerates null.
+     */
+    public void navigate(NavTarget target) {
+        switch (target) {
+            case DASHBOARD  -> showPage(dashboardPage, btnDashboard);
+            case MONITORING -> loadFxmlPage("/fxml/monitoring.fxml", btnMonitoring);
+            case DISEASE    -> showPage(new DiseaseDetectionPage(), btnDisease);
+            case ALERTS     -> loadFxmlPage("/fxml/alerts.fxml", btnAlerts);
+            case CROPS      -> loadFxmlPage("/fxml/crops.fxml", btnCropsCrops);
+            case PLOTS      -> loadFxmlPage("/fxml/plots.fxml", btnCropsPlots);
+            case WORKERS    -> loadFxmlPage("/fxml/workers.fxml", btnWorkers);
+            case ATTENDANCE -> showPage(new AttendancePage(), btnAttendance);
+            case TASKS      -> loadFxmlPage("/fxml/tasks.fxml", btnTasks);
+            case HARVESTS   -> loadFxmlPage("/fxml/harvest.fxml", btnHarvests);
+            case REPORTS    -> loadFxmlPage("/fxml/reports.fxml", btnReports);
+            case SETTINGS   -> showPage(new SettingsPage(), btnSettings);
+            case USERS      -> loadFxmlPage("/fxml/workers.fxml", btnUsers);
+            case LOGS       -> loadFxmlPage("/fxml/logs.fxml", btnLogs);
+        }
+    }
+
+    /** Identifiers for the dashboard's inner pages. */
+    public enum NavTarget {
+        DASHBOARD, MONITORING, DISEASE, ALERTS, CROPS, PLOTS,
+        WORKERS, ATTENDANCE, TASKS, HARVESTS, REPORTS, SETTINGS, USERS, LOGS
+    }
 
     private void showPage(Node page, Button navBtn) {
         pageContainer.getChildren().setAll(page);

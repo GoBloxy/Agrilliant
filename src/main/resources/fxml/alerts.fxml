@@ -262,6 +262,6 @@
                 <graphic><FontIcon iconLiteral="fth-check-circle" iconSize="14"/></graphic>
             </Button>
             <Button fx:id="btnDetailCreateTask" text="+ Create Task" styleClass="btn-primary"/>
-        </VBox>
-
+        </HBox>
     </VBox>
+</VBox>
