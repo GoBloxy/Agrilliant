@@ -104,6 +104,100 @@ aa320f5 [3bdelbary] B2.4 DashboardController logout via NavContext + AppView (dr
 
 ---
 
+## Pre-B3 smoke results
+
+Three smoke checks ran on 2026-05-14 against the post-B2 tree (`mobile-app` HEAD `28d4965` at the time; ran again at `62cece4` after the `display`+`statusbar` Attach addendum). All checks ran on Linux headless using `org.testfx:openjfx-monocle:jdk-12.0.1+2` for Monocle headless rendering, since Xvfb has a missing-lib issue on this host (`libnettle.so.9`).
+
+### Smoke 1 — resource presence
+Verified every resource the new code references actually exists on the classpath:
+
+| Resource | Status |
+|----------|--------|
+| `/images/logo-dark.png` (Splash, Main window icon) | ✅ present |
+| `/images/logo.png` | ✅ present |
+| `/css/farm-theme.css` (Main.postInit) | ✅ present |
+| All 12 FXML files (`signin`, `signup`, `dashboard`, + the 9 inner pages DashboardController loads) | ✅ all present |
+
+### Smoke 2 — FXML load via `FXMLLoader.load` (headless JFX)
+`target/fxml-smoke/FxmlLoadSmoke.java` invokes `FXMLLoader.load(...)` for every FXML on the FX thread.
+
+**Result: 7/12 load clean, 5/12 fail with NPE in their controllers' `initialize()`.**
+
+| FXML | Status | Reason |
+|------|--------|--------|
+| signin.fxml | ✅ loads | pure UI |
+| signup.fxml | ✅ loads | pure UI |
+| alerts.fxml | ✅ loads | controller defers DB |
+| logs.fxml | ✅ loads | controller defers DB |
+| plots.fxml | ✅ loads | `PlotController.initialize` catches the NPE and logs |
+| tasks.fxml | ✅ loads | controller defers DB |
+| workers.fxml | ✅ loads | controller defers DB |
+| dashboard.fxml | ❌ no-DB NPE | `DashboardController.initialize` eagerly hits DB |
+| crops.fxml | ❌ no-DB NPE | same |
+| harvest.fxml | ❌ no-DB NPE | same |
+| monitoring.fxml | ❌ no-DB NPE | same |
+| reports.fxml | ❌ no-DB NPE | same |
+
+**The 5 failures are pre-existing fragility, not a B1/B2 regression.** Stack traces all read the same shape:
+```
+NullPointerException: Cannot invoke "java.sql.Connection.createStatement()" because "this.conn" is null
+    at smartfarm.dao.PlotDAO.getAll(PlotDAO.java:77)
+    at smartfarm.ui.PlotController.loadPlotData(PlotController.java:510)
+    at smartfarm.ui.PlotController.setupTable(PlotController.java:501)
+    at smartfarm.ui.PlotController.initialize(PlotController.java:75)
+    at FXMLLoader.loadImpl ...
+```
+
+The DAOs cache a `Connection` at construction (Hagag's H5 doc'd this with the `TODO(phase-2): replace cached field with a per-call getInstance()` comment); without a real MySQL the cached connection is `null` and the eager init explodes. The same crash would have happened pre-migration on any sign-in flow that tried to load `dashboard.fxml` without DB access — `SignInController.navigateToDashboard` doing `FXMLLoader.load(dashboard.fxml)` would have hit the same NPE.
+
+**Implications for the B1/B2 nav graph:**
+- ✅ Splash → SIGNIN path works end-to-end without a DB (both `signin.fxml` + `signup.fxml` load clean)
+- ✅ SIGNIN ↔ SIGNUP nav (`AppView.SIGNUP/SIGNIN.switchTo()`) works
+- ❌ SIGNIN → SHELL (post-login) requires a DB because `ShellView` constructor loads `dashboard.fxml`. Same constraint as pre-migration desktop builds — sign-in always required a DB anyway.
+
+### Smoke 3 — `MobileApplication` boot
+`target/fxml-smoke/BootSmoke.java` calls `smartfarm.Main.main(...)` under Monocle headless. **Boot got through `Main.init()` + `Main.postInit()` cleanly** — confirmed by:
+
+```
+I/FarmServer: Farm Server started on port 8080
+```
+
+That line is `Logger.i(TAG, "Farm Server started on port " + PORT)` from `FarmServer.start`, reached via `Main.startFarmServerReflectively` (B1.11). So:
+- ✅ Gluon `MobileApplication.launch` reaches our `Main.init`
+- ✅ All 4 view factories register
+- ✅ Glisten's `AppManager.start` → `AppBar` construction works (verifies the **`display`+`statusbar` Attach addendum** in `[hagag] 62cece4` is correct — the original `Phase 2 prep` commit `a911016` would have crashed here on `NoClassDefFoundError: com/gluonhq/attach/display/DisplayService`)
+- ✅ `Main.postInit()` runs: styles applied, FarmServer thread started
+
+The smoke does crash later at the actual window-show step with `AbstractMethodError: MonocleWindow does not define _updateViewSize(long)`. That's the testfx-monocle artifact (built for JDK 12.0.1, 2019) being too old for JavaFX 21.0.2's evolved Window API. **Test-infrastructure limitation, not a code bug.**
+
+Two non-fatal Glisten log lines also appear during boot — `LicenseManager` / `TrackingManager` log `SEVERE: Private storage file not available`. Glisten tries to read a `gluonmobile.license` file via StorageService; the bare-desktop StorageService impl jar isn't on the classpath (only the API), so the read fails and Glisten falls back silently. App continues. Will not appear on `mvn -Pdesktop gluonfx:run` or on Android since GluonFX wires the platform-specific Storage impl via `<attachList>`.
+
+### What's verified, what's deferred
+
+**Verified through smoke:**
+- B1 + B2 code paths reach all the way through `Main.init` → `Main.postInit` → Glisten AppBar construction → FarmServer thread launch.
+- All resources the new code references exist.
+- 7 of 12 FXMLs load clean — including the two on the critical no-DB path (signin/signup).
+- The 5 FXML failures reproduce a known pre-existing fragility that the migration plan has slated for Phase 2 (async DAO sweep + per-method `getInstance()` refactor).
+
+**Deferred to a real-desktop smoke:**
+- Visual confirmation of splash → signin rendering.
+- Visual confirmation of `Main.applyDesktopWindowDefaults` (window title, icon, min size, maximize).
+- Post-login visual: sign in with a real DB → ShellView loads → dashboard renders inside Gluon's center pane.
+- Inner page navigation (`DashboardController.loadFxmlPage`).
+
+**Recipe for the real-desktop smoke** (on a machine with a display + a reachable MySQL):
+```bash
+# 1. Configure DB creds (one of):
+#    export DB_URL=... DB_USER=... DB_PASSWORD=...
+#    OR drop a populated db.properties in src/main/resources/
+# 2. Run via GluonFX (NOT javafx:run — that doesn't know Gluon's init/postInit
+#    or wire the Storage impl jar):
+mvn -Pdesktop gluonfx:run
+```
+
+---
+
 ## Status of B3–B10
 - [ ] **B3** — 12 FXML files made mobile-friendly. Touch targets, `ScrollPane` wrap, `TableView` → `CharmListView` where appropriate.
 - [ ] **B4** — Sweep controllers: replace `FileChooser` (CSV export in Dashboard/Logs/Reports/Crop) with `CSVExporter.saveCsv(...)`. Replace `FileChooser.showOpenDialog` (DiseaseDetectionPage) with `PlatformPickers.pickImage()` (delivered in B8).
