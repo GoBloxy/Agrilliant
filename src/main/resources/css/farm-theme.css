@@ -1534,3 +1534,96 @@
     -fx-border-color: -ag-outline-variant;
     -fx-border-radius: 20;
 }
+
+/* ═══════════════ FULL MATERIAL YOU SCREEN SYSTEM ═══════════════ */
+.page-header {
+    -fx-spacing: 6;
+    -fx-padding: 2 2 4 2;
+}
+
+.page-kicker {
+    -fx-text-fill: -ag-primary;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+}
+
+.page-subtitle {
+    -fx-text-fill: -ag-on-surface-variant;
+    -fx-font-size: 13;
+}
+
+.hero-card {
+    -fx-background-color: linear-gradient(to bottom right, -ag-primary-container, -ag-surface-container-low);
+    -fx-background-radius: 28;
+    -fx-border-radius: 28;
+    -fx-border-color: -ag-outline-variant;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(47, 111, 62, 0.14), 18, 0.18, 0, 7);
+}
+
+.hero-title {
+    -fx-text-fill: -ag-on-primary-container;
+    -fx-font-size: 24;
+    -fx-font-weight: bold;
+}
+
+.hero-subtitle {
+    -fx-text-fill: -ag-on-surface-variant;
+    -fx-font-size: 13;
+}
+
+.section-card,
+.list-card,
+.chart-card,
+.form-card {
+    -fx-background-color: -ag-surface;
+    -fx-background-radius: 22;
+    -fx-border-radius: 22;
+    -fx-border-color: -ag-outline-variant;
+    -fx-border-width: 1;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(25, 29, 23, 0.08), 14, 0.12, 0, 5);
+}
+
+.section-header {
+    -fx-spacing: 8;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.list-row-card {
+    -fx-background-color: -ag-surface-container-low;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: transparent;
+    -fx-padding: 12 14 12 14;
+}
+
+.btn-tonal {
+    -fx-background-color: -ag-secondary-container;
+    -fx-text-fill: -ag-on-surface;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.filter-chip {
+    -fx-background-color: -ag-surface-container;
+    -fx-text-fill: -ag-on-surface-variant;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: -ag-outline-variant;
+    -fx-padding: 7 12 7 12;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+}
+
+.empty-state {
+    -fx-background-color: -ag-surface-container-low;
+    -fx-background-radius: 22;
+    -fx-border-radius: 22;
+    -fx-border-color: -ag-outline-variant;
+    -fx-padding: 24;
+    -fx-alignment: CENTER;
+}
