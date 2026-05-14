@@ -456,3 +456,19 @@
     -fx-min-height: 48;
     -fx-padding: 10 16 10 16;
 }
+
+/* ───── Full redesign auth + drawer sizing ───────────────────── */
+.auth-card {
+    -fx-background-radius: 24;
+    -fx-border-radius: 24;
+    -fx-padding: 18;
+}
+
+.auth-field,
+.auth-combo {
+    -fx-min-height: 52;
+}
+
+.drawer-header {
+    -fx-padding: 18 14 14 14;
+}

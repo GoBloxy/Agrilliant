@@ -1627,3 +1627,97 @@
     -fx-padding: 24;
     -fx-alignment: CENTER;
 }
+
+/* ═══════════════ FULL REDESIGN AUTH + SHELL POLISH ═══════════════ */
+.auth-root {
+    -fx-background-color: radial-gradient(center 50% 0%, radius 90%, -ag-primary-container, -ag-background 58%);
+}
+
+.auth-brand-panel {
+    -fx-background-color: transparent;
+    -fx-padding: 8 0 2 0;
+}
+
+.auth-logo {
+    -fx-effect: dropshadow(gaussian, rgba(47, 111, 62, 0.18), 18, 0.18, 0, 6);
+}
+
+.auth-card {
+    -fx-background-color: rgba(255, 255, 255, 0.94);
+    -fx-background-radius: 28;
+    -fx-border-radius: 28;
+    -fx-border-color: rgba(220, 229, 216, 0.9);
+    -fx-padding: 22;
+    -fx-effect: dropshadow(gaussian, rgba(25, 29, 23, 0.12), 24, 0.14, 0, 9);
+}
+
+.auth-title {
+    -fx-text-fill: -ag-on-surface;
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+}
+
+.auth-field,
+.auth-combo {
+    -fx-background-color: -ag-surface-container-low;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: -ag-outline-variant;
+    -fx-min-height: 54;
+}
+
+.auth-btn,
+.auth-btn-secondary {
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-font-weight: bold;
+    -fx-min-height: 52;
+}
+
+.auth-error {
+    -fx-background-color: -ag-error-container;
+    -fx-background-radius: 16;
+    -fx-padding: 8 12 8 12;
+    -fx-text-fill: -ag-error;
+}
+
+.drawer-header {
+    -fx-background-color: linear-gradient(to bottom right, -ag-primary-container, -ag-surface-container-low);
+    -fx-background-radius: 0 0 28 28;
+    -fx-border-color: transparent transparent -ag-outline-variant transparent;
+}
+
+.drawer-title {
+    -fx-text-fill: -ag-on-primary-container;
+    -fx-font-size: 20;
+    -fx-font-weight: bold;
+}
+
+.drawer-brand-badge {
+    -fx-background-color: -ag-primary;
+    -fx-background-radius: 999;
+    -fx-min-width: 42;
+    -fx-min-height: 42;
+}
+
+.drawer-brand-icon {
+    -fx-icon-color: -ag-on-primary;
+}
+
+.drawer-user-name,
+.drawer-status-title {
+    -fx-text-fill: -ag-on-surface;
+    -fx-font-weight: bold;
+}
+
+.drawer-subtitle,
+.drawer-status-label {
+    -fx-text-fill: -ag-on-surface-variant;
+}
+
+.drawer-status-card {
+    -fx-background-color: -ag-surface-container-low;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-color: -ag-outline-variant;
+}

@@ -17,7 +17,7 @@
     <padding><Insets top="32" right="24" bottom="24" left="24"/></padding>
 
     <!-- Compact branding header (logo + brand name) -->
-    <VBox styleClass="auth-header" alignment="CENTER" spacing="6">
+    <VBox styleClass="auth-header,auth-brand-panel" alignment="CENTER" spacing="6">
         <ImageView styleClass="auth-logo" fitWidth="64" fitHeight="64" preserveRatio="true">
             <Image url="@/images/logo.png"/>
         </ImageView>
