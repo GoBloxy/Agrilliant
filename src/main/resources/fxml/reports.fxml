@@ -29,52 +29,52 @@
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-package" iconSize="18" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Total Harvest" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotalHarvest" text="0 kg" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Total harvested yield" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Total Harvest" styleClass="summary-card-title"/>
+                    <Label fx:id="lblTotalHarvest" text="0 kg" styleClass="summary-card-value"/>
+                    <Label text="Total harvested yield" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#d1fae5;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-trending-up" iconSize="18" iconColor="#065f46"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Avg Yield / Plot" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblAvgYield" text="0 kg" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Per plot average" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Avg Yield / Plot" styleClass="summary-card-title"/>
+                    <Label fx:id="lblAvgYield" text="0 kg" styleClass="summary-card-value"/>
+                    <Label text="Per plot average" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#dbeafe;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-info" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-dollar-sign" iconSize="18" iconColor="#1d4ed8"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Revenue" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblRevenue" text="0.00" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Gross revenue" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Revenue" styleClass="summary-card-title"/>
+                    <Label fx:id="lblRevenue" text="0.00" styleClass="summary-card-value"/>
+                    <Label text="Gross revenue" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-warning" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-percent" iconSize="18" iconColor="#d97706"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Profit Margin" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblProfitMargin" text="0%" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="After costs" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Profit Margin" styleClass="summary-card-title"/>
+                    <Label fx:id="lblProfitMargin" text="0%" styleClass="summary-card-value"/>
+                    <Label text="After costs" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>

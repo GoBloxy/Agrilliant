@@ -1517,3 +1517,20 @@
 .metric-icon-error {
     -fx-background-color: -ag-error-container;
 }
+
+.summary-icon-warning,
+.summary-icon-active {
+    -fx-icon-color: -ag-warning;
+}
+
+.alert-table {
+    -fx-background-radius: 18;
+}
+
+.report-card,
+.logs-card {
+    -fx-background-color: -ag-surface;
+    -fx-background-radius: 20;
+    -fx-border-color: -ag-outline-variant;
+    -fx-border-radius: 20;
+}

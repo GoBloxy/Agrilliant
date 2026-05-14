@@ -30,52 +30,52 @@
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#e8f5e9;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-primary" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-file-text" iconSize="18" iconColor="#2e7d32"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Total Logs" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblTotal" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="All system events" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Total Logs" styleClass="summary-card-title"/>
+                    <Label fx:id="lblTotal" text="0" styleClass="summary-card-value"/>
+                    <Label text="All system events" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#dbeafe;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-info" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-info" iconSize="18" iconColor="#1d4ed8"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Info" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblInfo" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Informational messages" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Info" styleClass="summary-card-title"/>
+                    <Label fx:id="lblInfo" text="0" styleClass="summary-card-value"/>
+                    <Label text="Informational messages" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fef3c7;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-warning" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-alert-triangle" iconSize="18" iconColor="#d97706"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Warnings" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblWarnings" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Potential issues" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Warnings" styleClass="summary-card-title"/>
+                    <Label fx:id="lblWarnings" text="0" styleClass="summary-card-value"/>
+                    <Label text="Potential issues" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
         <VBox styleClass="card" minWidth="200" spacing="6">
             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <StackPane style="-fx-background-color:#fee2e2;-fx-background-radius:10;" prefWidth="42" prefHeight="42" alignment="CENTER">
+                <StackPane styleClass="metric-icon,metric-icon-error" prefWidth="42" prefHeight="42" alignment="CENTER">
                     <FontIcon iconLiteral="fth-x-circle" iconSize="18" iconColor="#dc2626"/>
                 </StackPane>
                 <VBox spacing="2">
-                    <Label text="Errors" style="-fx-font-size:12;-fx-text-fill:#6b7280;"/>
-                    <Label fx:id="lblErrors" text="0" style="-fx-font-size:24;-fx-font-weight:bold;-fx-text-fill:#111827;"/>
-                    <Label text="Critical failures" style="-fx-font-size:11;-fx-text-fill:#9ca3af;"/>
+                    <Label text="Errors" styleClass="summary-card-title"/>
+                    <Label fx:id="lblErrors" text="0" styleClass="summary-card-value"/>
+                    <Label text="Critical failures" styleClass="summary-card-subtitle"/>
                 </VBox>
             </HBox>
         </VBox>
