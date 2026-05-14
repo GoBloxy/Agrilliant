@@ -31,10 +31,7 @@ import smartfarm.model.SensorReading;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
 import smartfarm.service.LiveSensorData;
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-=======
 import smartfarm.ui.async.AsyncCalls;
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
 import smartfarm.util.CSVExporter;
 import smartfarm.util.DBConnection;
 
@@ -597,34 +594,6 @@ public class DashboardController {
 
     @FXML
     private void onExportReport() {
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-        try {
-            List<HarvestRecord> harvests = harvestDAO.getAll();
-            List<Crop> crops = (allCrops != null) ? allCrops : cropDAO.getAll();
-            List<Plot> plots = (allPlots != null) ? allPlots : plotDAO.getAll();
-
-            Map<Integer, Crop> cropMap = new HashMap<>();
-            for (Crop c : crops) cropMap.put(c.getCropId(), c);
-            Map<Integer, String> plotMap = new HashMap<>();
-            for (Plot p : plots) plotMap.put(p.getPlotId(), p.getName());
-
-            double pricePerKg = 2.50;
-            StringBuilder csv = new StringBuilder("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
-            for (HarvestRecord hr : harvests) {
-                Crop c = cropMap.get(hr.getCropId());
-                String cropName = (c != null) ? c.getCropName() : "Crop #" + hr.getCropId();
-                String plotName = (c != null) ? plotMap.getOrDefault(c.getPlotId(), "—") : "—";
-                csv.append(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
-                        hr.getHarvestDate(), cropName, plotName,
-                        hr.getQuantityKg(), hr.getGrade().name(),
-                        hr.getQuantityKg() * pricePerKg));
-            }
-            File saved = CSVExporter.saveCsv(csv.toString(), "harvest_report.csv");
-            showExportSuccess("Report exported to " + saved.getName());
-        } catch (SQLException | IOException e) {
-            showExportError("Failed to export: " + e.getMessage());
-        }
-=======
         // P2.2: fetch on DB thread; format CSV + saveCsv on FX thread (CSVExporter
         // opens a desktop FileChooser or writes via Gluon Storage — must be on FX).
         AsyncCalls.runAndApply(
@@ -658,7 +627,6 @@ public class DashboardController {
                 },
                 err -> showExportError("Failed to export: " + err.getMessage())
         );
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
     }
 
     private void showQuickAlert(String msg) {
@@ -673,21 +641,6 @@ public class DashboardController {
 
     @FXML
     private void onExportSensorCSV() {
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-        try {
-            List<SensorReading> readings = sensorDAO.getRecent(500);
-            StringBuilder csv = new StringBuilder("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,Timestamp\n");
-            for (SensorReading r : readings) {
-                csv.append(String.format("%d,%d,%.2f,%.2f,%.2f,%s\n",
-                        r.getReadingId(), r.getDeviceId(), r.getTemperature(),
-                        r.getHumidity(), r.getSoilMoisture(), r.getTimestamp()));
-            }
-            File saved = CSVExporter.saveCsv(csv.toString(), "sensor_logs.csv");
-            showExportSuccess("Sensor logs exported to " + saved.getName());
-        } catch (SQLException | IOException ex) {
-            showExportError("Failed to export sensor logs: " + ex.getMessage());
-        }
-=======
         // P2.2: see onExportReport for the split rationale.
         AsyncCalls.runAndApply(
                 () -> sensorDAO.getRecent(500),
@@ -707,26 +660,10 @@ public class DashboardController {
                 },
                 err -> showExportError("Failed to export sensor logs: " + err.getMessage())
         );
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
     }
 
     @FXML
     private void onExportHarvestCSV() {
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-        try {
-            List<HarvestRecord> records = harvestDAO.getAll();
-            StringBuilder csv = new StringBuilder("RecordID,CropID,HarvestDate,QuantityKg,Grade\n");
-            for (HarvestRecord r : records) {
-                csv.append(String.format("%d,%d,%s,%.2f,%s\n",
-                        r.getRecordId(), r.getCropId(), r.getHarvestDate(),
-                        r.getQuantityKg(), r.getGrade().name()));
-            }
-            File saved = CSVExporter.saveCsv(csv.toString(), "harvest_summary.csv");
-            showExportSuccess("Harvest summary exported to " + saved.getName());
-        } catch (SQLException | IOException ex) {
-            showExportError("Failed to export harvest data: " + ex.getMessage());
-        }
-=======
         // P2.2: see onExportReport for the split rationale.
         AsyncCalls.runAndApply(
                 harvestDAO::getAll,
@@ -746,27 +683,10 @@ public class DashboardController {
                 },
                 err -> showExportError("Failed to export harvest data: " + err.getMessage())
         );
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
     }
 
     @FXML
     private void onExportAlertCSV() {
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-        try {
-            List<Alert> alerts = alertDAO.getAll();
-            StringBuilder csv = new StringBuilder("AlertID,Type,Severity,Message,Resolved,Timestamp,PlotID\n");
-            for (Alert a : alerts) {
-                csv.append(String.format("%d,%s,%s,\"%s\",%b,%s,%d\n",
-                        a.getAlertId(), a.getAlertType(), a.getSeverity().name(),
-                        a.getMessage().replace("\"", "\"\""), a.isResolved(),
-                        a.getTimestamp(), a.getPlotId()));
-            }
-            File saved = CSVExporter.saveCsv(csv.toString(), "alert_history.csv");
-            showExportSuccess("Alert history exported to " + saved.getName());
-        } catch (SQLException | IOException ex) {
-            showExportError("Failed to export alert history: " + ex.getMessage());
-        }
-=======
         // P2.2: see onExportReport for the split rationale.
         AsyncCalls.runAndApply(
                 alertDAO::getAll,
@@ -787,7 +707,6 @@ public class DashboardController {
                 },
                 err -> showExportError("Failed to export alert history: " + err.getMessage())
         );
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
     }
 
     private void showExportSuccess(String msg) {
@@ -939,17 +858,6 @@ public class DashboardController {
     }
 
     /**
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-=======
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      * B9 lifecycle re-attach — restarts the clock and re-subscribes to
      * {@code LiveSensorData}. Pairs with {@link #stopLifecycle()}.
      *
@@ -975,57 +883,16 @@ public class DashboardController {
     }
 
     /**
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      * B9 lifecycle teardown — stops the clock Timeline and detaches all
      * listeners from the shared {@code LiveSensorData} singleton.
      *
      * <p>Idempotent: safe to call multiple times in a row, or before
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-     * lifecycle has started. Pairs naturally with a future
-     * {@code startLifecycle()} that re-runs {@link #updateDateTime()}
-     * + {@link #subscribeLiveSensor()} + {@link #updateSidebarStatus()}.
-     *
-     * <p>Not called automatically by {@code ShellView} today because the
-     * shell caches this controller for the JVM lifetime (only one
-     * dashboard ever lives). Phase 2's Gluon Attach {@code LifecycleService}
-     * integration is the intended trigger: wire {@code PAUSE} →
-     * {@code stopLifecycle()} and {@code RESUME} → a re-attach hook so
-     * the dashboard goes idle while the OS has the app backgrounded.
-=======
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      * lifecycle has started. Pairs with {@link #startLifecycle()}.
      *
      * <p>Wired by {@code ShellView.setOnHiding} (handles user logout) and
      * by {@code Main}'s Gluon Attach {@code LifecycleService.PAUSE}
      * subscription (handles OS-level backgrounding on Android — the
      * dashboard goes idle while the user has switched away from the app).
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/DashboardController.java
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/DashboardController.java
      */
     public void stopLifecycle() {
         if (clock != null) {

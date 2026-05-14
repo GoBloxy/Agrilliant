@@ -21,10 +21,7 @@ import smartfarm.model.Crop;
 import smartfarm.model.Plot;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/CropController.java
-=======
 import smartfarm.ui.async.AsyncCalls;
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/CropController.java
 import smartfarm.util.CSVExporter;
 
 import java.io.File;

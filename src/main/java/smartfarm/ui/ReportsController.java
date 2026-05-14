@@ -10,10 +10,7 @@ import smartfarm.dao.CropDAO;
 import smartfarm.dao.HarvestDAO;
 import smartfarm.model.Crop;
 import smartfarm.model.HarvestRecord;
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/ReportsController.java
-=======
 import smartfarm.ui.async.AsyncCalls;
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/ReportsController.java
 import smartfarm.util.CSVExporter;
 
 import java.io.File;

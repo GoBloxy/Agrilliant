@@ -986,16 +986,6 @@ The next concrete milestone is the first `mvn -Pandroid gluonfx:build` to produc
 - [x] **B8** — done.
 - [x] **B9** — done.
 - [x] **B10** — done. This consolidated reference + the FXML/controller matrices + Phase 2 TODO list complete the §B10 deliverable.
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-=======
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
 
 ## Status of Phase 2 tasks (3bdelbary lane)
 - [x] **P2.1** — `AsyncCalls` helper + `Duration`-timeout overloads.
@@ -1012,7 +1002,6 @@ The next concrete milestone is the first `mvn -Pandroid gluonfx:build` to produc
 - [ ] **P2.10** — `cmbChartPeriod` listener.
 - [ ] **P2.11** — Adaptive launcher icons (Android 8.0+ foreground/background layers).
 - [x] **P2.12** — This Phase 2 section + `STATUS.md` Phase 2 subsection.
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 
 ---
 
@@ -1061,17 +1050,6 @@ UPDATE crops SET growth_stage = 'VEGETATIVE' WHERE growth_stage = 'GROWING';
 
 The file documents the problem, lists the three fix options (a/b/c), justifies why (b) was chosen, and includes a before/after `SELECT COUNT(*)` for verification. After running it, `dashboard.fxml` and `reports.fxml` should pass the FXML-load smoke (the only two failures left in `STATUS.md`'s smoke matrix).
 
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-### APK build — pre-flight checklist
-
-The 3bdelbary track and the cross-track items above are now complete. The first `mvn -Pandroid gluonfx:build` is a build-environment task that needs the user's machine to be set up — I cannot run it from this worktree (worktree mode + no installed deps). Pre-flight requirements:
-=======
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 ### APK build — three paths
 
 The 3bdelbary track and the cross-track items above are now complete. The first `mvn -Pandroid gluonfx:build` needs a **Linux host** because GluonFX's Substrate + GraalVM native-image cross-compile toolchain does not run natively on Windows. The team can pick from three paths:
@@ -1081,30 +1059,12 @@ The 3bdelbary track and the cross-track items above are now complete. The first 
 3. **Native Linux / macOS** — run `scripts/wsl-setup-android-build-env.sh` on any Ubuntu 22.04+ machine, or follow the equivalent steps for macOS from Gluon's docs.
 
 Pre-flight requirements (paths 2 + 3 only — the cloud path has none on your machine):
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 
 | Requirement | How to verify |
 |-------------|---------------|
 | **GraalVM CE 22+ or Liberica NIK 23+** | `java -version` should mention `GraalVM` or `Liberica NIK`. Set `GRAALVM_HOME` env var to that JDK. |
 | **Android SDK** with `cmdline-tools`, `platforms;android-35`, `build-tools;35.0.0` | `sdkmanager --list_installed`. Set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`). |
 | **Android NDK** ≥ 25.x | Installed via `sdkmanager "ndk;<ver>"`. Set `ANDROID_NDK` env var. |
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-| **DB credentials** for first-run via `DB_URL` / `DB_USER` / `DB_PASSWORD` env vars or `db.properties` (Hagag's H4) | Per Hagag's `MIGRATION_HAGAG.md`. |
-| **APK signing keystore** (release builds only) | Debug builds auto-sign with the GluonFX-managed debug key — fine for first device install. |
-
-=======
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 | **APK signing keystore** (release builds only) | Debug builds auto-sign with the GluonFX-managed debug key — fine for first device install. |
 
 #### Properties files — gitignored secrets must be copied in before the build
@@ -1130,13 +1090,6 @@ Copy-Item c:\Users\moham\Agrilliant\src\main\resources\crop-health.properties  s
 
 The pre-flight checklist below assumes a dev/internal build where the properties files are in place.
 
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
 #### Build commands
 
 ```powershell
@@ -1167,15 +1120,6 @@ mvn -Pandroid gluonfx:run
 - **MySQL connector reflection** — `mysql-connector-j` uses heavy reflection; if Hagag's H2 seed misses a constructor, queries fail with `InvocationTargetException`. Same agent-trace fix.
 - **`READ_MEDIA_IMAGES` permission silently denied on Android 13+** — `DiseaseDetectionPage.selectImage` returns empty. Fix: add a runtime permission request before calling `PlatformPickers.pickImage()`. Out of scope here — Hagag's `PermissionRequestActivity` (already in the manifest) is the entry point.
 - **`Crop.GrowthStage.GROWING` enum mismatch** at first DB hit — apply the SQL migration above before launching.
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
-<<<<<<< C:/Users/moham/Agrilliant/docs/MIGRATION_3BDELBARY.md
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md
-=======
 
 ---
 
@@ -1348,4 +1292,3 @@ These items remain on the Phase 2 backlog. Brief descriptions:
 This Phase 2 section + the parallel *Phase 2 — In Progress* subsection in `docs/STATUS.md` together close P2.12. The `## Status of Phase 2 tasks` checkbox list near the top of this file reflects the same matrix in compact form.
 
 Once P2.6–P2.11 land they should be appended here following the same `## P2.x: <name> — DONE ✅` pattern used above for P2.1–P2.5.
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/docs/MIGRATION_3BDELBARY.md

@@ -71,8 +71,6 @@ public class ShellView extends View {
      *  are wired once per controller instance, not on every showing. */
     private boolean lifecycleServiceWired = false;
 
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/views/ShellView.java
-=======
     /**
      * P2.5: viewport-width threshold above which the legacy sidebar inflates
      * inline and the Gluon AppBar hamburger is hidden. Below this, the drawer
@@ -91,7 +89,6 @@ public class ShellView extends View {
      */
     private ChangeListener<Number> widthListener;
 
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/views/ShellView.java
     public ShellView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
@@ -115,14 +112,11 @@ public class ShellView extends View {
             if (controller != null) {
                 controller.startLifecycle();
             }
-<<<<<<< C:/Users/moham/Agrilliant/src/main/java/smartfarm/ui/views/ShellView.java
-=======
             // P2.5: width-driven sidebar + hamburger toggling. Attached here
             // so it only fires while ShellView is the active view; detached
             // in setOnHiding to keep chrome from bleeding into sign-in /
             // sign-up.
             attachWidthListener();
->>>>>>> C:/Users/moham/.windsurf/worktrees/Agrilliant/Agrilliant-f99a6225/src/main/java/smartfarm/ui/views/ShellView.java
         });
         setOnHiding(e -> {
             Logger.d(TAG, "hiding");
