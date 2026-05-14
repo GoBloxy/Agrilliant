@@ -1,0 +1,113 @@
+/*
+ * mobile.css — touch-friendly overrides for the Android build only.
+ *
+ * Loaded by Main.postInit when Constants.IS_ANDROID is true.
+ * NOT applied on desktop (which keeps the dashboard-optimized sizing
+ * from farm-theme.css unchanged).
+ *
+ * Layered on top of:
+ *   1. AtlantaFX PrimerLight   (Application.setUserAgentStylesheet)
+ *   2. farm-theme.css          (scene stylesheet, both targets)
+ *   3. mobile.css              (this file, Android only)
+ *
+ * Strategy:
+ *   - Bump base font to 16px (controls inherit relative to .root).
+ *   - Enforce 48dp touch targets on every tappable control.
+ *   - Increase CharmListView row height so action buttons fit 48dp.
+ *   - Keep .icon-btn at 44dp (still finger-tappable, doesn't
+ *     dominate the toolbar visually).
+ *   - Defer to farm-theme.css for per-component palette + chrome —
+ *     mobile.css only changes sizing.
+ *
+ * Spec: §8.B5 of ANDROID_MIGRATION.md.
+ */
+
+/* ───── Base font ─────────────────────────────────────────────── */
+.root {
+    -fx-font-size: 16;
+}
+
+/* ───── Tappable controls (≥48dp Material/iOS minimum) ────────── */
+.button,
+.toggle-button,
+.menu-button,
+.split-menu-button,
+.choice-box,
+.combo-box {
+    -fx-min-height: 48;
+    -fx-padding: 10 18 10 18;
+}
+
+/* Compact icon buttons — 44dp keeps them visually tight but
+ * still well above the 32dp ergonomic floor. */
+.icon-btn {
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+}
+
+/* ───── Inputs ────────────────────────────────────────────────── */
+.text-field,
+.password-field,
+.date-picker > .text-field {
+    -fx-min-height: 48;
+    -fx-padding: 12 14 12 14;
+}
+
+.text-area .content {
+    -fx-padding: 12 14 12 14;
+}
+
+.date-picker {
+    -fx-min-height: 48;
+}
+
+.search-box {
+    -fx-min-height: 48;
+}
+
+/* ───── Gluon CharmListView rows ──────────────────────────────── *
+ * Each ListTile is a 3-line row with a primary (icon) and an
+ * optional secondary (action button group). 84dp gives the
+ * action buttons enough vertical breathing room to hit 48dp
+ * without crowding the text lines. */
+.list-tile {
+    -fx-padding: 12 16 12 16;
+    -fx-min-height: 84;
+}
+
+.charm-list-cell {
+    -fx-min-height: 84;
+}
+
+/* ───── Gluon NavigationDrawer items ──────────────────────────── *
+ * Drawer entries are single-tap targets. 56dp matches the
+ * Material spec for navigation drawer rows. */
+.nav-drawer .list-cell {
+    -fx-min-height: 56;
+    -fx-padding: 12 20 12 20;
+    -fx-font-size: 15;
+}
+
+/* ───── Dialog button bar ─────────────────────────────────────── *
+ * The Add/Edit Crop dialog, confirm-delete, etc. — make their
+ * OK/Cancel taps reliable on a 5-inch screen. */
+.dialog-pane .button {
+    -fx-min-height: 48;
+    -fx-min-width: 80;
+    -fx-padding: 10 22 10 22;
+}
+
+/* ───── TableView rows ────────────────────────────────────────── *
+ * Five inner pages keep TableView (dashboard, crops, alerts,
+ * monitoring, reports) because columns genuinely matter there.
+ * Bump row height so taps don't miss between rows. */
+.table-view {
+    -fx-fixed-cell-size: 48;
+}
+
+/* ───── Page titles ───────────────────────────────────────────── *
+ * Slightly bigger than farm-theme.css's defaults so the heading
+ * stays visually anchored after the global font bump. */
+.page-title {
+    -fx-font-size: 22;
+}

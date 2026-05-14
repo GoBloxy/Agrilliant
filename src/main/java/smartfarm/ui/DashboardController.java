@@ -1,6 +1,7 @@
 package smartfarm.ui;
 
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -14,7 +15,6 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.stage.FileChooser;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -31,10 +31,10 @@ import smartfarm.model.SensorReading;
 import smartfarm.model.Task;
 import smartfarm.model.Worker;
 import smartfarm.service.LiveSensorData;
+import smartfarm.util.CSVExporter;
 import smartfarm.util.DBConnection;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -96,6 +96,19 @@ public class DashboardController {
     private ContextMenu userMenu;
     private Button activeNavButton;
     private smartfarm.model.User currentUser;
+
+    // ─── B9 lifecycle handles ──────────────────────────────────────
+    // Promoted to fields so stopLifecycle() can cleanly tear them
+    // down. The shell caches this controller for the JVM lifetime
+    // today so they never actually leak, but having the hook in place
+    // means Phase 2's LifecycleService.PAUSE wiring (Hagag-track) is
+    // a one-line addition on ShellView's side rather than a refactor.
+    private javafx.animation.Timeline clock;
+    private ChangeListener<Number>  liveTempListener;
+    private ChangeListener<Number>  liveHumListener;
+    private ChangeListener<Number>  liveSoilListener;
+    private ChangeListener<String>  liveDeviceListener;
+    private ChangeListener<Number>  activeSensorsListener;
 
     // DAOs
     private final AlertDAO alertDAO = new AlertDAO();
@@ -533,13 +546,6 @@ public class DashboardController {
 
     @FXML
     private void onExportReport() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Export Harvest Report");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        chooser.setInitialFileName("harvest_report.csv");
-        File file = chooser.showSaveDialog(chartContainer.getScene().getWindow());
-        if (file == null) return;
-
         try {
             List<HarvestRecord> harvests = harvestDAO.getAll();
             List<Crop> crops = (allCrops != null) ? allCrops : cropDAO.getAll();
@@ -551,19 +557,18 @@ public class DashboardController {
             for (Plot p : plots) plotMap.put(p.getPlotId(), p.getName());
 
             double pricePerKg = 2.50;
-            try (FileWriter writer = new FileWriter(file)) {
-                writer.write("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
-                for (HarvestRecord hr : harvests) {
-                    Crop c = cropMap.get(hr.getCropId());
-                    String cropName = (c != null) ? c.getCropName() : "Crop #" + hr.getCropId();
-                    String plotName = (c != null) ? plotMap.getOrDefault(c.getPlotId(), "—") : "—";
-                    writer.write(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
-                            hr.getHarvestDate(), cropName, plotName,
-                            hr.getQuantityKg(), hr.getGrade().name(),
-                            hr.getQuantityKg() * pricePerKg));
-                }
+            StringBuilder csv = new StringBuilder("Date,Crop,Plot,Qty (kg),Grade,Revenue\n");
+            for (HarvestRecord hr : harvests) {
+                Crop c = cropMap.get(hr.getCropId());
+                String cropName = (c != null) ? c.getCropName() : "Crop #" + hr.getCropId();
+                String plotName = (c != null) ? plotMap.getOrDefault(c.getPlotId(), "—") : "—";
+                csv.append(String.format("%s,%s,%s,%.1f,%s,$%.2f\n",
+                        hr.getHarvestDate(), cropName, plotName,
+                        hr.getQuantityKg(), hr.getGrade().name(),
+                        hr.getQuantityKg() * pricePerKg));
             }
-            showExportSuccess("Report exported successfully!");
+            File saved = CSVExporter.saveCsv(csv.toString(), "harvest_report.csv");
+            showExportSuccess("Report exported to " + saved.getName());
         } catch (SQLException | IOException e) {
             showExportError("Failed to export: " + e.getMessage());
         }
@@ -581,23 +586,16 @@ public class DashboardController {
 
     @FXML
     private void onExportSensorCSV() {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Export Sensor Logs");
-        fc.setInitialFileName("sensor_logs.csv");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fc.showSaveDialog(chartContainer.getScene().getWindow());
-        if (file == null) return;
         try {
             List<SensorReading> readings = sensorDAO.getRecent(500);
-            try (FileWriter fw = new FileWriter(file)) {
-                fw.write("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,Timestamp\n");
-                for (SensorReading r : readings) {
-                    fw.write(String.format("%d,%d,%.2f,%.2f,%.2f,%s\n",
+            StringBuilder csv = new StringBuilder("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,Timestamp\n");
+            for (SensorReading r : readings) {
+                csv.append(String.format("%d,%d,%.2f,%.2f,%.2f,%s\n",
                         r.getReadingId(), r.getDeviceId(), r.getTemperature(),
                         r.getHumidity(), r.getSoilMoisture(), r.getTimestamp()));
-                }
             }
-            showExportSuccess("Sensor logs exported successfully!");
+            File saved = CSVExporter.saveCsv(csv.toString(), "sensor_logs.csv");
+            showExportSuccess("Sensor logs exported to " + saved.getName());
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export sensor logs: " + ex.getMessage());
         }
@@ -605,23 +603,16 @@ public class DashboardController {
 
     @FXML
     private void onExportHarvestCSV() {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Export Harvest Summary");
-        fc.setInitialFileName("harvest_summary.csv");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fc.showSaveDialog(chartContainer.getScene().getWindow());
-        if (file == null) return;
         try {
             List<HarvestRecord> records = harvestDAO.getAll();
-            try (FileWriter fw = new FileWriter(file)) {
-                fw.write("RecordID,CropID,HarvestDate,QuantityKg,Grade\n");
-                for (HarvestRecord r : records) {
-                    fw.write(String.format("%d,%d,%s,%.2f,%s\n",
+            StringBuilder csv = new StringBuilder("RecordID,CropID,HarvestDate,QuantityKg,Grade\n");
+            for (HarvestRecord r : records) {
+                csv.append(String.format("%d,%d,%s,%.2f,%s\n",
                         r.getRecordId(), r.getCropId(), r.getHarvestDate(),
                         r.getQuantityKg(), r.getGrade().name()));
-                }
             }
-            showExportSuccess("Harvest summary exported successfully!");
+            File saved = CSVExporter.saveCsv(csv.toString(), "harvest_summary.csv");
+            showExportSuccess("Harvest summary exported to " + saved.getName());
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export harvest data: " + ex.getMessage());
         }
@@ -629,24 +620,17 @@ public class DashboardController {
 
     @FXML
     private void onExportAlertCSV() {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Export Alert History");
-        fc.setInitialFileName("alert_history.csv");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fc.showSaveDialog(chartContainer.getScene().getWindow());
-        if (file == null) return;
         try {
             List<Alert> alerts = alertDAO.getAll();
-            try (FileWriter fw = new FileWriter(file)) {
-                fw.write("AlertID,Type,Severity,Message,Resolved,Timestamp,PlotID\n");
-                for (Alert a : alerts) {
-                    fw.write(String.format("%d,%s,%s,\"%s\",%b,%s,%d\n",
+            StringBuilder csv = new StringBuilder("AlertID,Type,Severity,Message,Resolved,Timestamp,PlotID\n");
+            for (Alert a : alerts) {
+                csv.append(String.format("%d,%s,%s,\"%s\",%b,%s,%d\n",
                         a.getAlertId(), a.getAlertType(), a.getSeverity().name(),
                         a.getMessage().replace("\"", "\"\""), a.isResolved(),
                         a.getTimestamp(), a.getPlotId()));
-                }
             }
-            showExportSuccess("Alert history exported successfully!");
+            File saved = CSVExporter.saveCsv(csv.toString(), "alert_history.csv");
+            showExportSuccess("Alert history exported to " + saved.getName());
         } catch (SQLException | IOException ex) {
             showExportError("Failed to export alert history: " + ex.getMessage());
         }
@@ -704,11 +688,17 @@ public class DashboardController {
     // ═══════════════ DATE/TIME ═══════════════
 
     private void updateDateTime() {
-        javafx.animation.Timeline clock = new javafx.animation.Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.ZERO, e -> {
-            LocalDateTime now = LocalDateTime.now();
-            lblDate.setText(now.format(DateTimeFormatter.ofPattern("MMM d, yyyy")));
-            lblTime.setText(now.format(DateTimeFormatter.ofPattern("hh:mm:ss a")));
-        }), new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1)));
+        // B9: keep the Timeline reachable via the `clock` field so
+        // stopLifecycle() can pause it. Idempotent — re-entering does
+        // not start a second timeline.
+        if (clock != null) return;
+        clock = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.ZERO, e -> {
+                    LocalDateTime now = LocalDateTime.now();
+                    lblDate.setText(now.format(DateTimeFormatter.ofPattern("MMM d, yyyy")));
+                    lblTime.setText(now.format(DateTimeFormatter.ofPattern("hh:mm:ss a")));
+                }),
+                new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1)));
         clock.setCycleCount(javafx.animation.Animation.INDEFINITE);
         clock.play();
     }
@@ -754,9 +744,10 @@ public class DashboardController {
 
         LiveSensorData live = LiveSensorData.getInstance();
         updateSensorDot(live.activeSensorsProperty().get());
-        live.activeSensorsProperty().addListener((obs, oldVal, newVal) ->
-            updateSensorDot(newVal.intValue())
-        );
+        if (activeSensorsListener == null) {
+            activeSensorsListener = (obs, oldVal, newVal) -> updateSensorDot(newVal.intValue());
+            live.activeSensorsProperty().addListener(activeSensorsListener);
+        }
     }
 
     private void updateSensorDot(int count) {
@@ -769,10 +760,19 @@ public class DashboardController {
     private void subscribeLiveSensor() {
         LiveSensorData live = LiveSensorData.getInstance();
 
-        live.temperatureProperty().addListener((obs, oldVal, newVal) -> updateTemperature(newVal.floatValue()));
-        live.humidityProperty().addListener((obs, oldVal, newVal) -> updateHumidity(newVal.floatValue()));
-        live.soilMoistureProperty().addListener((obs, oldVal, newVal) -> updateSoilMoisture(newVal.floatValue()));
-        live.deviceIdProperty().addListener((obs, oldVal, newVal) -> updatePlotLabels(newVal));
+        // B9: capture listener instances so stopLifecycle() can detach.
+        // Guard against a double-subscribe (e.g. if startLifecycle
+        // is called twice without an intervening stop).
+        if (liveTempListener == null) {
+            liveTempListener   = (obs, oldVal, newVal) -> updateTemperature(newVal.floatValue());
+            liveHumListener    = (obs, oldVal, newVal) -> updateHumidity(newVal.floatValue());
+            liveSoilListener   = (obs, oldVal, newVal) -> updateSoilMoisture(newVal.floatValue());
+            liveDeviceListener = (obs, oldVal, newVal) -> updatePlotLabels(newVal);
+            live.temperatureProperty().addListener(liveTempListener);
+            live.humidityProperty().addListener(liveHumListener);
+            live.soilMoistureProperty().addListener(liveSoilListener);
+            live.deviceIdProperty().addListener(liveDeviceListener);
+        }
 
         float t = live.temperatureProperty().get();
         float h = live.humidityProperty().get();
@@ -782,6 +782,50 @@ public class DashboardController {
         if (!Float.isNaN(h)) updateHumidity(h);
         if (!Float.isNaN(s)) updateSoilMoisture(s);
         if (dev != null && !dev.equals("--")) updatePlotLabels(dev);
+    }
+
+    /**
+     * B9 lifecycle teardown — stops the clock Timeline and detaches all
+     * listeners from the shared {@code LiveSensorData} singleton.
+     *
+     * <p>Idempotent: safe to call multiple times in a row, or before
+     * lifecycle has started. Pairs naturally with a future
+     * {@code startLifecycle()} that re-runs {@link #updateDateTime()}
+     * + {@link #subscribeLiveSensor()} + {@link #updateSidebarStatus()}.
+     *
+     * <p>Not called automatically by {@code ShellView} today because the
+     * shell caches this controller for the JVM lifetime (only one
+     * dashboard ever lives). Phase 2's Gluon Attach {@code LifecycleService}
+     * integration is the intended trigger: wire {@code PAUSE} →
+     * {@code stopLifecycle()} and {@code RESUME} → a re-attach hook so
+     * the dashboard goes idle while the OS has the app backgrounded.
+     */
+    public void stopLifecycle() {
+        if (clock != null) {
+            clock.stop();
+            clock = null;
+        }
+        LiveSensorData live = LiveSensorData.getInstance();
+        if (liveTempListener != null) {
+            live.temperatureProperty().removeListener(liveTempListener);
+            liveTempListener = null;
+        }
+        if (liveHumListener != null) {
+            live.humidityProperty().removeListener(liveHumListener);
+            liveHumListener = null;
+        }
+        if (liveSoilListener != null) {
+            live.soilMoistureProperty().removeListener(liveSoilListener);
+            liveSoilListener = null;
+        }
+        if (liveDeviceListener != null) {
+            live.deviceIdProperty().removeListener(liveDeviceListener);
+            liveDeviceListener = null;
+        }
+        if (activeSensorsListener != null) {
+            live.activeSensorsProperty().removeListener(activeSensorsListener);
+            activeSensorsListener = null;
+        }
     }
 
     private void updateTemperature(float t) {

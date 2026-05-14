@@ -13,7 +13,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.stage.FileChooser;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import smartfarm.dao.CropDAO;
@@ -22,9 +21,9 @@ import smartfarm.model.Crop;
 import smartfarm.model.Plot;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
+import smartfarm.util.CSVExporter;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -43,7 +42,7 @@ public class CropController {
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbPlot, cmbStage;
     @FXML private TableView<Crop> cropTable;
-    @FXML private TableColumn<Crop, String> colCropName, colPlot, colVariety, colPlantedDate, colHarvestDate, colStatus, colActions;
+    @FXML private TableColumn<Crop, String> colCropName, colPlot, colPlantedDate, colHarvestDate, colStatus, colActions;
     @FXML private Button btnAddCrop, btnExport;
 
     // ── Detail View ──
@@ -110,7 +109,6 @@ public class CropController {
         cropTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colCropName.setResizable(false);
         colPlot.setResizable(false);
-        colVariety.setResizable(false);
         colPlantedDate.setResizable(false);
         colHarvestDate.setResizable(false);
         colStatus.setResizable(false);
@@ -120,8 +118,6 @@ public class CropController {
                 new javafx.beans.property.SimpleStringProperty(data.getValue().getCropName()));
         colPlot.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(getPlotLabel(data.getValue().getPlotId())));
-        colVariety.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty("—"));
         colPlantedDate.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getPlantingDate() != null ? data.getValue().getPlantingDate().format(DATE_FMT) : "—"));
@@ -765,22 +761,16 @@ public class CropController {
 
     @FXML
     private void onExport() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Export Crops");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        chooser.setInitialFileName("crops.csv");
-        File file = chooser.showSaveDialog(btnExport.getScene().getWindow());
-        if (file == null) return;
-
-        try (FileWriter w = new FileWriter(file)) {
-            w.write("Crop Name,Plot,Planted Date,Harvest Date,Stage,Expected Yield\n");
+        try {
+            StringBuilder csv = new StringBuilder("Crop Name,Plot,Planted Date,Harvest Date,Stage,Expected Yield\n");
             for (Crop c : allCrops) {
-                w.write(String.format("%s,Plot %d,%s,%s,%s,%.1f\n",
+                csv.append(String.format("%s,Plot %d,%s,%s,%s,%.1f\n",
                         c.getCropName(), c.getPlotId(),
                         c.getPlantingDate(), c.getHarvestDate(),
                         c.getGrowthStage(), c.getExpectedYield()));
             }
-            showAlert("Export", "Exported to " + file.getName());
+            File saved = CSVExporter.saveCsv(csv.toString(), "crops.csv");
+            showAlert("Export", "Exported to " + saved.getName());
         } catch (IOException e) {
             showAlert("Error", "Failed to export: " + e.getMessage());
         }
