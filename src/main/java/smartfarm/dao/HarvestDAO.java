@@ -19,7 +19,8 @@ public class HarvestDAO implements GenericDAO<HarvestRecord> {
             rs.getObject("harvest_date", java.time.LocalDate.class),
             rs.getDouble("quantity_kg"),
             parseGrade(rs.getString("grade")),
-            rs.getInt("crop_id")
+            rs.getInt("crop_id"),
+            rs.getString("tx_hash")
         );
     }
 
@@ -33,12 +34,13 @@ public class HarvestDAO implements GenericDAO<HarvestRecord> {
 
     @Override
     public void save(HarvestRecord item) throws SQLException {
-        String sql = "INSERT INTO harvest_records (harvest_date, quantity_kg, grade, crop_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO harvest_records (harvest_date, quantity_kg, grade, crop_id, tx_hash) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             stmt.setObject(1, item.getHarvestDate());
             stmt.setDouble(2, item.getQuantityKg());
             stmt.setString(3, item.getGrade().name());
             stmt.setInt(4, item.getCropId());
+            stmt.setString(5, item.getTxHash());
             stmt.executeUpdate();
 
             try (ResultSet keys = stmt.getGeneratedKeys()) {
@@ -77,13 +79,14 @@ public class HarvestDAO implements GenericDAO<HarvestRecord> {
 
     @Override
     public void update(HarvestRecord item) throws SQLException {
-        String sql = "UPDATE harvest_records SET harvest_date = ?, quantity_kg = ?, grade = ?, crop_id = ? WHERE record_id = ?";
+        String sql = "UPDATE harvest_records SET harvest_date = ?, quantity_kg = ?, grade = ?, crop_id = ?, tx_hash = ? WHERE record_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, item.getHarvestDate());
             stmt.setDouble(2, item.getQuantityKg());
             stmt.setString(3, item.getGrade().name());
             stmt.setInt(4, item.getCropId());
-            stmt.setInt(5, item.getRecordId());
+            stmt.setString(5, item.getTxHash());
+            stmt.setInt(6, item.getRecordId());
             stmt.executeUpdate();
         }
     }

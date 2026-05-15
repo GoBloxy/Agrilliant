@@ -86,6 +86,13 @@
             <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
             <version>1.2.5</version>
         </dependency>
+
+        <!-- Web3j — Ethereum blockchain interaction (Sepolia via Alchemy) -->
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>4.12.3</version>
+        </dependency>
     </dependencies>
 
     <build>

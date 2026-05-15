@@ -15,6 +15,7 @@ import smartfarm.dao.CropDAO;
 import smartfarm.dao.HarvestDAO;
 import smartfarm.model.Crop;
 import smartfarm.model.HarvestRecord;
+import smartfarm.service.BlockchainService;
 import smartfarm.service.SystemLogManager;
 
 import java.sql.SQLException;
@@ -30,7 +31,7 @@ public class HarvestController {
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cmbQuality;
     @FXML private TableView<HarvestRecord> harvestTable;
-    @FXML private TableColumn<HarvestRecord, String> colCrop, colPlot, colQuantity, colDate, colQuality, colActions;
+    @FXML private TableColumn<HarvestRecord, String> colCrop, colPlot, colQuantity, colDate, colQuality, colBlockchain, colActions;
     @FXML private Button btnRecordHarvest;
     @FXML private BarChart<String, Number> gradeBarChart;
 
@@ -83,6 +84,7 @@ public class HarvestController {
         colQuantity.setResizable(false);
         colDate.setResizable(false);
         colQuality.setResizable(false);
+        colBlockchain.setResizable(false);
         colActions.setResizable(false);
 
         colCrop.setCellValueFactory(data -> {
@@ -104,6 +106,42 @@ public class HarvestController {
         colQuality.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         data.getValue().getGrade().name()));
+
+        colBlockchain.setCellValueFactory(data -> {
+            String tx = data.getValue().getTxHash();
+            return new javafx.beans.property.SimpleStringProperty(
+                    tx != null && !tx.isEmpty() ? tx : "");
+        });
+        colBlockchain.setCellFactory(col -> new TableCell<HarvestRecord, String>() {
+            private final Hyperlink link = new Hyperlink();
+            {
+                link.setOnAction(e -> {
+                    HarvestRecord r = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (r != null && r.getTxHash() != null && !r.getTxHash().isEmpty()) {
+                        try {
+                            java.awt.Desktop.getDesktop().browse(
+                                    java.net.URI.create(BlockchainService.getEtherscanUrl(r.getTxHash())));
+                        } catch (Exception ex) {
+                            System.err.println("Failed to open browser: " + ex.getMessage());
+                        }
+                    }
+                });
+                link.setStyle("-fx-font-size: 11px;");
+            }
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item.isEmpty()) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    link.setText(item.substring(0, Math.min(10, item.length())) + "...");
+                    link.setTooltip(new Tooltip(item));
+                    setGraphic(link);
+                    setText(null);
+                }
+            }
+        });
 
         colActions.setCellFactory(col -> new TableCell<HarvestRecord, String>() {
             private final Button editBtn = new Button("", new FontIcon("fth-edit-2"));
@@ -191,6 +229,33 @@ public class HarvestController {
                 }
                 SystemLogManager.getInstance().info("HarvestService",
                         "Harvest recorded: " + record.getQuantityKg() + " kg (Grade " + record.getGrade() + ")", "manager");
+
+                // Record on blockchain (async to avoid blocking UI)
+                BlockchainService bc = BlockchainService.getInstance();
+                if (bc.isEnabled()) {
+                    String cropName = crop != null ? crop.getCropName() : "Unknown";
+                    int plotId = crop != null ? crop.getPlotId() : 0;
+                    new Thread(() -> {
+                        String txHash = bc.recordHarvest(
+                                record.getRecordId(), cropName, record.getQuantityKg(),
+                                record.getGrade().name(), plotId, record.getHarvestDate());
+                        if (txHash != null) {
+                            record.setTxHash(txHash);
+                            try {
+                                harvestDAO.update(record);
+                            } catch (SQLException ex) {
+                                System.err.println("[Blockchain] Failed to save tx hash: " + ex.getMessage());
+                            }
+                            javafx.application.Platform.runLater(() -> {
+                                loadRecords();
+                                updateSummaryCards();
+                            });
+                            SystemLogManager.getInstance().info("Blockchain",
+                                    "Harvest #" + record.getRecordId() + " recorded on-chain: " + txHash, "system");
+                        }
+                    }, "blockchain-record").start();
+                }
+
                 loadCropCache();
                 loadRecords();
                 updateSummaryCards();

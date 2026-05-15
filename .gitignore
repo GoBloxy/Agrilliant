@@ -2,6 +2,7 @@
 src/main/resources/db.properties
 src/main/resources/crop-health.properties
 src/main/resources/mqtt.properties
+src/main/resources/blockchain.properties
 
 # === Build output ===
 target/

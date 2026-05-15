@@ -106,6 +106,7 @@
                 <TableColumn fx:id="colQuantity" text="Quantity (kg)" prefWidth="120"/>
                 <TableColumn fx:id="colDate"     text="Date"          prefWidth="120"/>
                 <TableColumn fx:id="colQuality"  text="Grade"         prefWidth="90"/>
+                <TableColumn fx:id="colBlockchain" text="Blockchain"  prefWidth="110"/>
                 <TableColumn fx:id="colActions"  text="Actions"       prefWidth="100"/>
             </columns>
         </TableView>

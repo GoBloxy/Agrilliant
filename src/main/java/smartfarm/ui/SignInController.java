@@ -171,6 +171,7 @@ public class SignInController {
     }
 
     private void navigateToDashboard(User user) {
+        fpService.disconnect(); // Release serial port so enrollment can open it
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
             Parent root = loader.load();

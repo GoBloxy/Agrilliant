@@ -456,6 +456,9 @@ void handleSerialCommand(String cmd) {
         handleScan();
         // Release immediately — SCAN is a one-shot operation
         serialBridgeActive = false;
+        // Reset the autonomous scan timer so checkFingerprint() doesn't fire
+        // again right away and overwrite the OLED with a stale NOT RECOGNIZED.
+        lastFpCheck = millis();
     }
     else if (cmd.startsWith("ENROLL:")) {
         int slot = cmd.substring(7).toInt();
@@ -493,7 +496,7 @@ void handleScan() {
     // Fast path: the autonomous checkFingerprint() ran just before LOCK arrived,
     // which is the common case when the user touches the sensor then clicks login.
     // Reuse that cached result instead of asking for a new scan on an empty sensor.
-    if (cachedFpId > 0 && (millis() - cachedFpTime) < FP_CACHE_MS) {
+    if (cachedFpId >= 0 && (millis() - cachedFpTime) < FP_CACHE_MS) {
         char buf[32];
         int id = cachedFpId;
         cachedFpId = -1;  // Consume so it isn't reused again
