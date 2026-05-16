@@ -90,6 +90,22 @@
             </HBox>
         </VBox>
 
+        <!-- Light Intensity -->
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <FontIcon iconLiteral="fth-sun" iconSize="32" styleClass="sensor-icon-light"/>
+                <VBox spacing="2">
+                    <Label text="Light Intensity" styleClass="summary-card-title"/>
+                    <HBox alignment="BASELINE_LEFT" spacing="4">
+                        <Label fx:id="lblLight" text="--" styleClass="summary-card-value"/>
+                        <Label text="\%" styleClass="summary-card-title"/>
+                    </HBox>
+                    <Label fx:id="lblLightSub" text="Waiting for data..." styleClass="text-muted"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
     </HBox>
 
     <!-- Middle Section: Trend Chart & Sensor Map -->
