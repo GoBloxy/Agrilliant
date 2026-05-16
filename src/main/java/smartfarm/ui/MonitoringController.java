@@ -11,6 +11,7 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 import smartfarm.dao.SensorDAO;
 import javafx.util.Duration;
 import smartfarm.dao.PlotDAO;
@@ -351,7 +352,7 @@ public class MonitoringController {
 
     private void addChartPoint(XYChart.Series<String, Number> series, float value) {
         if (series == null) return;
-        String label = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        String label = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
         series.getData().add(new XYChart.Data<>(label, value));
         if (series.getData().size() > MAX_CHART_POINTS) {
             series.getData().remove(0);
@@ -502,16 +503,141 @@ public class MonitoringController {
 
     @FXML
     private void onViewAllReadings() {
-        // Clear date filter and show all
-        datePicker.setValue(null);
-        cmbFields.getSelectionModel().selectFirst();
-        cmbPlots.getSelectionModel().selectFirst();
-        loadSensorReadings();
+        Stage stage = new Stage();
+        stage.initOwner(sensorTable.getScene().getWindow());
+        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        stage.setTitle("All Sensor Readings");
+
+        TableView<SensorRow> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<SensorRow, String> c1 = new TableColumn<>("Plot");        c1.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("plot"));
+        TableColumn<SensorRow, String> c2 = new TableColumn<>("Sensor Type"); c2.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("type"));
+        TableColumn<SensorRow, String> c3 = new TableColumn<>("Value");       c3.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("value"));
+        TableColumn<SensorRow, String> c4 = new TableColumn<>("Status");      c4.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("status"));
+        TableColumn<SensorRow, String> c5 = new TableColumn<>("Last Updated");c5.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("updated"));
+        table.getColumns().addAll(c1, c2, c3, c4, c5);
+
+        SensorService svc = new SensorService();
+        List<SensorReading> readings = svc.getRecentReadings(5000);
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("MM/dd hh:mm a");
+        ObservableList<SensorRow> rows = FXCollections.observableArrayList();
+        for (SensorReading r : readings) {
+            Plot p = plotCache.get(r.getDeviceId());
+            String plotName = p != null ? p.getName() : "Device " + r.getDeviceId();
+            String time = r.getTimestamp() != null ? r.getTimestamp().format(timeFmt) : "—";
+            float t = r.getTemperature();
+            String tStatus = (t > 40 || t < 5) ? "Critical" : (t > 35 || t < 10) ? "Warning" : "Normal";
+            rows.add(new SensorRow(plotName, "Temperature", smartfarm.service.SettingsManager.getInstance().formatTemp(t), tStatus, time));
+            float h = r.getHumidity();
+            String hStatus = (h > 90 || h < 20) ? "Critical" : (h > 80 || h < 30) ? "Warning" : "Normal";
+            rows.add(new SensorRow(plotName, "Humidity", String.format("%.0f %%", h), hStatus, time));
+            float s = r.getSoilMoisture();
+            if (!Float.isNaN(s)) {
+                String sStatus = (s < 15 || s > 95) ? "Critical" : (s < 30 || s > 85) ? "Warning" : "Normal";
+                rows.add(new SensorRow(plotName, "Soil Moisture", String.format("%.0f %%", s), sStatus, time));
+            }
+            float li = r.getLightLevel();
+            if (!Float.isNaN(li)) {
+                String liStatus = (li < 10 || li > 95) ? "Critical" : (li < 20 || li > 80) ? "Warning" : "Normal";
+                rows.add(new SensorRow(plotName, "Light Intensity", String.format("%.0f %%", li), liStatus, time));
+            }
+        }
+        table.setItems(rows);
+
+        javafx.scene.control.Label countLbl = new javafx.scene.control.Label(rows.size() + " readings");
+        countLbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12;");
+
+        javafx.scene.layout.VBox root = new javafx.scene.layout.VBox(8, countLbl, table);
+        javafx.scene.layout.VBox.setVgrow(table, javafx.scene.layout.Priority.ALWAYS);
+        root.setPadding(new javafx.geometry.Insets(16));
+        javafx.scene.Scene scene = new javafx.scene.Scene(root, 720, 540);
+        scene.getStylesheets().addAll(sensorTable.getScene().getStylesheets());
+        stage.setScene(scene);
+        stage.show();
     }
 
     @FXML
     private void onViewAllSensors() {
-        loadSensorReadings();
+        Stage stage = new Stage();
+        stage.initOwner(sensorTable.getScene().getWindow());
+        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        stage.setTitle("Sensor Status — All Devices");
+
+        javafx.scene.layout.VBox listBox = new javafx.scene.layout.VBox(10);
+        listBox.setPadding(new javafx.geometry.Insets(16));
+
+        Thread t = new Thread(() -> {
+            try {
+                PlotDAO dao = new PlotDAO();
+                List<Plot> plots = dao.getAll();
+                SensorDAO sDao = new SensorDAO();
+                Map<Integer, SensorReading> latest = new HashMap<>();
+                for (Plot p : plots) {
+                    List<SensorReading> rs = sDao.getRecentForPlot(p.getPlotId(), 1);
+                    if (!rs.isEmpty()) latest.put(p.getPlotId(), rs.get(0));
+                }
+                javafx.application.Platform.runLater(() -> {
+                    for (Plot p : plots) {
+                        SensorReading r = latest.get(p.getPlotId());
+                        String status = r == null ? "Offline" :
+                            deviceWorstStatus(r) == 2 ? "Critical" :
+                            deviceWorstStatus(r) == 1 ? "Warning" : "Normal";
+                        String color = switch (status) {
+                            case "Critical" -> "#ef4444";
+                            case "Warning"  -> "#f59e0b";
+                            case "Offline"  -> "#9e9e9e";
+                            default         -> "#22c55e";
+                        };
+                        javafx.scene.control.Label nameLbl = new javafx.scene.control.Label(p.getName());
+                        nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 13; -fx-text-fill: #f1f5f9;");
+                        javafx.scene.control.Label statusLbl = new javafx.scene.control.Label(status);
+                        statusLbl.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 12;");
+                        javafx.scene.layout.HBox row = new javafx.scene.layout.HBox(12);
+                        javafx.scene.shape.Circle dot = new javafx.scene.shape.Circle(5);
+                        dot.setStyle("-fx-fill: " + color + ";");
+                        javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+                        javafx.scene.layout.HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+                        String detail = r == null ? "No data" : String.format(
+                            "Temp: %s  |  Hum: %.0f%%  |  Soil: %s  |  Light: %s",
+                            smartfarm.service.SettingsManager.getInstance().formatTemp(r.getTemperature()),
+                            r.getHumidity(),
+                            Float.isNaN(r.getSoilMoisture()) ? "--" : String.format("%.0f%%", r.getSoilMoisture()),
+                            Float.isNaN(r.getLightLevel())   ? "--" : String.format("%.0f%%", r.getLightLevel())
+                        );
+                        javafx.scene.control.Label detailLbl = new javafx.scene.control.Label(detail);
+                        detailLbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 11;");
+                        javafx.scene.layout.VBox info = new javafx.scene.layout.VBox(2, nameLbl, detailLbl);
+                        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                        row.getChildren().addAll(dot, info, spacer, statusLbl);
+                        row.setPadding(new javafx.geometry.Insets(10));
+                        row.setStyle("-fx-background-color: #1e293b; -fx-background-radius: 8;");
+                        listBox.getChildren().add(row);
+                    }
+                    if (plots.isEmpty()) {
+                        javafx.scene.control.Label empty = new javafx.scene.control.Label("No sensors found.");
+                        empty.setStyle("-fx-text-fill: #94a3b8;");
+                        listBox.getChildren().add(empty);
+                    }
+                });
+            } catch (Exception ex) {
+                javafx.application.Platform.runLater(() -> {
+                    javafx.scene.control.Label err = new javafx.scene.control.Label("Failed to load sensor data.");
+                    err.setStyle("-fx-text-fill: #ef4444;");
+                    listBox.getChildren().add(err);
+                });
+            }
+        }, "sensor-status-loader");
+        t.setDaemon(true);
+        t.start();
+
+        javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(listBox);
+        scroll.setFitToWidth(true);
+        scroll.setStyle("-fx-background: #0f172a; -fx-background-color: #0f172a;");
+        javafx.scene.Scene scene = new javafx.scene.Scene(scroll, 560, 420);
+        scene.getStylesheets().addAll(sensorTable.getScene().getStylesheets());
+        stage.setScene(scene);
+        stage.show();
     }
 
     // ═══════════════ AUTO REFRESH ═══════════════
