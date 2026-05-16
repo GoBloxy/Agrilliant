@@ -23,8 +23,11 @@
  *   R307  TX    -> ESP32 GPIO 16 (UART2 RX)
  *   R307  RX    -> ESP32 GPIO 17 (UART2 TX)
  *
+ *   LDR   Leg1  -> ESP32 3.3V
+ *   LDR   Leg2  -> ESP32 GPIO 35 + 10kΩ resistor to GND
+ *
  * Data formats sent:
- *   Sensor:      DEVICE:<id>,TEMP:<value>,HUM:<value>,SOIL:<value>
+ *   Sensor:      DEVICE:<id>,TEMP:<value>,HUM:<value>,SOIL:<value>,LIGHT:<value>
  *   Fingerprint: FINGERPRINT:<id>,ID:<fingerprint_id>
  *
  * Libraries required (install via Arduino Library Manager):
@@ -66,12 +69,15 @@
 #define SOIL_DRY      4095              // ADC value when sensor is in dry air
 #define SOIL_WET      1200              // ADC value when sensor is in water
 #define SOIL_NO_SENSOR_THRESHOLD 4000   // Above this = floating pin (no sensor)
+
+#define LDR_PIN       35                // GPIO pin connected to LDR (analog)
 // ─────────────────────────────────────────────────────────────────
 
 DHT dht(DHT_PIN, DHT_TYPE);
 WiFiClient client;
 unsigned long lastRead = 0;
 bool soilSensorDetected = false;        // Auto-detected at startup
+bool ldrDetected = false;               // Auto-detected at startup
 
 // R307 Fingerprint on UART2
 HardwareSerial fpSerial(2);
@@ -157,6 +163,23 @@ void showIdleLogo() {
     oled.sendBuffer();
 }
 
+bool detectLDR() {
+    // A floating ADC1 input-only pin (GPIO 35 has no pull-up/down) produces
+    // noisy readings with a large spread. A real LDR + pull-down resistor
+    // gives stable readings (low spread), even if the value is near 0 in darkness.
+    int minVal = 4095, maxVal = 0;
+    for (int i = 0; i < 10; i++) {
+        int val = analogRead(LDR_PIN);
+        if (val < minVal) minVal = val;
+        if (val > maxVal) maxVal = val;
+        delay(50);
+    }
+    int spread = maxVal - minVal;
+    // A connected LDR has stable readings (spread < 200).
+    // A floating pin has wild swings (spread > 500).
+    return (spread < 500);
+}
+
 bool detectSoilSensor() {
     // A floating pin produces wildly varying readings (0–4095).
     // A real FC-28 gives stable readings. Take 10 samples and check:
@@ -188,6 +211,17 @@ void setup() {
     // Auto-detect FC-28 soil moisture sensor
     soilSensorDetected = detectSoilSensor();
     Serial.println(soilSensorDetected ? "FC-28 detected on GPIO 34" : "No FC-28 detected on GPIO 34");
+
+    // Auto-detect LDR photoresistor
+    Serial.println("--- LDR DEBUG (GPIO 35) ---");
+    for (int i = 0; i < 5; i++) {
+        int raw = analogRead(LDR_PIN);
+        Serial.printf("  LDR raw[%d] = %d\n", i, raw);
+        delay(100);
+    }
+    Serial.println("---------------------------");
+    ldrDetected = detectLDR();
+    Serial.println(ldrDetected ? "LDR detected on GPIO 35" : "No LDR detected on GPIO 35");
 
     // Initialize R307 fingerprint sensor on UART2
     fpSerial.begin(57600, SERIAL_8N1, FP_RX_PIN, FP_TX_PIN);
@@ -257,10 +291,19 @@ void loop() {
     if (soilSensorDetected) {
         int rawSoil = analogRead(SOIL_PIN);
         soilPercent = map(constrain(rawSoil, SOIL_WET, SOIL_DRY), SOIL_DRY, SOIL_WET, 0, 100);
-        Serial.printf("Temp: %.2f C  Hum: %.2f %%  Soil: %.1f %%\n", temp, hum, soilPercent);
-    } else {
-        Serial.printf("Temp: %.2f C  Hum: %.2f %%\n", temp, hum);
     }
+
+    // Read LDR light intensity (analog) — only if sensor was detected
+    float lightPercent = NAN;
+    if (ldrDetected) {
+        int rawLight = analogRead(LDR_PIN);
+        lightPercent = map(constrain(rawLight, 0, 4095), 0, 4095, 0, 100);
+    }
+
+    Serial.printf("Temp: %.2f C  Hum: %.2f %%", temp, hum);
+    if (!isnan(soilPercent)) Serial.printf("  Soil: %.1f %%", soilPercent);
+    if (!isnan(lightPercent)) Serial.printf("  Light: %.1f %%", lightPercent);
+    Serial.println();
 
     // Establish (or re-establish) server connection BEFORE updating OLED
     // so the display reflects the actual connection state.
@@ -269,7 +312,7 @@ void loop() {
         Serial.printf("Connecting to server %s:%d...\n", SERVER_IP, SERVER_PORT);
         if (!client.connect(SERVER_IP, SERVER_PORT)) {
             Serial.println("Connection failed!");
-            updateOLED(temp, hum, soilPercent);  // Show disconnected state
+            updateOLED(temp, hum, soilPercent, lightPercent);  // Show disconnected state
             return;
         }
         client.setNoDelay(true);  // Disable Nagle — send each packet immediately
@@ -277,7 +320,7 @@ void loop() {
     }
 
     // Update OLED — connection state is now accurate
-    updateOLED(temp, hum, soilPercent);
+    updateOLED(temp, hum, soilPercent, lightPercent);
 
     // Send reading in expected format
     String payload = "DEVICE:" + String(DEVICE_ID) +
@@ -286,6 +329,9 @@ void loop() {
     if (soilSensorDetected) {
         payload += ",SOIL:" + String(soilPercent, 2);
     }
+    if (ldrDetected) {
+        payload += ",LIGHT:" + String(lightPercent, 2);
+    }
     client.println(payload);
     client.flush();
     // Drain any server response to keep the TCP stream clean
@@ -293,7 +339,7 @@ void loop() {
     Serial.println("Sent: " + payload);
 }
 
-void updateOLED(float temp, float hum, float soil) {
+void updateOLED(float temp, float hum, float soil, float light) {
     char buf[32];
 
     oled.clearBuffer();
@@ -305,11 +351,11 @@ void updateOLED(float temp, float hum, float soil) {
 
     // Temperature
     snprintf(buf, sizeof(buf), "Temp:  %.1f C", temp);
-    oled.drawStr(0, 28, buf);
+    oled.drawStr(0, 26, buf);
 
     // Humidity
     snprintf(buf, sizeof(buf), "Hum:   %.0f %%", hum);
-    oled.drawStr(0, 40, buf);
+    oled.drawStr(0, 36, buf);
 
     // Soil moisture
     if (!isnan(soil)) {
@@ -317,11 +363,19 @@ void updateOLED(float temp, float hum, float soil) {
     } else {
         snprintf(buf, sizeof(buf), "Soil:  N/A");
     }
-    oled.drawStr(0, 52, buf);
+    oled.drawStr(0, 46, buf);
+
+    // Light intensity
+    if (!isnan(light)) {
+        snprintf(buf, sizeof(buf), "Light: %.0f %%", light);
+    } else {
+        snprintf(buf, sizeof(buf), "Light: N/A");
+    }
+    oled.drawStr(0, 56, buf);
 
     // Connection status + fingerprint indicator
     if (fingerprintDetected) {
-        oled.drawStr(0, 64, client.connected() ? "[Server OK] [FP]" : "[No Server] [FP]");
+        oled.drawStr(0, 64, client.connected() ? "[OK] [FP]" : "[No Srv] [FP]");
     } else {
         oled.drawStr(0, 64, client.connected() ? "[Server OK]" : "[No Server]");
     }

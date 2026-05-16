@@ -53,9 +53,9 @@ import java.util.Map;
 public class DashboardController {
 
     // ── Sensor Cards ──
-    @FXML private Label lblTemperature, lblHumidity, lblSoilMoisture;
-    @FXML private Label lblTempPlot, lblHumPlot, lblSoilPlot;
-    @FXML private Label lblTempStatus, lblHumStatus, lblSoilStatus;
+    @FXML private Label lblTemperature, lblHumidity, lblSoilMoisture, lblLightLevel;
+    @FXML private Label lblTempPlot, lblHumPlot, lblSoilPlot, lblLightPlot;
+    @FXML private Label lblTempStatus, lblHumStatus, lblSoilStatus, lblLightStatus;
 
     // ── Field Map ──
     @FXML private Pane fieldMap;
@@ -744,11 +744,11 @@ public class DashboardController {
         try {
             List<SensorReading> readings = sensorDAO.getRecent(500);
             try (FileWriter fw = new FileWriter(file)) {
-                fw.write("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,Timestamp\n");
+                fw.write("ReadingID,DeviceID,Temperature,Humidity,SoilMoisture,LightLevel,Timestamp\n");
                 for (SensorReading r : readings) {
-                    fw.write(String.format("%d,%d,%.2f,%.2f,%.2f,%s\n",
+                    fw.write(String.format("%d,%d,%.2f,%.2f,%.2f,%.2f,%s\n",
                         r.getReadingId(), r.getDeviceId(), r.getTemperature(),
-                        r.getHumidity(), r.getSoilMoisture(), r.getTimestamp()));
+                        r.getHumidity(), r.getSoilMoisture(), r.getLightLevel(), r.getTimestamp()));
                 }
             }
             showExportSuccess("Sensor logs exported successfully!");
@@ -972,6 +972,7 @@ public class DashboardController {
                 updateTemperature(r.getTemperature());
                 updateHumidity(r.getHumidity());
                 if (!Float.isNaN(r.getSoilMoisture())) updateSoilMoisture(r.getSoilMoisture());
+                if (!Float.isNaN(r.getLightLevel())) updateLightLevel(r.getLightLevel());
                 return;
             }
         } catch (SQLException e) {
@@ -987,6 +988,8 @@ public class DashboardController {
         if (!Float.isNaN(t)) updateTemperature(t);
         if (!Float.isNaN(h)) updateHumidity(h);
         if (!Float.isNaN(s)) updateSoilMoisture(s);
+        float l0 = live.lightLevelProperty().get();
+        if (!Float.isNaN(l0)) updateLightLevel(l0);
         if (dev != null && !dev.equals("--")) updatePlotLabels(dev);
     }
 
@@ -999,6 +1002,7 @@ public class DashboardController {
         });
         live.humidityProperty().addListener((obs, oldVal, newVal) -> updateHumidity(newVal.floatValue()));
         live.soilMoistureProperty().addListener((obs, oldVal, newVal) -> updateSoilMoisture(newVal.floatValue()));
+        live.lightLevelProperty().addListener((obs, oldVal, newVal) -> updateLightLevel(newVal.floatValue()));
         live.deviceIdProperty().addListener((obs, oldVal, newVal) -> updatePlotLabels(newVal));
 
         // Re-format temperature labels immediately when the user changes the unit
@@ -1023,6 +1027,8 @@ public class DashboardController {
                 if (!Float.isNaN(t2)) updateTemperature(t2);
                 if (!Float.isNaN(h2)) updateHumidity(h2);
                 if (!Float.isNaN(s2)) updateSoilMoisture(s2);
+                float l2 = live.lightLevelProperty().get();
+                if (!Float.isNaN(l2)) updateLightLevel(l2);
                 if (dev2 != null && !dev2.equals("--")) updatePlotLabels(dev2);
             })
         );
@@ -1032,10 +1038,12 @@ public class DashboardController {
         float t = live.temperatureProperty().get();
         float h = live.humidityProperty().get();
         float s = live.soilMoistureProperty().get();
+        float l = live.lightLevelProperty().get();
         String dev = live.deviceIdProperty().get();
         if (!Float.isNaN(t)) updateTemperature(t);
         if (!Float.isNaN(h)) updateHumidity(h);
         if (!Float.isNaN(s)) updateSoilMoisture(s);
+        if (!Float.isNaN(l)) updateLightLevel(l);
         if (dev != null && !dev.equals("--")) updatePlotLabels(dev);
     }
 
@@ -1084,9 +1092,18 @@ public class DashboardController {
         updateSoilChart(s);
     }
 
+    private void updateLightLevel(float l) {
+        lblLightLevel.setText(String.format("%.0f %%", l));
+        lblLightStatus.getStyleClass().removeAll("badge-normal", "badge-high", "badge-low");
+        if (l < 20) { lblLightStatus.setText("Low"); lblLightStatus.getStyleClass().add("badge-low"); }
+        else if (l > 80) { lblLightStatus.setText("Bright"); lblLightStatus.getStyleClass().add("badge-high"); }
+        else { lblLightStatus.setText("Normal"); lblLightStatus.getStyleClass().add("badge-normal"); }
+    }
+
     private void updatePlotLabels(String devId) {
         String plot = devId.replace("_sensor", "").replace("plot", "Plot ");
         lblTempPlot.setText(plot);
+        lblLightPlot.setText(plot);
         lblHumPlot.setText(plot);
         lblSoilPlot.setText(plot);
     }

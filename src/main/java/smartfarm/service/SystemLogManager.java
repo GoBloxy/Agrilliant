@@ -1,5 +1,6 @@
 package smartfarm.service;
 
+import smartfarm.dao.LogDAO;
 import smartfarm.model.SystemLog;
 import smartfarm.model.SystemLog.LogType;
 
@@ -11,8 +12,18 @@ public class SystemLogManager {
 
     private static final SystemLogManager INSTANCE = new SystemLogManager();
     private final List<SystemLog> logs = new ArrayList<>();
+    private final LogDAO logDAO = new LogDAO();
 
     private SystemLogManager() {
+        // Load persisted logs from database on startup
+        try {
+            List<SystemLog> persisted = logDAO.getAll();
+            // getAll() returns newest-first; reverse so oldest is first in our list
+            Collections.reverse(persisted);
+            logs.addAll(persisted);
+        } catch (Exception e) {
+            System.err.println("[SystemLogManager] Failed to load logs from DB: " + e.getMessage());
+        }
     }
 
     public static SystemLogManager getInstance() {
@@ -20,7 +31,9 @@ public class SystemLogManager {
     }
 
     public void log(LogType type, String source, String message, String user) {
-        logs.add(new SystemLog(type, source, message, user));
+        SystemLog entry = new SystemLog(type, source, message, user);
+        logs.add(entry);
+        logDAO.save(entry);
     }
 
     public void info(String source, String message, String user) {
@@ -41,6 +54,7 @@ public class SystemLogManager {
 
     public void clear() {
         logs.clear();
+        logDAO.clearAll();
     }
 
     public int size() {

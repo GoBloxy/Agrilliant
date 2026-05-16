@@ -15,19 +15,22 @@ public class SensorDAO implements GenericDAO<SensorReading> {
     private final Connection conn = DBConnection.getInstance();
 
     private SensorReading map(ResultSet rs) throws SQLException {
+        float light = rs.getFloat("light_level");
+        if (rs.wasNull()) light = Float.NaN;
         return new SensorReading(
             rs.getInt("reading_id"),
             rs.getInt("device_id"),
             rs.getFloat("temperature"),
             rs.getFloat("humidity"),
             rs.getFloat("soil_moisture"),
+            light,
             rs.getObject("timestamp", LocalDateTime.class)
         );
     }
 
     @Override
     public void save(SensorReading item) throws SQLException {
-        String sql = "INSERT INTO sensor_readings (device_id, temperature, humidity, soil_moisture, timestamp) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO sensor_readings (device_id, temperature, humidity, soil_moisture, light_level, timestamp) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, item.getDeviceId());
             stmt.setFloat(2, item.getTemperature());
@@ -37,7 +40,12 @@ public class SensorDAO implements GenericDAO<SensorReading> {
             } else {
                 stmt.setFloat(4, item.getSoilMoisture());
             }
-            stmt.setObject(5, item.getTimestamp());
+            if (Float.isNaN(item.getLightLevel())) {
+                stmt.setNull(5, java.sql.Types.FLOAT);
+            } else {
+                stmt.setFloat(5, item.getLightLevel());
+            }
+            stmt.setObject(6, item.getTimestamp());
             stmt.executeUpdate();
         }
     }

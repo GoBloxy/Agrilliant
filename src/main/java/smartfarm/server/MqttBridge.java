@@ -84,12 +84,12 @@ public class MqttBridge {
      * Called from SensorService after TCP handler delivers a reading.
      * Non-blocking — uses async publish.
      */
-    public void publishReading(String deviceCode, float temperature, float humidity, float soilMoisture) {
+    public void publishReading(String deviceCode, float temperature, float humidity, float soilMoisture, float lightLevel) {
         if (!connected || client == null) return;
 
         try {
             SensorPayload payload = new SensorPayload(deviceCode, temperature, humidity, soilMoisture,
-                    System.currentTimeMillis());
+                    lightLevel, System.currentTimeMillis());
             String json = gson.toJson(payload);
             String topic = topicPrefix + "/" + deviceCode;
 
@@ -135,15 +135,17 @@ public class MqttBridge {
         public float temperature;
         public float humidity;
         public float soilMoisture;
+        public float lightLevel;
         public long timestamp;
 
         public SensorPayload() {}
 
-        public SensorPayload(String deviceCode, float temperature, float humidity, float soilMoisture, long timestamp) {
+        public SensorPayload(String deviceCode, float temperature, float humidity, float soilMoisture, float lightLevel, long timestamp) {
             this.deviceCode = deviceCode;
             this.temperature = temperature;
             this.humidity = humidity;
             this.soilMoisture = soilMoisture;
+            this.lightLevel = lightLevel;
             this.timestamp = timestamp;
         }
     }

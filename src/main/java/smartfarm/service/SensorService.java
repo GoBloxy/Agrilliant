@@ -21,7 +21,7 @@ public class SensorService {
 
         // Broadcast to all remote clients via MQTT (non-blocking async publish)
         MqttBridge.getInstance().publishReading(
-                deviceCode, reading.getTemperature(), reading.getHumidity(), reading.getSoilMoisture());
+                deviceCode, reading.getTemperature(), reading.getHumidity(), reading.getSoilMoisture(), reading.getLightLevel());
 
         // Only save to database every DB_SAVE_INTERVAL_MS per device
         String key = deviceCode != null ? deviceCode : "unknown";

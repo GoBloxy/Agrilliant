@@ -40,7 +40,7 @@ public class SensorHandler implements Runnable {
                         lastDeviceCode = parsed.deviceCode;
                         int deviceId = resolveDeviceId(parsed.deviceCode);
                         SensorReading reading = new SensorReading(
-                            deviceId, parsed.temperature, parsed.humidity, parsed.soilMoisture, LocalDateTime.now()
+                            0, deviceId, parsed.temperature, parsed.humidity, parsed.soilMoisture, parsed.lightLevel, LocalDateTime.now()
                         );
                         sensorService.processReading(reading, parsed.deviceCode);
                     }
@@ -81,15 +81,25 @@ public class SensorHandler implements Runnable {
         }
     }
 
-    // Parses "DEVICE:plot1_sensor,TEMP:27.50,HUM:63.20,SOIL:54.30"
+    // Parses "DEVICE:plot1_sensor,TEMP:27.50,HUM:63.20,SOIL:54.30,LIGHT:72.00"
     private Parsed parseLine(String raw) {
         try {
             String[] parts = raw.split(",");
-            String deviceCode = parts[0].split(":")[1];
-            float temp = Float.parseFloat(parts[1].split(":")[1]);
-            float hum  = Float.parseFloat(parts[2].split(":")[1]);
-            float soil = parts.length > 3 ? Float.parseFloat(parts[3].split(":")[1]) : Float.NaN;
-            return new Parsed(deviceCode, temp, hum, soil);
+            String deviceCode = null;
+            float temp = Float.NaN, hum = Float.NaN, soil = Float.NaN, light = Float.NaN;
+            for (String part : parts) {
+                String[] kv = part.split(":", 2);
+                if (kv.length != 2) continue;
+                switch (kv[0].trim()) {
+                    case "DEVICE": deviceCode = kv[1].trim(); break;
+                    case "TEMP":   temp  = Float.parseFloat(kv[1].trim()); break;
+                    case "HUM":    hum   = Float.parseFloat(kv[1].trim()); break;
+                    case "SOIL":   soil  = Float.parseFloat(kv[1].trim()); break;
+                    case "LIGHT":  light = Float.parseFloat(kv[1].trim()); break;
+                }
+            }
+            if (deviceCode == null || Float.isNaN(temp)) return null;
+            return new Parsed(deviceCode, temp, hum, soil, light);
         } catch (Exception e) {
             System.err.println("Bad data format: " + raw);
             return null;
@@ -101,11 +111,13 @@ public class SensorHandler implements Runnable {
         final float temperature;
         final float humidity;
         final float soilMoisture;
-        Parsed(String deviceCode, float temperature, float humidity, float soilMoisture) {
+        final float lightLevel;
+        Parsed(String deviceCode, float temperature, float humidity, float soilMoisture, float lightLevel) {
             this.deviceCode = deviceCode;
             this.temperature = temperature;
             this.humidity = humidity;
             this.soilMoisture = soilMoisture;
+            this.lightLevel = lightLevel;
         }
     }
 }

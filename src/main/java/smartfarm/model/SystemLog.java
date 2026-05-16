@@ -21,6 +21,14 @@ public class SystemLog {
         this.user = user;
     }
 
+    public SystemLog(LogType type, String source, String message, String user, LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+        this.type = type;
+        this.source = source;
+        this.message = message;
+        this.user = user;
+    }
+
     public LocalDateTime getTimestamp() { return timestamp; }
     public LogType getType() { return type; }
     public String getSource() { return source; }

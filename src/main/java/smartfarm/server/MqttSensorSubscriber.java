@@ -123,10 +123,12 @@ public class MqttSensorSubscriber {
             if (payload == null || payload.deviceCode == null) return;
 
             SensorReading reading = new SensorReading(
+                    0, // readingId
                     0, // device_id resolved later if needed
                     payload.temperature,
                     payload.humidity,
                     payload.soilMoisture,
+                    payload.lightLevel,
                     LocalDateTime.now()
             );
 

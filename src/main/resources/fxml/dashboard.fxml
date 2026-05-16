@@ -209,6 +209,18 @@
                                 <Label fx:id="lblSoilPlot" text="Plot — North Field" styleClass="sensor-plot"/>
                                 <Label fx:id="lblSoilStatus" text="Normal" styleClass="badge,badge-normal"/>
                             </VBox>
+
+                            <!-- Light Intensity Card -->
+                            <VBox styleClass="sensor-card" alignment="CENTER" spacing="4" HBox.hgrow="ALWAYS">
+                                <padding><Insets top="12" right="10" bottom="10" left="10"/></padding>
+                                <HBox alignment="CENTER" spacing="5">
+                                    <FontIcon iconLiteral="fth-sun" iconSize="14" styleClass="sensor-icon-light"/>
+                                    <Label text="Light" styleClass="sensor-label"/>
+                                </HBox>
+                                <Label fx:id="lblLightLevel" text="-- %" styleClass="sensor-value"/>
+                                <Label fx:id="lblLightPlot" text="Plot — North Field" styleClass="sensor-plot"/>
+                                <Label fx:id="lblLightStatus" text="Normal" styleClass="badge,badge-normal"/>
+                            </VBox>
                         </HBox>
                     </VBox>
 
