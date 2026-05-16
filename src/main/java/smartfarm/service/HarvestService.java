@@ -115,7 +115,18 @@ public class HarvestService {
 
     public void deleteHarvestRecord(int recordId) {
         try {
-            harvestDAO.delete(recordId);
+            HarvestRecord record = harvestDAO.getById(recordId);
+            if (record != null) {
+                harvestDAO.delete(recordId);
+                Crop crop = cropDAO.getById(record.getCropId());
+                if (crop != null) {
+                    crop.setGrowthStage(Crop.GrowthStage.READY);
+                    crop.setHarvestDate(null);
+                    cropDAO.update(crop);
+                }
+            } else {
+                harvestDAO.delete(recordId);
+            }
         } catch (SQLException err) {
             throw new RuntimeException("Server Error! Try again later");
         }

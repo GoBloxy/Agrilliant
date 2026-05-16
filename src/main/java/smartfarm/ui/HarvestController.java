@@ -293,8 +293,18 @@ public class HarvestController {
             if (btn == ButtonType.YES) {
                 try {
                     harvestDAO.delete(record.getRecordId());
+                    
+                    Crop crop = cropCache.get(record.getCropId());
+                    if (crop != null) {
+                        crop.setGrowthStage(Crop.GrowthStage.READY);
+                        crop.setHarvestDate(null);
+                        cropDAO.update(crop);
+                    }
+                    
                     SystemLogManager.getInstance().info("HarvestService",
                             "Harvest record #" + record.getRecordId() + " deleted", "manager");
+                    
+                    loadCropCache();
                     loadRecords();
                     updateSummaryCards();
                     populateGradeChart();

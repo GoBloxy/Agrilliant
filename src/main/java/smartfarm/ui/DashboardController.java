@@ -176,6 +176,21 @@ public class DashboardController {
             btnUsers.setVisible(false);      btnUsers.setManaged(false);
             btnLogs.setVisible(false);       btnLogs.setManaged(false);
         }
+        if (role == smartfarm.model.User.Role.ADMIN) {
+            // Sidebar: Admin is an IT Supervisor, hide farm operations tabs
+            btnMonitoring.setVisible(false); btnMonitoring.setManaged(false);
+            btnDisease.setVisible(false);    btnDisease.setManaged(false);
+            btnAlerts.setVisible(false);     btnAlerts.setManaged(false);
+            btnCrops.setVisible(false);      btnCrops.setManaged(false);
+            btnWorkers.setVisible(false);    btnWorkers.setManaged(false);
+            btnTasks.setVisible(false);      btnTasks.setManaged(false);
+            btnHarvests.setVisible(false);   btnHarvests.setManaged(false);
+            
+            // Dashboard: hide management-only sections to keep it clean
+            workerOverviewCard.setVisible(false); workerOverviewCard.setManaged(false);
+            quickActionsCard.setVisible(false);   quickActionsCard.setManaged(false);
+            bottomSection.setVisible(false);      bottomSection.setManaged(false);
+        }
     }
 
     @FXML
