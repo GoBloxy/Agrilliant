@@ -44,6 +44,7 @@ public class MonitoringController {
     @FXML private Label lblTemp, lblTempSub;
     @FXML private Label lblHum, lblHumSub;
     @FXML private Label lblSoil, lblSoilSub;
+    @FXML private Label lblLight, lblLightSub;
 
     @FXML private ComboBox<String> cmbChartPeriod;
     @FXML private LineChart<String, Number> trendChart;
@@ -82,6 +83,7 @@ public class MonitoringController {
     private XYChart.Series<String, Number> tempSeries;
     private XYChart.Series<String, Number> humSeries;
     private XYChart.Series<String, Number> soilSeries;
+    private XYChart.Series<String, Number> lightSeries;
 
     private PieChart.Data pieNormal, pieWarning, pieCritical, pieOffline;
     private Timeline autoRefreshTimeline;
@@ -96,7 +98,7 @@ public class MonitoringController {
         cmbChartPeriod.setItems(FXCollections.observableArrayList("24 Hours", "7 Days", "30 Days"));
         cmbChartPeriod.getSelectionModel().selectFirst();
 
-        cmbMapSensors.setItems(FXCollections.observableArrayList("All Sensors", "Temperature", "Humidity", "Soil Moisture"));
+        cmbMapSensors.setItems(FXCollections.observableArrayList("All Sensors", "Temperature", "Humidity", "Soil Moisture", "Light Intensity"));
         cmbMapSensors.getSelectionModel().selectFirst();
         cmbMapSensors.setOnAction(e -> {
             mapMode = cmbMapSensors.getValue() != null ? cmbMapSensors.getValue() : "All Sensors";
@@ -193,13 +195,24 @@ public class MonitoringController {
             loadMapData();
         });
 
+        live.lightLevelProperty().addListener((obs, oldVal, newVal) -> {
+            float l = newVal.floatValue();
+            if (lblLight != null) {
+                lblLight.setText(String.format("%.0f", l));
+                lblLightSub.setText(l < 20 ? "Dark" : l > 80 ? "Bright" : "Normal");
+            }
+            addChartPoint(lightSeries, l);
+        });
+
         // Show current values immediately
         float t = live.temperatureProperty().get();
         float h = live.humidityProperty().get();
         float s = live.soilMoistureProperty().get();
+        float l = live.lightLevelProperty().get();
         if (!Float.isNaN(t)) { lblTemp.setText(String.format("%.1f", t)); lblTempSub.setText(t > 35 ? "High" : t < 10 ? "Low" : "Normal"); }
         if (!Float.isNaN(h)) { lblHum.setText(String.format("%.0f", h)); lblHumSub.setText(h > 80 ? "High" : h < 30 ? "Low" : "Normal"); }
         if (!Float.isNaN(s)) { lblSoil.setText(String.format("%.0f", s)); lblSoilSub.setText(s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal"); }
+        if (lblLight != null && !Float.isNaN(l)) { lblLight.setText(String.format("%.0f", l)); lblLightSub.setText(l < 20 ? "Dark" : l > 80 ? "Bright" : "Normal"); }
 
         // Polling fallback for remote clients: re-applies LiveSensorData every 5s
         // so cards stay current even when the same value arrives repeatedly.
@@ -207,9 +220,11 @@ public class MonitoringController {
             float t2 = live.temperatureProperty().get();
             float h2 = live.humidityProperty().get();
             float s2 = live.soilMoistureProperty().get();
+            float l2 = live.lightLevelProperty().get();
             if (!Float.isNaN(t2)) { lblTemp.setText(String.format("%.1f", t2)); lblTempSub.setText(t2 > 35 ? "High" : t2 < 10 ? "Low" : "Normal"); }
             if (!Float.isNaN(h2)) { lblHum.setText(String.format("%.0f", h2)); lblHumSub.setText(h2 > 80 ? "High" : h2 < 30 ? "Low" : "Normal"); }
             if (!Float.isNaN(s2)) { lblSoil.setText(String.format("%.0f", s2)); lblSoilSub.setText(s2 < 30 ? "Dry" : s2 > 85 ? "Wet" : "Normal"); }
+            if (lblLight != null && !Float.isNaN(l2)) { lblLight.setText(String.format("%.0f", l2)); lblLightSub.setText(l2 < 20 ? "Dark" : l2 > 80 ? "Bright" : "Normal"); }
         }));
         livePoll.setCycleCount(Animation.INDEFINITE);
         livePoll.play();
@@ -235,9 +250,11 @@ public class MonitoringController {
                 float t = r.getTemperature();
                 float h = r.getHumidity();
                 float s = r.getSoilMoisture();
+                float li = r.getLightLevel();
                 if (!Float.isNaN(t)) { lblTemp.setText(String.format("%.1f", t)); lblTempSub.setText(t > 35 ? "High" : t < 10 ? "Low" : "Normal"); }
                 if (!Float.isNaN(h)) { lblHum.setText(String.format("%.0f", h)); lblHumSub.setText(h > 80 ? "High" : h < 30 ? "Low" : "Normal"); }
                 if (!Float.isNaN(s)) { lblSoil.setText(String.format("%.0f", s)); lblSoilSub.setText(s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal"); }
+                if (lblLight != null && !Float.isNaN(li)) { lblLight.setText(String.format("%.0f", li)); lblLightSub.setText(li < 20 ? "Dark" : li > 80 ? "Bright" : "Normal"); }
                 return;
             }
         } catch (SQLException e) {
@@ -247,9 +264,11 @@ public class MonitoringController {
         float t = live.temperatureProperty().get();
         float h = live.humidityProperty().get();
         float s = live.soilMoistureProperty().get();
+        float li = live.lightLevelProperty().get();
         if (!Float.isNaN(t)) { lblTemp.setText(String.format("%.1f", t)); lblTempSub.setText(t > 35 ? "High" : t < 10 ? "Low" : "Normal"); }
         if (!Float.isNaN(h)) { lblHum.setText(String.format("%.0f", h)); lblHumSub.setText(h > 80 ? "High" : h < 30 ? "Low" : "Normal"); }
         if (!Float.isNaN(s)) { lblSoil.setText(String.format("%.0f", s)); lblSoilSub.setText(s < 30 ? "Dry" : s > 85 ? "Wet" : "Normal"); }
+        if (lblLight != null && !Float.isNaN(li)) { lblLight.setText(String.format("%.0f", li)); lblLightSub.setText(li < 20 ? "Dark" : li > 80 ? "Bright" : "Normal"); }
     }
 
     // ═══════════════ TREND CHART ═══════════════
@@ -266,14 +285,17 @@ public class MonitoringController {
         humSeries.setName("Humidity (%)");
         soilSeries = new XYChart.Series<>();
         soilSeries.setName("Soil Moisture (%)");
+        lightSeries = new XYChart.Series<>();
+        lightSeries.setName("Light Intensity (%)");
 
-        trendChart.getData().addAll(tempSeries, humSeries, soilSeries);
+        trendChart.getData().addAll(tempSeries, humSeries, soilSeries, lightSeries);
     }
 
     private void loadHistoricalChart() {
         tempSeries.getData().clear();
         humSeries.getData().clear();
         soilSeries.getData().clear();
+        lightSeries.getData().clear();
 
         SensorService svc = new SensorService();
         // Determine how many readings to fetch based on period
@@ -312,6 +334,9 @@ public class MonitoringController {
             humSeries.getData().add(new XYChart.Data<>(label, r.getHumidity()));
             if (!Float.isNaN(r.getSoilMoisture())) {
                 soilSeries.getData().add(new XYChart.Data<>(label, r.getSoilMoisture()));
+            }
+            if (!Float.isNaN(r.getLightLevel())) {
+                lightSeries.getData().add(new XYChart.Data<>(label, r.getLightLevel()));
             }
             count++;
             if (count >= MAX_CHART_POINTS) break;
@@ -451,6 +476,16 @@ public class MonitoringController {
                 else { sStatus = "Normal"; normal++; }
                 rows.add(new SensorRow(plotName, "Soil Moisture", String.format("%.0f %%", s), sStatus, time));
             }
+
+            // Light intensity row
+            float li = r.getLightLevel();
+            if (!Float.isNaN(li)) {
+                String liStatus;
+                if (li < 10 || li > 95) { liStatus = "Critical"; critical++; }
+                else if (li < 20 || li > 80) { liStatus = "Warning"; warning++; }
+                else { liStatus = "Normal"; normal++; }
+                rows.add(new SensorRow(plotName, "Light Intensity", String.format("%.0f %%", li), liStatus, time));
+            }
         }
 
         sensorTable.setItems(rows);
@@ -522,7 +557,7 @@ public class MonitoringController {
                     List<SensorReading> rs = sDao.getRecentForPlot(p.getPlotId(), 1);
                     if (!rs.isEmpty()) {
                         SensorReading r = rs.get(0);
-                        readings.put(p.getPlotId(), new float[]{r.getTemperature(), r.getHumidity(), r.getSoilMoisture()});
+                        readings.put(p.getPlotId(), new float[]{r.getTemperature(), r.getHumidity(), r.getSoilMoisture(), r.getLightLevel()});
                     }
                 }
                 float[] vals = computeFieldValues(plots, readings);
@@ -550,6 +585,7 @@ public class MonitoringController {
                 case "Temperature"    -> norm(r[0], 0, 50);
                 case "Humidity"       -> norm(r[1], 0, 100);
                 case "Soil Moisture"  -> norm(r[2], 0, 100);
+                case "Light Intensity"-> r.length > 3 ? norm(r[3], 0, 100) : 0.5f;
                 default               -> allScore(r[0], r[1], r[2]);
             };
         }
@@ -578,10 +614,11 @@ public class MonitoringController {
         drawForest(gc, w, h);
 
         Color[] palette = switch (mapMode) {
-            case "Temperature"   -> new Color[]{Color.web("#ffffb2"), Color.web("#fd8d3c"), Color.web("#bd0026")};
-            case "Humidity"      -> new Color[]{Color.web("#d0e8ff"), Color.web("#4a9fd4"), Color.web("#083d77")};
-            case "Soil Moisture" -> new Color[]{Color.web("#f5deb3"), Color.web("#8b6914"), Color.web("#3b1a00")};
-            default              -> new Color[]{Color.web("#4caf50"), Color.web("#ff9800"), Color.web("#f44336")};
+            case "Temperature"    -> new Color[]{Color.web("#ffffb2"), Color.web("#fd8d3c"), Color.web("#bd0026")};
+            case "Humidity"       -> new Color[]{Color.web("#d0e8ff"), Color.web("#4a9fd4"), Color.web("#083d77")};
+            case "Soil Moisture"  -> new Color[]{Color.web("#f5deb3"), Color.web("#8b6914"), Color.web("#3b1a00")};
+            case "Light Intensity"-> new Color[]{Color.web("#1a1a2e"), Color.web("#f5c518"), Color.web("#fff8dc")};
+            default               -> new Color[]{Color.web("#4caf50"), Color.web("#ff9800"), Color.web("#f44336")};
         };
 
         float[] vals = mapFieldValues != null ? mapFieldValues : DEMO_VALUES;

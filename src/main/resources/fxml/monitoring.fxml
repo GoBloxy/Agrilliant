@@ -114,7 +114,7 @@
         <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="600">
             <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
             <HBox alignment="CENTER_LEFT">
-                <Label text="Sensor Trend (Temp / Humidity / Soil)" styleClass="card-title"/>
+                <Label text="Sensor Trend (Temp / Humidity / Soil / Light)" styleClass="card-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <ComboBox fx:id="cmbChartPeriod" promptText="24 Hours" styleClass="filter-combo"/>
             </HBox>
