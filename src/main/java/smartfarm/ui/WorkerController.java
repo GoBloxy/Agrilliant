@@ -108,12 +108,14 @@ public class WorkerController {
                 editBtn.getStyleClass().add("icon-btn");
                 delBtn.getStyleClass().add("icon-btn");
                 editBtn.setOnAction(e -> {
-                    Worker w = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (w != null) onEditWorker(w);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onEditWorker(getTableView().getItems().get(idx));
                 });
                 delBtn.setOnAction(e -> {
-                    Worker w = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (w != null) onDeleteWorker(w);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onDeleteWorker(getTableView().getItems().get(idx));
                 });
             }
             @Override
@@ -181,15 +183,18 @@ public class WorkerController {
 
         if (total == 0) {
             statusPieChart.getData().add(new PieChart.Data("No Workers", 1));
-            statusPieChart.getData().get(0).getNode().setStyle("-fx-pie-color:#e5e7eb;");
+            javafx.application.Platform.runLater(() ->
+                statusPieChart.getData().get(0).getNode().setStyle("-fx-pie-color:#e5e7eb;"));
             return;
         }
 
         PieChart.Data onData = new PieChart.Data("On Duty", onDuty);
         PieChart.Data offData = new PieChart.Data("Off Duty", offDuty);
         statusPieChart.getData().addAll(onData, offData);
-        onData.getNode().setStyle("-fx-pie-color:#22c55e;");
-        offData.getNode().setStyle("-fx-pie-color:#f87171;");
+        javafx.application.Platform.runLater(() -> {
+            onData.getNode().setStyle("-fx-pie-color:#22c55e;");
+            offData.getNode().setStyle("-fx-pie-color:#f87171;");
+        });
 
         statusLegendBox.getChildren().addAll(
                 buildLegendRow("#22c55e", "On Duty", onDuty, total > 0 ? (int)(onDuty * 100 / total) : 0),

@@ -282,38 +282,25 @@ public class MonitoringController {
         soilSeries.getData().clear();
         lightSeries.getData().clear();
 
-        SensorService svc = new SensorService();
-        // Determine how many readings to fetch based on period
         String period = cmbChartPeriod.getValue();
         int limit = MAX_CHART_POINTS;
         LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
         if ("7 Days".equals(period)) { limit = 200; cutoff = LocalDateTime.now().minusDays(7); }
         else if ("30 Days".equals(period)) { limit = 500; cutoff = LocalDateTime.now().minusDays(30); }
 
-        List<SensorReading> readings = svc.getRecentReadings(limit);
+        String selectedField = cmbFields.getValue();
+        String selectedPlot = cmbPlots.getValue();
+        List<SensorReading> readings = fetchChartReadings(selectedField, selectedPlot, limit);
+
         DateTimeFormatter fmt = "24 Hours".equals(period)
                 ? DateTimeFormatter.ofPattern("HH:mm")
                 : DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
-        // Filter by cutoff and plot/field selection
-        String selectedField = cmbFields.getValue();
-        String selectedPlot = cmbPlots.getValue();
-
+        final LocalDateTime cutoffFinal = cutoff;
         int count = 0;
         for (int i = readings.size() - 1; i >= 0; i--) {
             SensorReading r = readings.get(i);
-            if (r.getTimestamp() != null && r.getTimestamp().isBefore(cutoff)) continue;
-
-            // Apply field/plot filter
-            if (selectedField != null && !selectedField.equals("All Fields")) {
-                List<Integer> allowedIds = fieldToDeviceIds.getOrDefault(selectedField, List.of());
-                if (!allowedIds.contains(r.getDeviceId())) continue;
-            }
-            if (selectedPlot != null && !selectedPlot.equals("All Plots")) {
-                Plot p = plotCache.get(r.getDeviceId());
-                if (p == null || !p.getName().equals(selectedPlot)) continue;
-            }
-
+            if (r.getTimestamp() != null && r.getTimestamp().isBefore(cutoffFinal)) continue;
             String label = r.getTimestamp() != null ? r.getTimestamp().format(fmt) : String.valueOf(i);
             tempSeries.getData().add(new XYChart.Data<>(label, r.getTemperature()));
             humSeries.getData().add(new XYChart.Data<>(label, r.getHumidity()));
@@ -325,6 +312,36 @@ public class MonitoringController {
             }
             count++;
             if (count >= MAX_CHART_POINTS) break;
+        }
+    }
+
+    private List<SensorReading> fetchChartReadings(String field, String plot, int limit) {
+        SensorDAO dao = new SensorDAO();
+        try {
+            // Specific plot selected — use plot-level join to get correct device readings
+            if (plot != null && !plot.equals("All Plots")) {
+                for (Map.Entry<Integer, Plot> entry : plotCache.entrySet()) {
+                    if (entry.getValue().getName().equals(plot)) {
+                        return dao.getRecentForPlot(entry.getKey(), limit);
+                    }
+                }
+            }
+            // Specific field selected — fetch for all plots in that field
+            if (field != null && !field.equals("All Fields")) {
+                List<Integer> plotIds = fieldToDeviceIds.getOrDefault(field, List.of());
+                List<SensorReading> all = new java.util.ArrayList<>();
+                for (int pid : plotIds) {
+                    all.addAll(dao.getRecentForPlot(pid, limit));
+                }
+                all.sort((a, b) -> b.getTimestamp() != null && a.getTimestamp() != null
+                        ? b.getTimestamp().compareTo(a.getTimestamp()) : 0);
+                return all;
+            }
+            // All plots — return recent readings globally
+            return dao.getRecent(limit);
+        } catch (Exception e) {
+            System.err.println("Chart fetch error: " + e.getMessage());
+            return new java.util.ArrayList<>();
         }
     }
 

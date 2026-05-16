@@ -183,16 +183,19 @@ public class CropController {
                 editBtn.getStyleClass().add("icon-btn");
                 delBtn.getStyleClass().add("icon-btn");
                 viewBtn.setOnAction(e -> {
-                    Crop c = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (c != null) showCropDetail(c);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        showCropDetail(getTableView().getItems().get(idx));
                 });
                 editBtn.setOnAction(e -> {
-                    Crop c = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (c != null) onEditCrop(c);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onEditCrop(getTableView().getItems().get(idx));
                 });
                 delBtn.setOnAction(e -> {
-                    Crop c = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (c != null) onDeleteCrop(c);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onDeleteCrop(getTableView().getItems().get(idx));
                 });
             }
             @Override
@@ -499,7 +502,7 @@ public class CropController {
         if (reading == null) {
             try {
                 smartfarm.dao.SensorDAO sensorDAO = new smartfarm.dao.SensorDAO();
-                List<SensorReading> recent = sensorDAO.getRecentForDevice(plotId, 1);
+                List<SensorReading> recent = sensorDAO.getRecentForPlot(plotId, 1);
                 if (!recent.isEmpty()) {
                     reading = recent.get(0);
                     source = "Last recorded reading";
@@ -545,7 +548,7 @@ public class CropController {
         if (reading == null) {
             try {
                 smartfarm.dao.SensorDAO sensorDAO = new smartfarm.dao.SensorDAO();
-                List<SensorReading> recent = sensorDAO.getRecentForDevice(crop.getPlotId(), 1);
+                List<SensorReading> recent = sensorDAO.getRecentForPlot(crop.getPlotId(), 1);
                 if (!recent.isEmpty()) reading = recent.get(0);
             } catch (Exception ignored) {}
         }

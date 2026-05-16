@@ -91,6 +91,36 @@ public class AlertService {
                 );
             }
         }
+
+        // Light intensity checks
+        float light = reading.getLightLevel();
+        if (!Float.isNaN(light)) {
+            if (light <= ThresholdConfig.LIGHT_CRITICAL_LOW) {
+                createAlertWithTask(
+                    "LOW_LIGHT", Severity.CRITICAL,
+                    String.format("Light critically low: %.0f%% — crops may need supplemental lighting", light),
+                    plotId
+                );
+            } else if (light <= ThresholdConfig.LIGHT_WARNING_LOW) {
+                createAlertOnly(
+                    "LOW_LIGHT", Severity.WARNING,
+                    String.format("Light intensity below normal: %.0f%%", light),
+                    plotId
+                );
+            } else if (light >= ThresholdConfig.LIGHT_CRITICAL_HIGH) {
+                createAlertWithTask(
+                    "HIGH_LIGHT", Severity.CRITICAL,
+                    String.format("Light intensity critically high: %.0f%% — risk of heat stress", light),
+                    plotId
+                );
+            } else if (light >= ThresholdConfig.LIGHT_WARNING_HIGH) {
+                createAlertOnly(
+                    "HIGH_LIGHT", Severity.WARNING,
+                    String.format("Light intensity above normal: %.0f%%", light),
+                    plotId
+                );
+            }
+        }
     }
 
     // Save an alert AND auto-create a task for it

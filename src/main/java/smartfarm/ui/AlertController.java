@@ -377,6 +377,7 @@ public class AlertController {
         if (alertType.contains("TEMP")) detailIcon.setIconLiteral("fth-thermometer");
         else if (alertType.contains("HUMIDITY")) detailIcon.setIconLiteral("fth-droplet");
         else if (alertType.contains("SOIL")) detailIcon.setIconLiteral("fth-droplet");
+        else if (alertType.contains("LIGHT")) detailIcon.setIconLiteral("fth-sun");
         else detailIcon.setIconLiteral("fth-alert-triangle");
 
         // Chart — real sensor data
@@ -635,6 +636,8 @@ public class AlertController {
         if (alertType.contains("LOW_HUMIDITY")) return "< " + ThresholdConfig.HUM_WARNING_LOW + " %";
         if (alertType.contains("DRY_SOIL")) return "< " + ThresholdConfig.SOIL_WARNING_DRY + " %";
         if (alertType.contains("WET_SOIL")) return "> " + ThresholdConfig.SOIL_WARNING_WET + " %";
+        if (alertType.contains("HIGH_LIGHT")) return "> " + ThresholdConfig.LIGHT_WARNING_HIGH + " %";
+        if (alertType.contains("LOW_LIGHT")) return "< " + ThresholdConfig.LIGHT_WARNING_LOW + " %";
         return "N/A";
     }
 
@@ -653,6 +656,10 @@ public class AlertController {
             return "Reading at " + val + ". Start irrigation immediately. Check for blocked drip lines or pump failures.";
         if (alertType.contains("WET_SOIL"))
             return "Reading at " + val + ". Reduce watering schedule. Ensure proper drainage. Check for overwatering.";
+        if (alertType.contains("LOW_LIGHT"))
+            return "Reading at " + val + ". Activate supplemental grow lights. Check for shade from structures or vegetation.";
+        if (alertType.contains("HIGH_LIGHT"))
+            return "Reading at " + val + ". Deploy shade netting to protect crops from excessive light and heat stress.";
         return "Monitor the situation and take corrective action as needed.";
     }
 
@@ -684,6 +691,7 @@ public class AlertController {
         if (alertType.contains("TEMP")) return "Temperature Sensor";
         if (alertType.contains("SOIL") || alertType.contains("MOISTURE")) return "Soil Moisture Sensor";
         if (alertType.contains("HUMIDITY")) return "Humidity Sensor";
+        if (alertType.contains("LIGHT")) return "Light Intensity Sensor";
         return "Environmental Sensor";
     }
 }

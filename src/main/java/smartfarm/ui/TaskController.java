@@ -146,20 +146,24 @@ public class TaskController {
                 editBtn.getStyleClass().add("icon-btn");
                 delBtn.getStyleClass().add("icon-btn");
                 advanceBtn.setOnAction(e -> {
-                    Task t = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (t != null) onAdvanceStatus(t);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onAdvanceStatus(getTableView().getItems().get(idx));
                 });
                 revertBtn.setOnAction(e -> {
-                    Task t = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (t != null) onRevertStatus(t);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onRevertStatus(getTableView().getItems().get(idx));
                 });
                 editBtn.setOnAction(e -> {
-                    Task t = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (t != null) onEditTask(t);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onEditTask(getTableView().getItems().get(idx));
                 });
                 delBtn.setOnAction(e -> {
-                    Task t = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (t != null) onDeleteTask(t);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onDeleteTask(getTableView().getItems().get(idx));
                 });
                 // Workers can only advance/revert status, not edit or delete
                 if (workerModeId > 0) {
@@ -174,8 +178,9 @@ public class TaskController {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    Task t = getTableRow().getItem();
-                    if (t != null) {
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size()) {
+                        Task t = getTableView().getItems().get(idx);
                         advanceBtn.setDisable(t.getStatus() == Task.Status.DONE);
                         revertBtn.setDisable(t.getStatus() == Task.Status.PENDING);
                     }

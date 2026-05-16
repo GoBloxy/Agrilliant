@@ -116,7 +116,9 @@ public class HarvestController {
             private final Hyperlink link = new Hyperlink();
             {
                 link.setOnAction(e -> {
-                    HarvestRecord r = getTableRow() != null ? getTableRow().getItem() : null;
+                    int idx = getIndex();
+                    HarvestRecord r = (idx >= 0 && idx < getTableView().getItems().size())
+                            ? getTableView().getItems().get(idx) : null;
                     if (r != null && r.getTxHash() != null && !r.getTxHash().isEmpty()) {
                         try {
                             java.awt.Desktop.getDesktop().browse(
@@ -151,12 +153,14 @@ public class HarvestController {
                 editBtn.getStyleClass().add("icon-btn");
                 delBtn.getStyleClass().add("icon-btn");
                 editBtn.setOnAction(e -> {
-                    HarvestRecord r = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (r != null) onEditRecord(r);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onEditRecord(getTableView().getItems().get(idx));
                 });
                 delBtn.setOnAction(e -> {
-                    HarvestRecord r = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (r != null) onDeleteRecord(r);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onDeleteRecord(getTableView().getItems().get(idx));
                 });
             }
             @Override
@@ -332,9 +336,12 @@ public class HarvestController {
         java.util.Set<Integer> harvestedCropIds = allRecords.stream()
                 .map(HarvestRecord::getCropId)
                 .collect(Collectors.toSet());
+        int existingCropId = existing != null ? existing.getCropId() : -1;
         for (Crop c : cropCache.values()) {
-            if (c.getGrowthStage() == Crop.GrowthStage.HARVESTED
-                    || harvestedCropIds.contains(c.getCropId())) continue;
+            // Always include the crop being edited so the combo has a valid selection
+            boolean isCurrentCrop = c.getCropId() == existingCropId;
+            if (!isCurrentCrop && (c.getGrowthStage() == Crop.GrowthStage.HARVESTED
+                    || harvestedCropIds.contains(c.getCropId()))) continue;
             String label = c.getCropName() + " (Plot " + c.getPlotId() + ")";
             cropCombo.getItems().add(label);
             cropNameToId.put(label, c.getCropId());

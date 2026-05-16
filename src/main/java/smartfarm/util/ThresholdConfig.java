@@ -19,4 +19,10 @@ public class ThresholdConfig {
     public static final float SOIL_CRITICAL_DRY = 20.0f;
     public static final float SOIL_WARNING_DRY  = 30.0f;
     public static final float SOIL_WARNING_WET  = 85.0f;
+
+    // Light intensity thresholds (%)
+    public static final float LIGHT_CRITICAL_LOW  = 10.0f;
+    public static final float LIGHT_WARNING_LOW   = 20.0f;
+    public static final float LIGHT_WARNING_HIGH  = 85.0f;
+    public static final float LIGHT_CRITICAL_HIGH = 95.0f;
 }

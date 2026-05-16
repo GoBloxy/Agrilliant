@@ -100,12 +100,14 @@ public class UsersController {
                 editBtn.getStyleClass().add("icon-btn");
                 delBtn.getStyleClass().add("icon-btn");
                 editBtn.setOnAction(e -> {
-                    UserRow r = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (r != null) onEditUser(r);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onEditUser(getTableView().getItems().get(idx));
                 });
                 delBtn.setOnAction(e -> {
-                    UserRow r = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (r != null) onDeleteUser(r);
+                    int idx = getIndex();
+                    if (idx >= 0 && idx < getTableView().getItems().size())
+                        onDeleteUser(getTableView().getItems().get(idx));
                 });
             }
             @Override

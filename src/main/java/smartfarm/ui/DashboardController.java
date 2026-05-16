@@ -388,7 +388,7 @@ public class DashboardController {
             Map<Integer, String> plotStatus = new HashMap<>();
             for (Plot p : allPlots) {
                 try {
-                    List<SensorReading> recent = sensorDAO.getRecentForDevice(p.getPlotId(), 1);
+                    List<SensorReading> recent = sensorDAO.getRecentForPlot(p.getPlotId(), 1);
                     if (recent.isEmpty()) {
                         plotStatus.put(p.getPlotId(), "offline");
                     } else {
