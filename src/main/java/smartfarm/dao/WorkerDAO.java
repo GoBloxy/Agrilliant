@@ -99,8 +99,15 @@ public class WorkerDAO implements GenericDAO<Worker> {
     @Override
     public void delete(int id) throws SQLException {
         if (conn == null) return;
-        String sql = "DELETE FROM worker WHERE worker_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM worker_task WHERE worker_id = ?")) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM attendance WHERE worker_id = ?")) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM worker WHERE worker_id = ?")) {
             ps.setInt(1, id);
             ps.executeUpdate();
         }

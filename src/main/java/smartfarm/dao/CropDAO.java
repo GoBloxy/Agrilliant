@@ -83,8 +83,11 @@ public class CropDAO implements GenericDAO<Crop> {
 
     @Override
     public void delete(int id) throws SQLException {
-        String sql = "DELETE FROM crops WHERE crop_id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM harvest_records WHERE crop_id = ?")) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM crops WHERE crop_id = ?")) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }

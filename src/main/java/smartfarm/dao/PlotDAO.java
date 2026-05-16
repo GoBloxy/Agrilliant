@@ -125,8 +125,41 @@ public class PlotDAO implements GenericDAO<Plot> {
 
     @Override
     public void delete(int id) throws SQLException {
-        String sql = "DELETE FROM plots WHERE plot_id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        // 1. Delete harvest records for all crops in this plot
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "DELETE hr FROM harvest_records hr JOIN crops c ON hr.crop_id = c.crop_id WHERE c.plot_id = ?")) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+        // 2. Delete crops
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM crops WHERE plot_id = ?")) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+        // 3. Delete worker_task entries for tasks in this plot
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "DELETE wt FROM worker_task wt JOIN tasks t ON wt.task_id = t.task_id WHERE t.plot_id = ?")) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+        // 4. Delete tasks
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM tasks WHERE plot_id = ?")) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+        // 5. Delete sensor readings for devices linked to this plot
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "DELETE sr FROM sensor_readings sr JOIN devices d ON sr.device_id = d.device_id WHERE d.plot_id = ?")) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+        // 6. Delete devices
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM devices WHERE plot_id = ?")) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+        // 7. Delete the plot
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM plots WHERE plot_id = ?")) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }
