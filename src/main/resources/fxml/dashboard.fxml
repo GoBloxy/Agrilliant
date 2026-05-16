@@ -227,7 +227,7 @@
                     <!-- Temperature & Humidity Trend Chart -->
                     <VBox styleClass="card">
                         <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
-                        <Label text="Temperature &amp; Humidity Trend" styleClass="card-title"/>
+                        <Label text="Sensor Trend (Temp / Humidity / Soil / Light)" styleClass="card-title"/>
                         <StackPane fx:id="chartContainer" prefHeight="220" maxHeight="220"/>
                     </VBox>
                 </VBox>

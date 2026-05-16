@@ -15,6 +15,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.input.MouseEvent;
@@ -66,6 +67,7 @@ public class DashboardController {
     private XYChart.Series<String, Number> tempSeries;
     private XYChart.Series<String, Number> humSeries;
     private XYChart.Series<String, Number> soilSeries;
+    private XYChart.Series<String, Number> lightSeries;
     private int dataPointIndex = 0;
     private static final int MAX_DATA_POINTS = 40;
     private float lastTempCelsius = Float.NaN;
@@ -411,24 +413,32 @@ public class DashboardController {
                 double y = pad + row * (cellH + pad);
 
                 Rectangle rect = new Rectangle(cellW, cellH);
-                rect.setArcWidth(8);
-                rect.setArcHeight(8);
+                rect.setArcWidth(10);
+                rect.setArcHeight(10);
                 String status = plotStatus.getOrDefault(p.getPlotId(), "offline");
                 rect.getStyleClass().add("plot-" + status);
                 rect.setLayoutX(x);
                 rect.setLayoutY(y);
 
-                Label lbl = new Label(p.getName());
-                lbl.setStyle("-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#1f2937;");
-                lbl.setLayoutX(x + cellW / 2 - 20);
-                lbl.setLayoutY(y + cellH / 2 - 8);
+                Label nameLbl = new Label(p.getName());
+                nameLbl.setStyle("-fx-font-size:11;-fx-font-weight:bold;-fx-text-fill:#1f2937;");
+                nameLbl.setWrapText(true);
+                nameLbl.setMaxWidth(cellW - 8);
+                nameLbl.setAlignment(javafx.geometry.Pos.CENTER);
+                nameLbl.setTextAlignment(TextAlignment.CENTER);
 
                 Label sizeLbl = new Label(String.format("%.1f ac", p.getSizeAcres()));
                 sizeLbl.setStyle("-fx-font-size:9;-fx-text-fill:#6b7280;");
-                sizeLbl.setLayoutX(x + cellW / 2 - 15);
-                sizeLbl.setLayoutY(y + cellH / 2 + 8);
+                sizeLbl.setAlignment(javafx.geometry.Pos.CENTER);
 
-                fieldMap.getChildren().addAll(rect, lbl, sizeLbl);
+                VBox content = new VBox(3, nameLbl, sizeLbl);
+                content.setAlignment(javafx.geometry.Pos.CENTER);
+                content.setPrefWidth(cellW);
+                content.setPrefHeight(cellH);
+                content.setLayoutX(x);
+                content.setLayoutY(y);
+
+                fieldMap.getChildren().addAll(rect, content);
             }
         } catch (SQLException e) {
             System.err.println("Failed to build field map: " + e.getMessage());
@@ -852,8 +862,10 @@ public class DashboardController {
         humSeries.setName("Humidity (%)");
         soilSeries = new XYChart.Series<>();
         soilSeries.setName("Soil Moisture (%)");
+        lightSeries = new XYChart.Series<>();
+        lightSeries.setName("Light Intensity (%)");
 
-        sensorChart.getData().addAll(tempSeries, humSeries, soilSeries);
+        sensorChart.getData().addAll(tempSeries, humSeries, soilSeries, lightSeries);
         chartContainer.getChildren().add(sensorChart);
 
         loadHistoricalChartData();
@@ -870,6 +882,9 @@ public class DashboardController {
                 humSeries.getData().add(new XYChart.Data<>(label, r.getHumidity()));
                 if (!Float.isNaN(r.getSoilMoisture())) {
                     soilSeries.getData().add(new XYChart.Data<>(label, r.getSoilMoisture()));
+                }
+                if (!Float.isNaN(r.getLightLevel())) {
+                    lightSeries.getData().add(new XYChart.Data<>(label, r.getLightLevel()));
                 }
             }
         } catch (SQLException e) {
@@ -1098,6 +1113,7 @@ public class DashboardController {
         if (l < 20) { lblLightStatus.setText("Low"); lblLightStatus.getStyleClass().add("badge-low"); }
         else if (l > 80) { lblLightStatus.setText("Bright"); lblLightStatus.getStyleClass().add("badge-high"); }
         else { lblLightStatus.setText("Normal"); lblLightStatus.getStyleClass().add("badge-normal"); }
+        addChartDataPoint(lightSeries, l);
     }
 
     private void updatePlotLabels(String devId) {

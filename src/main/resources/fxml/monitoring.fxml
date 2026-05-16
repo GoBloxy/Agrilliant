@@ -133,10 +133,8 @@
                 <ComboBox fx:id="cmbMapSensors" promptText="All Sensors" styleClass="filter-combo"/>
             </HBox>
             <StackPane fx:id="mapCanvasPane" VBox.vgrow="ALWAYS"
-                       style="-fx-background-color:#1a3a1a;-fx-background-radius:8;"
-                       prefHeight="260" maxHeight="Infinity">
-                <Canvas fx:id="mapCanvas"/>
-            </StackPane>
+                       style="-fx-background-color:#1e293b;-fx-background-radius:8;"
+                       prefHeight="260" maxHeight="Infinity"/>
         </VBox>
     </HBox>
 

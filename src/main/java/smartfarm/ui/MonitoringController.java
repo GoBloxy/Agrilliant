@@ -10,10 +10,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import smartfarm.dao.SensorDAO;
 import javafx.util.Duration;
 import smartfarm.dao.PlotDAO;
@@ -21,8 +18,6 @@ import smartfarm.model.Plot;
 import smartfarm.model.SensorReading;
 import smartfarm.service.LiveSensorData;
 import smartfarm.service.SensorService;
-
-import java.sql.SQLException;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -50,7 +45,6 @@ public class MonitoringController {
     @FXML private LineChart<String, Number> trendChart;
 
     @FXML private ComboBox<String> cmbMapSensors;
-    @FXML private Canvas mapCanvas;
     @FXML private StackPane mapCanvasPane;
 
     @FXML private TableView<SensorRow> sensorTable;
@@ -66,17 +60,8 @@ public class MonitoringController {
     @FXML private Label lblNormalCount, lblWarningCount, lblCriticalCount, lblOfflineCount;
     @FXML private Label lblTotalSensors;
 
-    // ── Sensor-map canvas ──
-    private static final double[][][] FIELDS = {
-        {{0.03, 0.47, 0.46, 0.03}, {0.03, 0.04, 0.31, 0.30}},
-        {{0.53, 0.97, 0.97, 0.54}, {0.04, 0.03, 0.30, 0.31}},
-        {{0.04, 0.46, 0.44, 0.03}, {0.34, 0.36, 0.64, 0.62}},
-        {{0.54, 0.96, 0.97, 0.56}, {0.36, 0.34, 0.62, 0.64}},
-        {{0.03, 0.45, 0.47, 0.03}, {0.66, 0.68, 0.97, 0.97}},
-        {{0.55, 0.97, 0.97, 0.53}, {0.68, 0.66, 0.97, 0.97}},
-    };
-    private static final float[] DEMO_VALUES = {0.35f, 0.68f, 0.50f, 0.72f, 0.42f, 0.58f};
-    private float[] mapFieldValues = DEMO_VALUES.clone();
+    // ── Sensor-map tile pane ──
+    private javafx.scene.layout.TilePane sensorMapTile;
     private String mapMode = "All Sensors";
 
     private static final int MAX_CHART_POINTS = 40;
@@ -444,48 +429,49 @@ public class MonitoringController {
 
         DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm:ss a");
         ObservableList<SensorRow> rows = FXCollections.observableArrayList();
-        int normal = 0, warning = 0, critical = 0;
+
+        // Track latest reading per device for the pie chart (one status count per device)
+        Map<Integer, SensorReading> latestPerDevice = new java.util.LinkedHashMap<>();
 
         for (SensorReading r : filtered) {
+            latestPerDevice.putIfAbsent(r.getDeviceId(), r);
+
             Plot p = plotCache.get(r.getDeviceId());
             String plotName = (p != null) ? p.getName() : "Device " + r.getDeviceId();
             String time = r.getTimestamp() != null ? r.getTimestamp().format(timeFmt) : "—";
 
             // Temperature row
             float t = r.getTemperature();
-            String tStatus;
-            if (t > 40 || t < 5) { tStatus = "Critical"; critical++; }
-            else if (t > 35 || t < 10) { tStatus = "Warning"; warning++; }
-            else { tStatus = "Normal"; normal++; }
+            String tStatus = (t > 40 || t < 5) ? "Critical" : (t > 35 || t < 10) ? "Warning" : "Normal";
             rows.add(new SensorRow(plotName, "Temperature", smartfarm.service.SettingsManager.getInstance().formatTemp(t), tStatus, time));
 
             // Humidity row
             float h = r.getHumidity();
-            String hStatus;
-            if (h > 90 || h < 20) { hStatus = "Critical"; critical++; }
-            else if (h > 80 || h < 30) { hStatus = "Warning"; warning++; }
-            else { hStatus = "Normal"; normal++; }
+            String hStatus = (h > 90 || h < 20) ? "Critical" : (h > 80 || h < 30) ? "Warning" : "Normal";
             rows.add(new SensorRow(plotName, "Humidity", String.format("%.0f %%", h), hStatus, time));
 
             // Soil moisture row
             float s = r.getSoilMoisture();
             if (!Float.isNaN(s)) {
-                String sStatus;
-                if (s < 15 || s > 95) { sStatus = "Critical"; critical++; }
-                else if (s < 30 || s > 85) { sStatus = "Warning"; warning++; }
-                else { sStatus = "Normal"; normal++; }
+                String sStatus = (s < 15 || s > 95) ? "Critical" : (s < 30 || s > 85) ? "Warning" : "Normal";
                 rows.add(new SensorRow(plotName, "Soil Moisture", String.format("%.0f %%", s), sStatus, time));
             }
 
             // Light intensity row
             float li = r.getLightLevel();
             if (!Float.isNaN(li)) {
-                String liStatus;
-                if (li < 10 || li > 95) { liStatus = "Critical"; critical++; }
-                else if (li < 20 || li > 80) { liStatus = "Warning"; warning++; }
-                else { liStatus = "Normal"; normal++; }
+                String liStatus = (li < 10 || li > 95) ? "Critical" : (li < 20 || li > 80) ? "Warning" : "Normal";
                 rows.add(new SensorRow(plotName, "Light Intensity", String.format("%.0f %%", li), liStatus, time));
             }
+        }
+
+        // Count pie chart status per device (worst metric wins)
+        int normal = 0, warning = 0, critical = 0;
+        for (SensorReading r : latestPerDevice.values()) {
+            int worst = deviceWorstStatus(r); // 0=normal, 1=warning, 2=critical
+            if (worst == 2) critical++;
+            else if (worst == 1) warning++;
+            else normal++;
         }
 
         sensorTable.setItems(rows);
@@ -535,14 +521,23 @@ public class MonitoringController {
         autoRefreshTimeline.play();
     }
 
-    // ═══════════════ SENSOR MAP CANVAS ═══════════════
+    // ═══════════════ SENSOR MAP (TILE-BASED) ═══════════════
 
     private void initMapCanvas() {
-        if (mapCanvas == null || mapCanvasPane == null) return;
-        mapCanvas.widthProperty().bind(mapCanvasPane.widthProperty());
-        mapCanvas.heightProperty().bind(mapCanvasPane.heightProperty());
-        mapCanvas.widthProperty().addListener(obs -> drawMap());
-        mapCanvas.heightProperty().addListener(obs -> drawMap());
+        if (mapCanvasPane == null) return;
+        sensorMapTile = new javafx.scene.layout.TilePane();
+        sensorMapTile.setHgap(8);
+        sensorMapTile.setVgap(8);
+        sensorMapTile.setPadding(new javafx.geometry.Insets(10));
+        sensorMapTile.setPrefColumns(2);
+        sensorMapTile.setStyle("-fx-background-color: transparent;");
+
+        javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(sensorMapTile);
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        mapCanvasPane.getChildren().setAll(scroll);
         loadMapData();
     }
 
@@ -552,156 +547,141 @@ public class MonitoringController {
                 PlotDAO dao = new PlotDAO();
                 List<Plot> plots = dao.getAll();
                 SensorDAO sDao = new SensorDAO();
-                Map<Integer, float[]> readings = new HashMap<>();
+                Map<Integer, SensorReading> latestReadings = new HashMap<>();
                 for (Plot p : plots) {
                     List<SensorReading> rs = sDao.getRecentForPlot(p.getPlotId(), 1);
-                    if (!rs.isEmpty()) {
-                        SensorReading r = rs.get(0);
-                        readings.put(p.getPlotId(), new float[]{r.getTemperature(), r.getHumidity(), r.getSoilMoisture(), r.getLightLevel()});
-                    }
+                    if (!rs.isEmpty()) latestReadings.put(p.getPlotId(), rs.get(0));
                 }
-                float[] vals = computeFieldValues(plots, readings);
-                javafx.application.Platform.runLater(() -> {
-                    mapFieldValues = vals;
-                    drawMap();
-                });
+                javafx.application.Platform.runLater(() -> buildSensorTiles(plots, latestReadings));
             } catch (Exception ex) {
-                javafx.application.Platform.runLater(this::drawMap);
+                javafx.application.Platform.runLater(() -> buildSensorTiles(List.of(), Map.of()));
             }
         }, "map-loader");
         t.setDaemon(true);
         t.start();
     }
 
-    private float[] computeFieldValues(List<Plot> plots, Map<Integer, float[]> readings) {
-        if (readings.isEmpty()) return DEMO_VALUES.clone();
-        float[] out = new float[FIELDS.length];
-        for (int i = 0; i < FIELDS.length; i++) {
-            if (plots.isEmpty()) { out[i] = DEMO_VALUES[i]; continue; }
-            Plot p = plots.get(i % plots.size());
-            float[] r = readings.get(p.getPlotId());
-            if (r == null) { out[i] = DEMO_VALUES[i]; continue; }
-            out[i] = switch (mapMode) {
-                case "Temperature"    -> norm(r[0], 0, 50);
-                case "Humidity"       -> norm(r[1], 0, 100);
-                case "Soil Moisture"  -> norm(r[2], 0, 100);
-                case "Light Intensity"-> r.length > 3 ? norm(r[3], 0, 100) : 0.5f;
-                default               -> allScore(r[0], r[1], r[2]);
-            };
-        }
-        return out;
-    }
+    private void buildSensorTiles(List<Plot> plots, Map<Integer, SensorReading> readings) {
+        if (sensorMapTile == null) return;
+        sensorMapTile.getChildren().clear();
 
-    private float norm(float v, float min, float max) {
-        if (Float.isNaN(v)) return 0.5f;
-        return Math.max(0f, Math.min(1f, (v - min) / (max - min)));
-    }
-
-    private float allScore(float t, float h, float s) {
-        float ts = Math.abs(norm(t, 0, 50) - 0.5f) * 2;
-        float hs = Math.abs(norm(h, 0, 100) - 0.6f) * 2;
-        float ss = Float.isNaN(s) ? 0 : Math.abs(norm(s, 0, 100) - 0.55f) * 2;
-        return Math.max(0f, Math.min(1f, (ts + hs + ss) / 3f));
-    }
-
-    private void drawMap() {
-        if (mapCanvas == null) return;
-        double w = mapCanvas.getWidth(), h = mapCanvas.getHeight();
-        if (w <= 0 || h <= 0) return;
-        GraphicsContext gc = mapCanvas.getGraphicsContext2D();
-        gc.clearRect(0, 0, w, h);
-
-        drawForest(gc, w, h);
-
-        Color[] palette = switch (mapMode) {
-            case "Temperature"    -> new Color[]{Color.web("#ffffb2"), Color.web("#fd8d3c"), Color.web("#bd0026")};
-            case "Humidity"       -> new Color[]{Color.web("#d0e8ff"), Color.web("#4a9fd4"), Color.web("#083d77")};
-            case "Soil Moisture"  -> new Color[]{Color.web("#f5deb3"), Color.web("#8b6914"), Color.web("#3b1a00")};
-            case "Light Intensity"-> new Color[]{Color.web("#1a1a2e"), Color.web("#f5c518"), Color.web("#fff8dc")};
-            default               -> new Color[]{Color.web("#4caf50"), Color.web("#ff9800"), Color.web("#f44336")};
-        };
-
-        float[] vals = mapFieldValues != null ? mapFieldValues : DEMO_VALUES;
-        long seed = 42;
-        for (int i = 0; i < FIELDS.length; i++) {
-            float v = i < vals.length ? vals[i] : DEMO_VALUES[i % DEMO_VALUES.length];
-            Color c = lerp(v, palette[0], palette[1], palette[2]);
-            double[] xs = scalePts(FIELDS[i][0], w);
-            double[] ys = scalePts(FIELDS[i][1], h);
-            drawField(gc, xs, ys, c, seed += 7);
+        if (plots.isEmpty()) {
+            javafx.scene.control.Label empty = new javafx.scene.control.Label("No plots available");
+            empty.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 13;");
+            sensorMapTile.getChildren().add(empty);
+            return;
         }
 
-        drawRoads(gc, w, h);
-        drawVignette(gc, w, h);
-    }
-
-    private double[] scalePts(double[] norm, double size) {
-        double[] out = new double[norm.length];
-        for (int i = 0; i < norm.length; i++) out[i] = norm[i] * size;
-        return out;
-    }
-
-    private void drawField(GraphicsContext gc, double[] xs, double[] ys, Color base, long seed) {
-        gc.setFill(base);
-        gc.fillPolygon(xs, ys, xs.length);
-        java.util.Random rng = new java.util.Random(seed);
-        for (int k = 0; k < 18; k++) {
-            double bx = minOf(xs) + rng.nextDouble() * (maxOf(xs) - minOf(xs));
-            double by = minOf(ys) + rng.nextDouble() * (maxOf(ys) - minOf(ys));
-            double r2 = 3 + rng.nextDouble() * 7;
-            gc.setFill(base.deriveColor(0, 0.9 + rng.nextDouble() * 0.2, 0.85 + rng.nextDouble() * 0.25, 0.35));
-            gc.fillOval(bx - r2, by - r2, r2 * 2, r2 * 2);
-        }
-        gc.setStroke(Color.color(0, 0, 0, 0.3));
-        gc.setLineWidth(1.5);
-        gc.strokePolygon(xs, ys, xs.length);
-    }
-
-    private void drawForest(GraphicsContext gc, double w, double h) {
-        gc.setFill(Color.web("#1a3a1a"));
-        gc.fillRect(0, 0, w, h);
-        java.util.Random rng = new java.util.Random(99L);
-        for (int k = 0; k < 120; k++) {
-            double x = rng.nextDouble() * w;
-            double y = rng.nextDouble() * h;
-            double r = 6 + rng.nextDouble() * 12;
-            if (x > w * 0.1 && x < w * 0.9 && y > h * 0.1 && y < h * 0.9) continue;
-            gc.setFill(Color.color(0.1, 0.28 + rng.nextDouble() * 0.12, 0.1, 0.55));
-            gc.fillOval(x - r, y - r, r * 2, r * 2);
+        for (Plot p : plots) {
+            SensorReading r = readings.get(p.getPlotId());
+            sensorMapTile.getChildren().add(buildPlotTile(p, r));
         }
     }
 
-    private void drawRoads(GraphicsContext gc, double w, double h) {
-        gc.setStroke(Color.color(0.55, 0.5, 0.35, 0.6));
-        gc.setLineWidth(4);
-        gc.strokeLine(w * 0.5, 0, w * 0.5, h);
-        gc.strokeLine(0, h * 0.33, w, h * 0.33);
-        gc.strokeLine(0, h * 0.66, w, h * 0.66);
-        gc.setStroke(Color.color(0.65, 0.6, 0.45, 0.3));
-        gc.setLineWidth(2);
-        gc.strokeLine(w * 0.5, 0, w * 0.5, h);
-        gc.strokeLine(0, h * 0.33, w, h * 0.33);
-        gc.strokeLine(0, h * 0.66, w, h * 0.66);
+    private javafx.scene.layout.VBox buildPlotTile(Plot p, SensorReading r) {
+        // Determine status color
+        String borderColor = "#64748b"; // offline grey
+        String bgColor = "rgba(100,116,139,0.15)";
+        if (r != null) {
+            int worst = deviceWorstStatus(r);
+            if (worst == 2) { borderColor = "#ef4444"; bgColor = "rgba(239,68,68,0.15)"; }
+            else if (worst == 1) { borderColor = "#f59e0b"; bgColor = "rgba(245,158,11,0.15)"; }
+            else { borderColor = "#22c55e"; bgColor = "rgba(34,197,94,0.15)"; }
+        }
+
+        javafx.scene.layout.VBox card = new javafx.scene.layout.VBox(6);
+        card.setPadding(new javafx.geometry.Insets(10));
+        card.setPrefWidth(160);
+        card.setStyle(
+            "-fx-background-color: " + bgColor + ";" +
+            "-fx-background-radius: 8;" +
+            "-fx-border-color: " + borderColor + ";" +
+            "-fx-border-width: 0 0 0 4;" +
+            "-fx-border-radius: 8;"
+        );
+
+        // Plot name
+        javafx.scene.control.Label nameLabel = new javafx.scene.control.Label(p.getName());
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12; -fx-text-fill: #f1f5f9;");
+        nameLabel.setWrapText(false);
+        card.getChildren().add(nameLabel);
+
+        // Sensor readings grid (2 columns)
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(8);
+        grid.setVgap(4);
+
+        if (r != null) {
+            boolean showAll  = "All Sensors".equals(mapMode);
+            boolean showTemp  = showAll || "Temperature".equals(mapMode);
+            boolean showHum   = showAll || "Humidity".equals(mapMode);
+            boolean showSoil  = showAll || "Soil Moisture".equals(mapMode);
+            boolean showLight = showAll || "Light Intensity".equals(mapMode);
+
+            int col = 0, row = 0;
+            if (showTemp)  { grid.add(sensorCell("🌡", formatSensorTemp(r.getTemperature()), "#fb923c"), col++, row); if (col > 1) { col = 0; row++; } }
+            if (showHum)   { grid.add(sensorCell("💧", fmt(r.getHumidity(), "%"), "#60a5fa"), col++, row); if (col > 1) { col = 0; row++; } }
+            if (showSoil && !Float.isNaN(r.getSoilMoisture()))  { grid.add(sensorCell("🌱", fmt(r.getSoilMoisture(), "%"), "#4ade80"), col++, row); if (col > 1) { col = 0; row++; } }
+            if (showLight && !Float.isNaN(r.getLightLevel()))   { grid.add(sensorCell("☀", fmt(r.getLightLevel(), "%"), "#facc15"), col, row); }
+        } else {
+            javafx.scene.control.Label noData = new javafx.scene.control.Label("No data");
+            noData.setStyle("-fx-text-fill: #64748b; -fx-font-size: 11;");
+            grid.add(noData, 0, 0);
+        }
+
+        card.getChildren().add(grid);
+        return card;
     }
 
-    private void drawVignette(GraphicsContext gc, double w, double h) {
-        int b = 16;
-        gc.setFill(Color.color(0, 0, 0, 0.45));
-        gc.fillRect(0, 0, w, b);
-        gc.fillRect(0, h - b, w, b);
-        gc.fillRect(0, 0, b, h);
-        gc.fillRect(w - b, 0, b, h);
+    private javafx.scene.layout.VBox sensorCell(String icon, String value, String color) {
+        javafx.scene.layout.VBox cell = new javafx.scene.layout.VBox(1);
+        cell.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        javafx.scene.control.Label iconLbl = new javafx.scene.control.Label(icon);
+        iconLbl.setStyle("-fx-font-size: 14;");
+
+        javafx.scene.control.Label valLbl = new javafx.scene.control.Label(value);
+        valLbl.setStyle("-fx-font-size: 11; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
+
+        cell.getChildren().addAll(iconLbl, valLbl);
+        return cell;
     }
 
-    private Color lerp(float t, Color lo, Color mid, Color hi) {
-        if (t <= 0.5f) return lo.interpolate(mid, t * 2);
-        return mid.interpolate(hi, (t - 0.5f) * 2);
+    private String fmt(float v, String unit) {
+        return Float.isNaN(v) ? "--" : String.format("%.0f%s", v, unit);
     }
 
-    private double minOf(double[] a) { double m = a[0]; for (double v : a) if (v < m) m = v; return m; }
-    private double maxOf(double[] a) { double m = a[0]; for (double v : a) if (v > m) m = v; return m; }
+    private String formatSensorTemp(float t) {
+        if (Float.isNaN(t)) return "--";
+        return smartfarm.service.SettingsManager.getInstance().formatTemp(t);
+    }
 
     // ═══════════════ TABLE ROW MODEL ═══════════════
+
+    /** Returns 0=Normal, 1=Warning, 2=Critical for the worst metric in this reading. */
+    private int deviceWorstStatus(SensorReading r) {
+        int worst = 0;
+        float t = r.getTemperature();
+        if (t > 40 || t < 5) worst = 2;
+        else if ((t > 35 || t < 10) && worst < 1) worst = 1;
+
+        float h = r.getHumidity();
+        if (h > 90 || h < 20) worst = 2;
+        else if ((h > 80 || h < 30) && worst < 1) worst = 1;
+
+        float s = r.getSoilMoisture();
+        if (!Float.isNaN(s)) {
+            if (s < 15 || s > 95) worst = 2;
+            else if ((s < 30 || s > 85) && worst < 1) worst = 1;
+        }
+
+        float li = r.getLightLevel();
+        if (!Float.isNaN(li)) {
+            if (li < 10 || li > 95) worst = 2;
+            else if ((li < 20 || li > 80) && worst < 1) worst = 1;
+        }
+        return worst;
+    }
 
     public static class SensorRow {
         private final String plot, type, value, status, updated;
